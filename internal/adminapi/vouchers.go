@@ -2,6 +2,7 @@ package adminapi
 
 import (
 	"crypto/rand"
+	"encoding/csv"
 	"fmt"
 	"math/big"
 	"net/http"
@@ -13,6 +14,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 	"github.com/talkincode/toughradius/v9/pkg/common"
+	"go.uber.org/zap"
 )
 
 // ListVoucherBatches retrieves the voucher batch list
@@ -391,9 +393,111 @@ func RedeemVoucher(c echo.Context) error {
 	return ok(c, user)
 }
 
+// BulkActivateVouchers activates all vouchers in a batch
+func BulkActivateVouchers(c echo.Context) error {
+	id := c.Param("id")
+	if err := GetDB(c).Model(&domain.Voucher{}).Where("batch_id = ? AND status = ?", id, "unused").Update("status", "active").Error; err != nil {
+		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "Failed to activate vouchers", err.Error())
+	}
+	return ok(c, nil)
+}
+
+// BulkDeactivateVouchers deactivates all active vouchers in a batch
+func BulkDeactivateVouchers(c echo.Context) error {
+	id := c.Param("id")
+	
+	// Find all active vouchers in this batch to get their codes (usernames)
+	var vouchers []domain.Voucher
+	if err := GetDB(c).Where("batch_id = ? AND status = ?", id, "active").Find(&vouchers).Error; err != nil {
+		return fail(c, http.StatusInternalServerError, "QUERY_FAILED", "Failed to query vouchers", err.Error())
+	}
+
+	// Disconnect online sessions for these vouchers
+	for _, v := range vouchers {
+		var session domain.RadiusOnline
+		// Check if user is online
+		if err := GetDB(c).Where("username = ?", v.Code).First(&session).Error; err == nil {
+			// User is online, disconnect them
+			if err := DisconnectSession(c, session); err != nil {
+				// Log error but continue with other vouchers
+				zap.L().Error("Failed to disconnect voucher user", 
+					zap.String("username", v.Code),
+					zap.Error(err))
+			}
+		}
+	}
+
+	if err := GetDB(c).Model(&domain.Voucher{}).Where("batch_id = ? AND status = ?", id, "active").Update("status", "unused").Error; err != nil {
+		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "Failed to deactivate vouchers", err.Error())
+	}
+	return ok(c, nil)
+}
+
+// DeleteVoucherBatch deletes a batch and its vouchers
+func DeleteVoucherBatch(c echo.Context) error {
+	id := c.Param("id")
+	tx := GetDB(c).Begin()
+	if err := tx.Where("batch_id = ?", id).Delete(&domain.Voucher{}).Error; err != nil {
+		tx.Rollback()
+		return fail(c, http.StatusInternalServerError, "DELETE_VOUCHERS_FAILED", "Failed to delete vouchers", err.Error())
+	}
+	if err := tx.Delete(&domain.VoucherBatch{}, id).Error; err != nil {
+		tx.Rollback()
+		return fail(c, http.StatusInternalServerError, "DELETE_BATCH_FAILED", "Failed to delete batch", err.Error())
+	}
+	tx.Commit()
+	return ok(c, nil)
+}
+
+// ExportVoucherBatch exports batch vouchers to CSV
+func ExportVoucherBatch(c echo.Context) error {
+	id := c.Param("id")
+	
+	var batch domain.VoucherBatch
+	if err := GetDB(c).First(&batch, id).Error; err != nil {
+		return fail(c, http.StatusNotFound, "BATCH_NOT_FOUND", "Batch not found", err.Error())
+	}
+
+	var product domain.Product
+	if err := GetDB(c).First(&product, batch.ProductID).Error; err != nil {
+		return fail(c, http.StatusNotFound, "PRODUCT_NOT_FOUND", "Product not found", err.Error())
+	}
+
+	var vouchers []domain.Voucher
+	if err := GetDB(c).Where("batch_id = ?", id).Find(&vouchers).Error; err != nil {
+		return fail(c, http.StatusInternalServerError, "EXPORT_FAILED", "Failed to find vouchers", err.Error())
+	}
+
+	filename := fmt.Sprintf("%s-%s-%d.csv", batch.Name, product.Name, batch.Count)
+	// Sanitize filename to prevent header injection or invalid characters
+	filename = strings.ReplaceAll(filename, " ", "_")
+	
+	c.Response().Header().Set(echo.HeaderContentDisposition, fmt.Sprintf("attachment; filename=%s", filename))
+	c.Response().Header().Set(echo.HeaderContentType, "text/csv")
+	c.Response().WriteHeader(http.StatusOK)
+
+	writer := csv.NewWriter(c.Response())
+	writer.Write([]string{"ID", "Code", "Status", "Price", "ExpireTime"})
+	for _, v := range vouchers {
+		writer.Write([]string{
+			fmt.Sprintf("%d", v.ID),
+			v.Code,
+			v.Status,
+			fmt.Sprintf("%.2f", v.Price),
+			v.ExpireTime.Format("2006-01-02 15:04:05"),
+		})
+	}
+	writer.Flush()
+	return nil
+}
+
 func registerVoucherRoutes() {
 	webserver.ApiGET("/voucher-batches", ListVoucherBatches)
 	webserver.ApiGET("/vouchers", ListVouchers)
 	webserver.ApiPOST("/voucher-batches", CreateVoucherBatch)
+	webserver.ApiPOST("/voucher-batches/:id/activate", BulkActivateVouchers)
+	webserver.ApiPOST("/voucher-batches/:id/deactivate", BulkDeactivateVouchers)
+	webserver.ApiDELETE("/voucher-batches/:id", DeleteVoucherBatch)
+	webserver.ApiGET("/voucher-batches/:id/export", ExportVoucherBatch)
 	webserver.ApiPOST("/vouchers/redeem", RedeemVoucher)
 }

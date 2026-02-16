@@ -187,66 +187,75 @@ func DeleteOnlineSession(c echo.Context) error {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "Session not found", nil)
 	}
 
-	// Fetch NAS info for CoA
-	var nas domain.NetNas
-	nasErr := GetDB(c).Where("ipaddr = ?", session.NasAddr).First(&nas).Error
-
 	// Delete online session record
 	if err := GetDB(c).Delete(&domain.RadiusOnline{}, id).Error; err != nil {
+		zap.L().Error("Failed to delete session from database", zap.Error(err))
 		return fail(c, http.StatusInternalServerError, "DELETE_FAILED", "Failed to terminate session", err.Error())
 	}
 
-	// Send CoA Disconnect-Request to NAS asynchronously (non-blocking)
-	if nasErr == nil {
-		go func() {
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel()
-
-			// Build CoA Disconnect-Request packet
-			pkt := radius.New(radius.CodeDisconnectRequest, []byte(nas.Secret))
-			_ = rfc2866.AcctSessionID_SetString(pkt, session.AcctSessionId) //nolint:errcheck
-			_ = rfc2865.UserName_SetString(pkt, session.Username)           //nolint:errcheck
-
-			// Send to NAS CoA port (default 3799)
-			coaAddr := net.JoinHostPort(nas.Ipaddr, "3799")
-			client := &radius.Client{
-				Retry: time.Second * 2,
-			}
-
-			response, err := client.Exchange(ctx, pkt, coaAddr)
-			if err != nil {
-				zap.L().Error("Failed to send CoA Disconnect-Request",
-					zap.Error(err),
-					zap.String("nas_addr", coaAddr),
-					zap.String("username", session.Username),
-					zap.String("acct_session_id", session.AcctSessionId),
-					zap.String("namespace", "adminapi"))
-				return
-			}
-
-			if response.Code == radius.CodeDisconnectACK {
-				zap.L().Info("CoA Disconnect-Request ACK received",
-					zap.String("nas_addr", coaAddr),
-					zap.String("username", session.Username),
-					zap.String("namespace", "adminapi"))
-			} else {
-				zap.L().Warn("CoA Disconnect-Request NAK received",
-					zap.String("nas_addr", coaAddr),
-					zap.String("username", session.Username),
-					zap.Uint8("response_code", uint8(response.Code)), //nolint:gosec // G115: RADIUS code is always in uint8 range
-					zap.String("namespace", "adminapi"))
-			}
-		}()
-	} else {
-		zap.L().Warn("NAS not found for CoA, session deleted from database only",
-			zap.String("nas_addr", session.NasAddr),
-			zap.String("username", session.Username),
-			zap.String("namespace", "adminapi"))
+	if err := DisconnectSession(c, session); err != nil {
+		zap.L().Error("Failed to disconnect session", zap.Error(err))
 	}
 
 	return ok(c, map[string]interface{}{
 		"message": "User has been forced offline",
 	})
+}
+
+// DisconnectSession sends a CoA Disconnect-Request to the NAS
+func DisconnectSession(c echo.Context, session domain.RadiusOnline) error {
+	// Fetch NAS info for CoA
+	var nas domain.NetNas
+	if err := GetDB(c).Where("ipaddr = ?", session.NasAddr).First(&nas).Error; err != nil {
+		zap.L().Warn("NAS not found for CoA, session deleted from database only",
+			zap.String("nas_addr", session.NasAddr),
+			zap.String("username", session.Username),
+			zap.String("namespace", "adminapi"))
+		return nil
+	}
+
+	// Send CoA Disconnect-Request to NAS asynchronously (non-blocking)
+	go func() {
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+
+		// Build CoA Disconnect-Request packet
+		pkt := radius.New(radius.CodeDisconnectRequest, []byte(nas.Secret))
+		_ = rfc2866.AcctSessionID_SetString(pkt, session.AcctSessionId) //nolint:errcheck
+		_ = rfc2865.UserName_SetString(pkt, session.Username)           //nolint:errcheck
+
+		// Send to NAS CoA port (default 3799)
+		coaAddr := net.JoinHostPort(nas.Ipaddr, "3799")
+		client := &radius.Client{
+			Retry: time.Second * 2,
+		}
+
+		response, err := client.Exchange(ctx, pkt, coaAddr)
+		if err != nil {
+			zap.L().Error("Failed to send CoA Disconnect-Request",
+				zap.Error(err),
+				zap.String("nas_addr", coaAddr),
+				zap.String("username", session.Username),
+				zap.String("acct_session_id", session.AcctSessionId),
+				zap.String("namespace", "adminapi"))
+			return
+		}
+
+		if response.Code == radius.CodeDisconnectACK {
+			zap.L().Info("CoA Disconnect-Request ACK received",
+				zap.String("nas_addr", coaAddr),
+				zap.String("username", session.Username),
+				zap.String("namespace", "adminapi"))
+		} else {
+			zap.L().Warn("CoA Disconnect-Request NAK received",
+				zap.String("nas_addr", coaAddr),
+				zap.String("username", session.Username),
+				zap.Uint8("response_code", uint8(response.Code)), //nolint:gosec // G115: RADIUS code is always in uint8 range
+				zap.String("namespace", "adminapi"))
+		}
+	}()
+
+	return nil
 }
 
 // registerSessionRoutes Register online session routes

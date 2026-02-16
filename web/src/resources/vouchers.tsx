@@ -23,12 +23,115 @@ import {
 } from 'react-admin';
 import { Box, Dialog, DialogTitle, DialogContent, DialogActions, TextField as MuiTextField, Button as MuiButton } from '@mui/material';
 import RedeemIcon from '@mui/icons-material/Redeem';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import DownloadIcon from '@mui/icons-material/Download';
+import ToggleOnIcon from '@mui/icons-material/ToggleOn';
+import ToggleOffIcon from '@mui/icons-material/ToggleOff';
+import DeleteIcon from '@mui/icons-material/Delete';
+import { Link } from 'react-router-dom';
+
+import { httpClient } from '../utils/apiClient';
 
 // --- Voucher Batch ---
 
+const BatchActions = ({ label }: { label?: string }) => {
+    const record = useRecordContext();
+    const notify = useNotify();
+    const refresh = useRefresh();
+    const dataProvider = useDataProvider();
+
+    if (!record) return null;
+
+    const handleAction = async (action: string) => {
+        try {
+            await httpClient(`/voucher-batches/${record.id}/${action}`, { method: 'POST' });
+            notify(`Batch ${action}ed successfully`, { type: 'success' });
+            refresh();
+        } catch (error) {
+            notify(`Failed to ${action} batch`, { type: 'error' });
+        }
+    };
+
+    const handleDelete = async () => {
+        if (window.confirm('Are you sure you want to delete this batch and all its vouchers?')) {
+            try {
+                await dataProvider.delete('voucher-batches', { id: record.id });
+                notify('Batch deleted successfully', { type: 'success' });
+                refresh();
+            } catch (error) {
+                notify('Failed to delete batch', { type: 'error' });
+            }
+        }
+    };
+
+    const handleDownload = async () => {
+        try {
+            const token = localStorage.getItem('token');
+            const response = await fetch(`/api/v1/voucher-batches/${record.id}/export`, {
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                },
+            });
+
+            if (!response.ok) {
+                throw new Error('Export failed');
+            }
+
+            // Try to extract filename from Content-Disposition header
+            const contentDisposition = response.headers.get('Content-Disposition');
+            let filename = `voucher_batch_${record.id}.csv`;
+            if (contentDisposition) {
+                const filenameMatch = contentDisposition.match(/filename="?([^"]+)"?/);
+                if (filenameMatch && filenameMatch.length === 2) {
+                    filename = filenameMatch[1];
+                }
+            }
+
+            const blob = await response.blob();
+            const url = window.URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = filename;
+            document.body.appendChild(a);
+            a.click();
+            window.URL.revokeObjectURL(url);
+            document.body.removeChild(a);
+            notify('Export successful', { type: 'success' });
+        } catch (error) {
+            notify('Failed to export batch', { type: 'error' });
+        }
+    };
+
+    return (
+        <Box display="flex">
+            <Button
+                label="Voucher List"
+                size="small"
+                component={Link}
+                to={`/vouchers?filter=${JSON.stringify({ batch_id: record.id })}`}
+                onClick={(e) => e.stopPropagation()}
+            >
+                <VisibilityIcon />
+            </Button>
+            <Button label="Download" size="small" onClick={handleDownload}>
+                <DownloadIcon />
+            </Button>
+            <Button label="Activate" size="small" onClick={() => handleAction('activate')} color="primary">
+                <ToggleOnIcon />
+            </Button>
+            <Button label="Deactivate" size="small" onClick={() => handleAction('deactivate')} color="warning">
+                <ToggleOffIcon />
+            </Button>
+            <Button label="Delete" size="small" onClick={handleDelete} color="error">
+                <DeleteIcon />
+            </Button>
+        </Box>
+    );
+};
+
 export const VoucherBatchList = (props: ListProps) => (
     <List {...props} sort={{ field: 'id', order: 'DESC' }}>
-        <Datagrid rowClick="show">
+        <Datagrid>
             <TextField source="id" />
             <TextField source="name" />
             <ReferenceField source="product_id" reference="products">
@@ -41,6 +144,7 @@ export const VoucherBatchList = (props: ListProps) => (
             <TextField source="prefix" />
             <DateField source="expire_time" showTime label="Expiry Time" />
             <DateField source="created_at" showTime />
+            <BatchActions label="Actions" />
         </Datagrid>
     </List>
 );

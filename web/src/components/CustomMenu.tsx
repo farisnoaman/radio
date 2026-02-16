@@ -10,7 +10,6 @@ import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettin
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import SupportAgentOutlinedIcon from '@mui/icons-material/SupportAgentOutlined';
 import ConfirmationNumberOutlinedIcon from '@mui/icons-material/ConfirmationNumberOutlined';
-import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
 import { Box, useTheme } from '@mui/material';
 import { MenuItemLink, MenuProps, useGetIdentity, useTranslate } from 'react-admin';
 
@@ -26,8 +25,7 @@ const menuItems = [
   { to: '/system/operators', labelKey: 'menu.operators', icon: <AdminPanelSettingsOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/products', labelKey: 'Products', icon: <Inventory2OutlinedIcon /> },
   { to: '/agents', labelKey: 'Agents', icon: <SupportAgentOutlinedIcon /> },
-  { to: '/voucher-batches', labelKey: 'Voucher Batches', icon: <ConfirmationNumberOutlinedIcon /> },
-  { to: '/vouchers', labelKey: 'Vouchers List', icon: <LocalOfferOutlinedIcon /> },
+  { to: '/voucher-batches', labelKey: 'Vouchers', icon: <ConfirmationNumberOutlinedIcon /> },
 ];
 
 export const CustomMenu = ({ dense, onMenuClick, logout }: MenuProps) => {
