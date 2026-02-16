@@ -20,6 +20,7 @@ import {
     useDataProvider,
     useRecordContext,
     DateTimeInput,
+    useGetOne,
 } from 'react-admin';
 import { Box, Dialog, DialogTitle, DialogContent, DialogActions, TextField as MuiTextField, Button as MuiButton } from '@mui/material';
 import RedeemIcon from '@mui/icons-material/Redeem';
@@ -149,19 +150,81 @@ export const VoucherBatchList = (props: ListProps) => (
     </List>
 );
 
-export const VoucherBatchCreate = (props: CreateProps) => (
-    <Create {...props}>
-        <SimpleForm>
+import { useWatch, useFormContext } from 'react-hook-form';
+
+const VoucherBatchInputs = () => {
+    const { setValue, control } = useFormContext();
+    const [balance, setBalance] = useState<number | null>(null);
+    const [user, setUser] = useState<any>(null);
+    const notify = useNotify();
+
+    const productId = useWatch({ control, name: 'product_id' });
+    const { data: product } = useGetOne('products', { id: productId }, { enabled: !!productId });
+
+    React.useEffect(() => {
+        const userStr = localStorage.getItem('user');
+        if (userStr) {
+            const u = JSON.parse(userStr);
+            setUser(u);
+            if (u.level === 'agent') {
+                httpClient(`/agents/${u.id}/wallet`)
+                    .then(({ json }) => {
+                        setBalance(json.balance);
+                    })
+                    .catch(() => {
+                        notify('Failed to fetch wallet balance', { type: 'warning' });
+                    });
+            }
+        }
+    }, [notify]);
+
+    React.useEffect(() => {
+        if (user?.level === 'agent' && product && balance !== null) {
+            const price = product.price || 0;
+            if (price > 0) {
+                const max = Math.floor(balance / price);
+                setValue('count', max);
+                notify(`Max affordable vouchers: ${max}`, { type: 'info' });
+            }
+        }
+    }, [product, balance, user, setValue, notify]);
+
+    const maxAffordable = (user?.level === 'agent' && product && balance !== null)
+        ? Math.floor(balance / (product.price || 1))
+        : null;
+
+    return (
+        <>
             <TextInput source="name" validate={[required()]} fullWidth />
             <ReferenceInput source="product_id" reference="products">
                 <SelectInput optionText="name" validate={[required()]} />
             </ReferenceInput>
-            <ReferenceInput source="agent_id" reference="agents">
-                <SelectInput optionText="realname" helperText="Optional: Charge to agent wallet" />
-            </ReferenceInput>
+
+            {user?.level !== 'agent' && (
+                <ReferenceInput source="agent_id" reference="agents">
+                    <SelectInput optionText="realname" helperText="Optional: Charge to agent wallet" />
+                </ReferenceInput>
+            )}
+
+            {user?.level === 'agent' && balance !== null && (
+                <Box mb={2} p={1} bgcolor="background.default" borderRadius={1}>
+                    Available Balance: <strong>{balance.toFixed(2)}</strong>
+                    {product && (
+                        <span> | Product Price: <strong>{product.price}</strong> | Max Affordable: <strong>{maxAffordable}</strong></span>
+                    )}
+                </Box>
+            )}
+
             <Box display={{ xs: 'block', sm: 'flex', width: '100%' }}>
                 <Box flex={1} mr={{ xs: 0, sm: '0.5em' }}>
-                    <NumberInput source="count" validate={[required()]} min={1} max={10000} fullWidth />
+                    <NumberInput
+                        source="count"
+                        validate={[required()]}
+                        min={1}
+                        max={maxAffordable || 10000}
+                        fullWidth
+                        helperText={maxAffordable !== null ? `Max: ${maxAffordable}` : ''}
+                    />
                 </Box>
                 <Box flex={1} ml={{ xs: 0, sm: '0.5em' }}>
                     <TextInput source="prefix" fullWidth />
@@ -187,6 +250,14 @@ export const VoucherBatchCreate = (props: CreateProps) => (
                     <TextInput source="remark" multiline fullWidth />
                 </Box>
             </Box>
+        </>
+    );
+};
+
+export const VoucherBatchCreate = (props: CreateProps) => (
+    <Create {...props}>
+        <SimpleForm>
+            <VoucherBatchInputs />
         </SimpleForm>
     </Create>
 );

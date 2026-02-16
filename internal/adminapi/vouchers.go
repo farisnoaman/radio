@@ -184,6 +184,17 @@ func CreateVoucherBatch(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_PRODUCT", "Product not found", nil)
 	}
 
+	// Securely get current user to enforce AgentID
+	currentUser, err := resolveOperatorFromContext(c)
+	if err != nil {
+		return fail(c, http.StatusUnauthorized, "UNAUTHORIZED", "Authentication failed", err.Error())
+	}
+
+	// If user is an agent, force the AgentID to be their own ID
+	if currentUser.Level == "agent" {
+		req.AgentID = fmt.Sprintf("%d", currentUser.ID)
+	}
+
 	// Start Transaction
 	tx := GetDB(c).Begin()
 

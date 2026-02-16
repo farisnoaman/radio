@@ -30,6 +30,7 @@ import {
 } from '@mui/material';
 import AddCardIcon from '@mui/icons-material/AddCard';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import { httpClient } from '../utils/apiClient';
 
 const AgentListActions = () => (
     <TopToolbar>
@@ -44,7 +45,6 @@ const TopupButton = () => {
     const [remark, setRemark] = useState('');
     const notify = useNotify();
     const refresh = useRefresh();
-    const dataProvider = useDataProvider();
 
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
@@ -52,9 +52,12 @@ const TopupButton = () => {
     const handleSubmit = async () => {
         if (!record) return;
         try {
-            await dataProvider.post(`agents/${record.id}/topup`, {
-                amount: parseFloat(amount),
-                remark,
+            await httpClient(`/agents/${record.id}/topup`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    amount: parseFloat(amount),
+                    remark,
+                }),
             });
             notify('Topup successful', { type: 'success' });
             setOpen(false);

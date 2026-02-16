@@ -147,8 +147,92 @@ func GetAgentWallet(c echo.Context) error {
 	return ok(c, wallet)
 }
 
+// CreateAgent creates a new agent
+// @Summary create an agent
+// @Tags Agent
+// @Param agent body operatorPayload true "Agent info"
+// @Success 201 {object} domain.SysOpr
+// @Router /api/v1/agents [post]
+func CreateAgent(c echo.Context) error {
+	// Permission check
+	currentOpr, err := resolveOperatorFromContext(c)
+	if err != nil {
+		return fail(c, http.StatusUnauthorized, "UNAUTHORIZED", "Unable to retrieve current user information", nil)
+	}
+
+	if currentOpr.Level != "super" && currentOpr.Level != "admin" {
+		return fail(c, http.StatusForbidden, "PERMISSION_DENIED", "Only admins can create agents", nil)
+	}
+
+	var payload operatorPayload
+	if err := c.Bind(&payload); err != nil {
+		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse agent parameters", nil)
+	}
+
+	payload.Username = strings.TrimSpace(payload.Username)
+	payload.Password = strings.TrimSpace(payload.Password)
+
+	// Validate required fields
+	if payload.Username == "" {
+		return fail(c, http.StatusBadRequest, "MISSING_USERNAME", "Username is required", nil)
+	}
+	if payload.Password == "" {
+		return fail(c, http.StatusBadRequest, "MISSING_PASSWORD", "Password is required", nil)
+	}
+	if payload.Realname == "" {
+		return fail(c, http.StatusBadRequest, "MISSING_REALNAME", "Real name is required", nil)
+	}
+
+	// Validate Username format
+	if len(payload.Username) < 3 || len(payload.Username) > 30 {
+		return fail(c, http.StatusBadRequest, "INVALID_USERNAME", "Username length must be between 3 and 30 characters", nil)
+	}
+
+	// Validate Password length
+	if len(payload.Password) < 6 || len(payload.Password) > 50 {
+		return fail(c, http.StatusBadRequest, "INVALID_PASSWORD", "Password length must be between 6 and 50 characters", nil)
+	}
+
+	// Check Username exists
+	var exists int64
+	GetDB(c).Model(&domain.SysOpr{}).Where("username = ?", payload.Username).Count(&exists)
+	if exists > 0 {
+		return fail(c, http.StatusConflict, "USERNAME_EXISTS", "Username already exists", nil)
+	}
+
+	hashedPassword := common.Sha256HashWithSalt(payload.Password, common.GetSecretSalt())
+
+	operator := domain.SysOpr{
+		ID:        common.UUIDint64(),
+		Username:  payload.Username,
+		Password:  hashedPassword,
+		Realname:  payload.Realname,
+		Mobile:    payload.Mobile,
+		Email:     payload.Email,
+		Level:     "agent", // Force level to agent
+		Status:    "enabled",
+		Remark:    payload.Remark,
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+	}
+
+	if err := GetDB(c).Create(&operator).Error; err != nil {
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to create agent", err.Error())
+	}
+
+	// Initialize wallet
+	if err := GetDB(c).Create(&domain.AgentWallet{AgentID: operator.ID, Balance: 0, UpdatedAt: time.Now()}).Error; err != nil {
+		// Log error but don't fail, wallet can be created on topup
+		c.Logger().Warn("Failed to initialize agent wallet", err)
+	}
+
+	operator.Password = ""
+	return ok(c, operator)
+}
+
 func registerAgentRoutes() {
 	webserver.ApiGET("/agents", ListAgents)
+	webserver.ApiPOST("/agents", CreateAgent)
 	webserver.ApiPOST("/agents/:id/topup", TopupAgent)
 	webserver.ApiGET("/agents/:id/wallet", GetAgentWallet)
 }
