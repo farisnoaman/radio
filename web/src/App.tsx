@@ -7,6 +7,7 @@ import { i18nProvider } from './i18n';
 import Dashboard from './pages/Dashboard';
 import AccountSettings from './pages/AccountSettings';
 import { SystemConfigPage } from './pages/SystemConfigPage';
+import FinancialPerformance from './pages/FinancialPerformance';
 import { LoginPage } from './pages/LoginPage';
 import { CustomLayout, CustomError } from './components';
 import { theme, darkTheme } from './theme';
@@ -186,8 +187,9 @@ const App = () => (
     <CustomRoutes>
       <Route path="/account/settings" element={<AccountSettings />} />
       <Route path="/system/config" element={<SystemConfigPage />} />
+      <Route path="/financial/performance" element={<FinancialPerformance />} />
     </CustomRoutes>
-  </Admin>
+  </Admin >
 );
 
 export default App;

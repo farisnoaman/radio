@@ -10,6 +10,7 @@ import AdminPanelSettingsOutlinedIcon from '@mui/icons-material/AdminPanelSettin
 import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import SupportAgentOutlinedIcon from '@mui/icons-material/SupportAgentOutlined';
 import ConfirmationNumberOutlinedIcon from '@mui/icons-material/ConfirmationNumberOutlined';
+import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
 import { Box, useTheme } from '@mui/material';
 import { MenuItemLink, MenuProps, useGetIdentity, useTranslate } from 'react-admin';
 
@@ -25,6 +26,7 @@ const menuItems = [
   { to: '/system/operators', labelKey: 'menu.operators', icon: <AdminPanelSettingsOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/products', labelKey: 'Products', icon: <Inventory2OutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/agents', labelKey: 'Agents', icon: <SupportAgentOutlinedIcon />, permissions: ['super', 'admin'] },
+  { to: '/financial/performance', labelKey: 'Financial Performance', icon: <AssessmentOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/voucher-batches', labelKey: 'Vouchers', icon: <ConfirmationNumberOutlinedIcon /> }, // Everyone
 ];
 
