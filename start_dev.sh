@@ -12,6 +12,14 @@ NC='\033[0m'
 
 echo -e "${GREEN}Starting ToughRadius Development Environment...${NC}"
 
+# Clean up stale processes
+echo -e "${GREEN}Cleaning up stale processes...${NC}"
+fuser -k ${BACKEND_PORT}/tcp 2>/dev/null
+fuser -k ${FRONTEND_PORT}/tcp 2>/dev/null
+pkill -9 -f "go run main.go" 2>/dev/null
+pkill -9 -f "vite" 2>/dev/null
+sleep 2
+
 # Check Go
 if ! command -v go &> /dev/null; then
     echo -e "${RED}Go is not installed or not in PATH.${NC}"
@@ -74,15 +82,28 @@ go run main.go -initdb -c $CONFIG_FILE
 echo -e "${GREEN}Starting Backend and Frontend...${NC}"
 
 # Trap Ctrl+C to kill both processes
-trap 'kill $(jobs -p)' SIGINT
+trap 'kill $(jobs -p)' EXIT
 
 # Start Backend in background
-go run main.go -c $CONFIG_FILE &
+nohup go run main.go -c $CONFIG_FILE > backend.log 2>&1 &
 BACKEND_PID=$!
 
+# Wait for backend to be ready
+echo -e "${GREEN}Waiting for backend to be ready on port ${BACKEND_PORT}...${NC}"
+for i in {1..30}; do
+    if curl -s http://localhost:${BACKEND_PORT}/api/v1/system/settings &> /dev/null; then
+        echo -e "${GREEN}Backend is ready!${NC}"
+        break
+    fi
+    if [ $i -eq 30 ]; then
+        echo -e "${RED}Backend failed to start after 30 seconds.${NC}"
+        tail -n 20 backend.log
+        exit 1
+    fi
+    sleep 1
+done
+
 # Start Frontend
+echo -e "${GREEN}Starting Frontend on port ${FRONTEND_PORT}...${NC}"
 cd web
 npm run dev
-
-# Wait for backend
-wait $BACKEND_PID

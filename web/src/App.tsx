@@ -64,6 +64,21 @@ import {
   OperatorCreate,
   OperatorShow,
 } from './resources/operators';
+import {
+  ProductList,
+  ProductCreate,
+  ProductEdit,
+  ProductShow,
+} from './resources/products';
+import {
+  VoucherBatchList,
+  VoucherBatchCreate,
+  VoucherList,
+} from './resources/vouchers';
+import {
+  AgentList,
+  AgentCreate,
+} from './resources/agents';
 
 const App = () => (
   <Admin
@@ -140,12 +155,39 @@ const App = () => (
       show={OperatorShow}
     />
 
+    {/* Products */}
+    <Resource
+      name="products"
+      list={ProductList}
+      create={ProductCreate}
+      edit={ProductEdit}
+      show={ProductShow}
+    />
+
+    {/* Vouchers */}
+    <Resource
+      name="voucher-batches"
+      list={VoucherBatchList}
+      create={VoucherBatchCreate}
+    />
+    <Resource
+      name="vouchers"
+      list={VoucherList}
+    />
+
+    {/* Agents */}
+    <Resource
+      name="agents"
+      list={AgentList}
+      create={AgentCreate}
+    />
+
     {/* 自定义路由 */}
     <CustomRoutes>
       <Route path="/account/settings" element={<AccountSettings />} />
       <Route path="/system/config" element={<SystemConfigPage />} />
     </CustomRoutes>
-    </Admin>
+  </Admin>
 );
 
 export default App;

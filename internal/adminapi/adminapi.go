@@ -15,5 +15,9 @@ func Init(appCtx app.AppContext) {
 	registerNASRoutes()
 	registerSettingsRoutes()
 	registerNodesRoutes()
+	registerNodesRoutes()
 	registerOperatorsRoutes()
+	registerProductRoutes()
+	registerVoucherRoutes()
+	registerAgentRoutes()
 }

@@ -13,4 +13,10 @@ var Tables = []interface{}{
 	&RadiusOnline{},
 	&RadiusProfile{},
 	&RadiusUser{},
+	// Commercial
+	&Product{},
+	&VoucherBatch{},
+	&Voucher{},
+	&AgentWallet{},
+	&WalletLog{},
 }
