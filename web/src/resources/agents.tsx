@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import {
     List,
     Datagrid,
@@ -15,7 +15,6 @@ import {
     Button,
     useNotify,
     useRefresh,
-    useDataProvider,
     TopToolbar,
     CreateButton,
     FunctionField,
@@ -101,25 +100,6 @@ const TopupButton = () => {
     );
 };
 
-// Custom field to fetch and display wallet balance
-const WalletBalanceField = () => {
-    const record = useRecordContext();
-    const [balance, setBalance] = useState<number | null>(null);
-    const dataProvider = useDataProvider();
-
-    React.useEffect(() => {
-        if (record && record.id) {
-            dataProvider.getOne('agents', { id: record.id + '/wallet' })
-                .then(({ data }) => setBalance(data.balance))
-                .catch(() => setBalance(0));
-        }
-    }, [record, dataProvider]);
-
-    if (balance === null) return <span>...</span>;
-    return <span>{balance.toFixed(2)}</span>;
-};
-
-
 export const AgentList = (props: ListProps) => (
     <List {...props} actions={<AgentListActions />}>
         <Datagrid>
@@ -127,8 +107,10 @@ export const AgentList = (props: ListProps) => (
             <TextField source="username" />
             <TextField source="realname" />
             <EmailField source="mobile" />
-            {/* Display Wallet Balance via custom component or ensure API returns it */}
-            <FunctionField label="Balance" render={() => <WalletBalanceField />} />
+            <FunctionField
+                label="Balance"
+                render={(record: any) => (record.balance || 0).toFixed(2)}
+            />
             <TextField source="status" />
             <TopupButton />
         </Datagrid>

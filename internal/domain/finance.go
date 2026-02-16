@@ -18,7 +18,7 @@ func (AgentWallet) TableName() string {
 // WalletLog Immutable ledger of transactions
 type WalletLog struct {
 	ID          int64     `json:"id,string" form:"id"`
-	AgentID     int64     `json:"agent_id,string" form:"agent_id"`
+	AgentID     int64     `gorm:"index" json:"agent_id,string" form:"agent_id"`
 	Type        string    `json:"type" form:"type"`     // deposit, purchase, refund
 	Amount      float64   `json:"amount" form:"amount"` // Positive for deposit, negative for purchase
 	Balance     float64   `json:"balance" form:"balance"` // Balance after transaction

@@ -15,8 +15,9 @@ import {
 import { alpha, useTheme } from '@mui/material/styles';
 import ReactECharts from 'echarts-for-react';
 import { useMemo } from 'react';
-import { useTranslate } from 'react-admin';
+import { useTranslate, useGetIdentity } from 'react-admin';
 import { useApiQuery } from '../hooks/useApiQuery';
+import AgentDashboard from '../dashboard/AgentDashboard';
 
 interface DashboardStats {
   total_users: number;
@@ -69,13 +70,23 @@ const Dashboard = () => {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const translate = useTranslate();
+  const { data: identity, isLoading: identityLoading } = useGetIdentity();
+
   const { data: statsPayload, isFetching } = useApiQuery<DashboardStats>({
     path: '/dashboard/stats',
     queryKey: ['dashboard', 'stats'],
     staleTime: 60 * 1000,
     refetchInterval: 60 * 1000,
     retry: 1,
+    enabled: identity?.level !== 'agent', // Only fetch if not an agent
   });
+
+  if (identityLoading) return <LinearProgress />;
+
+  // Render specialized dashboard for agents
+  if (identity?.level === 'agent') {
+    return <AgentDashboard />;
+  }
 
   const stats = statsPayload ?? emptyStats;
 
@@ -314,8 +325,8 @@ const Dashboard = () => {
         sx={{
           borderRadius: 4,
           overflow: 'hidden',
-          background: isDark 
-            ? 'linear-gradient(135deg, #1e293b, #334155)' 
+          background: isDark
+            ? 'linear-gradient(135deg, #1e293b, #334155)'
             : 'linear-gradient(135deg, #eef2ff, #fdf2f8)',
           border: `1px solid ${isDark ? 'rgba(148, 163, 184, 0.1)' : 'rgba(255, 255, 255, 0.6)'}`,
         }}

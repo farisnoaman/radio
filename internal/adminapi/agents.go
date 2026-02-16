@@ -32,19 +32,27 @@ func ListAgents(c echo.Context) error {
 	}
 
 	var total int64
-	var agents []domain.SysOpr
+	var agents []struct {
+		domain.SysOpr
+		Balance float64 `json:"balance"`
+	}
 
-	// Filter only agents
-	query := db.Model(&domain.SysOpr{}).Where("level = ?", "agent")
+	// Filter only agents and join with wallet
+	query := db.Table("sys_opr").
+		Select("sys_opr.*, COALESCE(agent_wallet.balance, 0) as balance").
+		Joins("LEFT JOIN agent_wallet ON sys_opr.id = agent_wallet.agent_id").
+		Where("sys_opr.level = ?", "agent")
 
 	if name := strings.TrimSpace(c.QueryParam("name")); name != "" {
-		query = query.Where("username LIKE ? OR realname LIKE ?", "%"+name+"%", "%"+name+"%")
+		query = query.Where("sys_opr.username LIKE ? OR sys_opr.realname LIKE ?", "%"+name+"%", "%"+name+"%")
 	}
 
 	query.Count(&total)
 
-	offset := (page - 1) * perPage
-	query.Order("id DESC").Limit(perPage).Offset(offset).Find(&agents)
+	err := query.Offset((page - 1) * perPage).Limit(perPage).Order("sys_opr.id DESC").Find(&agents).Error
+	if err != nil {
+		return fail(c, http.StatusInternalServerError, "QUERY_FAILED", "Failed to query agents", err.Error())
+	}
 
 	return paged(c, agents, total, page, perPage)
 }
@@ -98,7 +106,7 @@ func TopupAgent(c echo.Context) error {
 
 	// 2. Update Balance
 	newBalance := wallet.Balance + req.Amount
-	if err := tx.Model(&wallet).Update("balance", newBalance).Error; err != nil {
+	if err := tx.Model(&domain.AgentWallet{}).Where("agent_id = ?", id).Updates(map[string]interface{}{"balance": newBalance, "updated_at": time.Now()}).Error; err != nil {
 		tx.Rollback()
 		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "Failed to update balance", err.Error())
 	}
@@ -235,4 +243,5 @@ func registerAgentRoutes() {
 	webserver.ApiPOST("/agents", CreateAgent)
 	webserver.ApiPOST("/agents/:id/topup", TopupAgent)
 	webserver.ApiGET("/agents/:id/wallet", GetAgentWallet)
+	webserver.ApiGET("/agents/:id/stats", GetAgentStats)
 }

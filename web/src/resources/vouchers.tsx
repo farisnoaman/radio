@@ -169,7 +169,7 @@ const VoucherBatchInputs = () => {
             if (u.level === 'agent') {
                 httpClient(`/agents/${u.id}/wallet`)
                     .then(({ json }) => {
-                        setBalance(json.balance);
+                        setBalance(json.data.balance);
                     })
                     .catch(() => {
                         notify('Failed to fetch wallet balance', { type: 'warning' });
@@ -180,7 +180,7 @@ const VoucherBatchInputs = () => {
 
     React.useEffect(() => {
         if (user?.level === 'agent' && product && balance !== null) {
-            const price = product.price || 0;
+            const price = product.cost_price || product.price || 0;
             if (price > 0) {
                 const max = Math.floor(balance / price);
                 setValue('count', max);
@@ -189,8 +189,9 @@ const VoucherBatchInputs = () => {
         }
     }, [product, balance, user, setValue, notify]);
 
-    const maxAffordable = (user?.level === 'agent' && product && balance !== null)
-        ? Math.floor(balance / (product.price || 1))
+    const effectivePrice = product ? (product.cost_price || product.price || 0) : 0;
+    const maxAffordable = (user?.level === 'agent' && effectivePrice > 0 && balance !== null)
+        ? Math.floor(balance / effectivePrice)
         : null;
 
     return (
@@ -207,10 +208,10 @@ const VoucherBatchInputs = () => {
             )}
 
             {user?.level === 'agent' && balance !== null && (
-                <Box mb={2} p={1} bgcolor="background.default" borderRadius={1}>
+                <Box mb={2} p={1} bgcolor="background.default" borderRadius={1} border="1px solid #e0e0e0">
                     Available Balance: <strong>{balance.toFixed(2)}</strong>
                     {product && (
-                        <span> | Product Price: <strong>{product.price}</strong> | Max Affordable: <strong>{maxAffordable}</strong></span>
+                        <span> | Agent Cost: <strong>{effectivePrice}</strong> | Max Affordable: <strong>{maxAffordable}</strong></span>
                     )}
                 </Box>
             )}

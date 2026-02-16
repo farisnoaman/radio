@@ -50,7 +50,18 @@ func ListVoucherBatches(c echo.Context) error {
 	var total int64
 	var batches []domain.VoucherBatch
 
+	// Permission check
+	currentUser, err := resolveOperatorFromContext(c)
+	if err != nil {
+		return fail(c, http.StatusUnauthorized, "UNAUTHORIZED", "Authentication failed", err.Error())
+	}
+
 	query := db.Model(&domain.VoucherBatch{})
+
+	// Filter by agent: Agents can only see their own batches
+	if currentUser.Level == "agent" {
+		query = query.Where("agent_id = ?", currentUser.ID)
+	}
 
 	// Filter by name
 	if name := strings.TrimSpace(c.QueryParam("name")); name != "" {
@@ -204,7 +215,11 @@ func CreateVoucherBatch(c echo.Context) error {
 	// Agent Wallet Logic
 	if agentID > 0 {
 		finalCost = product.CostPrice * float64(req.Count)
-		
+		// Fallback to retail price if cost price is not set
+		if finalCost <= 0 && product.Price > 0 {
+			finalCost = product.Price * float64(req.Count)
+		}
+
 		var wallet domain.AgentWallet
 		if err := tx.Set("gorm:query_option", "FOR UPDATE").FirstOrCreate(&wallet, domain.AgentWallet{AgentID: agentID}).Error; err != nil {
 			tx.Rollback()
@@ -218,7 +233,7 @@ func CreateVoucherBatch(c echo.Context) error {
 
 		// Deduct Balance
 		newBalance := wallet.Balance - finalCost
-		if err := tx.Model(&wallet).Update("balance", newBalance).Error; err != nil {
+		if err := tx.Model(&domain.AgentWallet{}).Where("agent_id = ?", agentID).Updates(map[string]interface{}{"balance": newBalance, "updated_at": time.Now()}).Error; err != nil {
 			tx.Rollback()
 			return fail(c, http.StatusInternalServerError, "WALLET_UPDATE_FAILED", "Failed to update balance", err.Error())
 		}
@@ -479,7 +494,8 @@ func ExportVoucherBatch(c echo.Context) error {
 		return fail(c, http.StatusInternalServerError, "EXPORT_FAILED", "Failed to find vouchers", err.Error())
 	}
 
-	filename := fmt.Sprintf("%s-%s-%d.csv", batch.Name, product.Name, batch.Count)
+	nowStr := time.Now().Format("02012006")
+	filename := fmt.Sprintf("%s-%s-%d-%s.csv", batch.Name, product.Name, batch.Count, nowStr)
 	// Sanitize filename to prevent header injection or invalid characters
 	filename = strings.ReplaceAll(filename, " ", "_")
 	
