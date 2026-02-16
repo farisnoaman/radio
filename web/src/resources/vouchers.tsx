@@ -29,6 +29,8 @@ import DownloadIcon from '@mui/icons-material/Download';
 import ToggleOnIcon from '@mui/icons-material/ToggleOn';
 import ToggleOffIcon from '@mui/icons-material/ToggleOff';
 import DeleteIcon from '@mui/icons-material/Delete';
+import RestoreIcon from '@mui/icons-material/Restore';
+import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import { Link } from 'react-router-dom';
 
 import { httpClient } from '../utils/apiClient';
@@ -48,8 +50,9 @@ const BatchActions = ({ label }: { label?: string }) => {
             await httpClient(`/voucher-batches/${record.id}/${action}`, { method: 'POST' });
             notify(`Batch ${action}ed successfully`, { type: 'success' });
             refresh();
-        } catch (error) {
-            notify(`Failed to ${action} batch`, { type: 'error' });
+        } catch (error: any) {
+            const msg = error?.json?.msg || error?.message || `Failed to ${action} batch`;
+            notify(msg, { type: 'error' });
         }
     };
 
@@ -103,6 +106,10 @@ const BatchActions = ({ label }: { label?: string }) => {
         }
     };
 
+    const userStr = localStorage.getItem('user');
+    const user = userStr ? JSON.parse(userStr) : null;
+    const isAdmin = user && user.level !== 'agent';
+
     return (
         <Box display="flex">
             <Button
@@ -114,20 +121,47 @@ const BatchActions = ({ label }: { label?: string }) => {
             >
                 <VisibilityIcon />
             </Button>
-            <Button label="Download" size="small" onClick={handleDownload}>
-                <DownloadIcon />
-            </Button>
-            <Button label="Activate" size="small" onClick={() => handleAction('activate')} color="primary">
-                <ToggleOnIcon />
-            </Button>
-            <Button label="Deactivate" size="small" onClick={() => handleAction('deactivate')} color="warning">
-                <ToggleOffIcon />
-            </Button>
-            <Button label="Delete" size="small" onClick={handleDelete} color="error">
-                <DeleteIcon />
-            </Button>
+            {!record.is_deleted && (
+                <>
+                    <Button label="Download" size="small" onClick={handleDownload}>
+                        <DownloadIcon />
+                    </Button>
+                    <Button label="Activate" size="small" onClick={() => handleAction('activate')} color="primary">
+                        <ToggleOnIcon />
+                    </Button>
+                    <Button label="Deactivate" size="small" onClick={() => handleAction('deactivate')} color="warning">
+                        <ToggleOffIcon />
+                    </Button>
+                    <Button label="Delete" size="small" onClick={handleDelete} color="error">
+                        <DeleteIcon />
+                    </Button>
+                </>
+            )}
+            {record.is_deleted && isAdmin && (
+                <>
+                    <Button label="Restore" size="small" onClick={() => handleAction('restore')} color="primary">
+                        <RestoreIcon />
+                    </Button>
+                    {record.agent_id && record.agent_id !== "0" && (
+                        <Button label="Refund Unused" size="small" onClick={() => handleAction('refund')} color="success">
+                            <CurrencyExchangeIcon />
+                        </Button>
+                    )}
+                </>
+            )}
         </Box>
     );
+};
+
+import { Chip } from '@mui/material';
+
+const StatusField = () => {
+    const record = useRecordContext();
+    if (!record) return null;
+    if (record.is_deleted) {
+        return <Chip label="Deleted" color="error" size="small" variant="outlined" />;
+    }
+    return <Chip label="Active" color="success" size="small" variant="outlined" />;
 };
 
 export const VoucherBatchList = (props: ListProps) => (
@@ -142,7 +176,7 @@ export const VoucherBatchList = (props: ListProps) => (
                 <TextField source="realname" />
             </ReferenceField>
             <TextField source="count" />
-            <TextField source="prefix" />
+            <StatusField />
             <DateField source="expire_time" showTime label="Expiry Time" />
             <DateField source="created_at" showTime />
             <BatchActions label="Actions" />
