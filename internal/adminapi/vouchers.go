@@ -149,7 +149,7 @@ func generateVoucherCode(length int, charType string) string {
 		mixed   = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	)
 
-	charset := mixed
+	var charset string
 	switch charType {
 	case "number":
 		charset = numbers
