@@ -80,6 +80,7 @@ import {
   AgentList,
   AgentCreate,
 } from './resources/agents';
+import { SystemLogList } from './resources/systemLogs';
 
 const App = () => (
   <Admin
@@ -181,6 +182,12 @@ const App = () => (
       name="agents"
       list={AgentList}
       create={AgentCreate}
+    />
+
+    {/* System Logs */}
+    <Resource
+      name="system/logs"
+      list={SystemLogList}
     />
 
     {/* 自定义路由 */}

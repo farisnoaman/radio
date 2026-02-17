@@ -66,7 +66,12 @@ func loginHandler(c echo.Context) error {
 		GetDB(c).Model(&domain.SysOpr{}).Where("id = ?", id).Update("last_login", time.Now())
 	}(operator.ID)
 
+	// Mask password
 	operator.Password = ""
+	
+	// Log login
+	LogOperation(c, "operator_login", "Operator "+operator.Username+" logged in")
+
 	return ok(c, map[string]interface{}{
 		"token":        token,
 		"user":         operator,

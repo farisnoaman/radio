@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/talkincode/toughradius/v9/internal/domain"
 )
 
 func parsePagination(c echo.Context) (int, int) {
@@ -59,4 +60,38 @@ func parseTimeInput(value string, fallback time.Time) (time.Time, error) {
 		}
 	}
 	return time.Time{}, errors.New("invalid time format")
+}
+
+
+func clientIP(c echo.Context) string {
+	ip := c.Request().Header.Get(echo.HeaderXRealIP)
+	if ip == "" {
+		ip = c.Request().Header.Get(echo.HeaderXForwardedFor)
+	}
+	if ip == "" {
+		ip = c.Request().RemoteAddr
+	}
+	return ip
+}
+
+// LogOperation logs an administrative action
+func LogOperation(c echo.Context, action string, desc string) {
+	opr, err := resolveOperatorFromContext(c)
+	oprName := "system"
+	if err == nil && opr != nil {
+		oprName = opr.Username
+	}
+
+	log := domain.SysOprLog{
+		OprName:   oprName,
+		OprIp:     clientIP(c),
+		OptAction: action,
+		OptDesc:   desc,
+		OptTime:   time.Now(),
+	}
+
+	// Use a separate goroutine to avoid blocking the request
+	go func() {
+		GetDB(c).Create(&log)
+	}()
 }

@@ -21,4 +21,5 @@ func Init(appCtx app.AppContext) {
 	registerVoucherRoutes()
 	registerAgentRoutes()
 	registerFinancialRoutes()
+	registerSystemLogRoutes()
 }
