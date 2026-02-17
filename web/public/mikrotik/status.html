@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connection Status - $(identity)</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-dark: #1e40af;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --bg-light: #f3f4f6;
+            --white: #ffffff;
+            --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background: var(--bg-light);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #1f2937;
+        }
+
+        .status-card {
+            background: var(--white);
+            width: 100%;
+            max-width: 420px;
+            border-radius: 20px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+            margin: 20px;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            padding: 2rem;
+            text-align: center;
+            color: var(--white);
+        }
+
+        .user-avatar {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        .welcome-text {
+            font-size: 1.5rem;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .username {
+            font-size: 1rem;
+            opacity: 0.9;
+            margin-top: 0.5rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            padding: 20px;
+        }
+
+        .stat-item {
+            background: #f9fafb;
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid #e5e7eb;
+        }
+
+        .stat-item i {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: #6b7280;
+            display: block;
+            margin-bottom: 5px;
+        }
+
+        .stat-value {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #111827;
+        }
+
+        .progress-section {
+            padding: 0 20px 20px;
+        }
+
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+        }
+
+        .progress-bar {
+            height: 10px;
+            background: #e5e7eb;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: var(--success);
+            width: 0%;
+            /* Will be set by JS if logic allows */
+        }
+
+        .actions {
+            padding: 20px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            transition: opacity 0.2s;
+        }
+
+        .btn:hover {
+            opacity: 0.9;
+        }
+
+        .btn-logout {
+            background: #fee2e2;
+            color: var(--danger);
+        }
+
+        .btn-refresh {
+            background: #dbeafe;
+            color: var(--primary);
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="status-card">
+        <div class="header">
+            <div class="user-avatar">
+                <i class="fas fa-user-circle"></i>
+            </div>
+            <h1 class="welcome-text">Connected!</h1>
+            <div class="username">$(username)</div>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-item">
+                <i class="fas fa-clock" style="color: var(--primary)"></i>
+                <span class="stat-label">Time Connected</span>
+                <span class="stat-value">$(uptime)</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-stopwatch" style="color: var(--warning)"></i>
+                <span class="stat-label">Time Left</span>
+                <span class="stat-value">$(session-time-left)</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-arrow-down" style="color: var(--success)"></i>
+                <span class="stat-label">Downloaded</span>
+                <span class="stat-value">$(bytes-out-nice)</span>
+            </div>
+            <div class="stat-item">
+                <i class="fas fa-arrow-up" style="color: var(--danger)"></i>
+                <span class="stat-label">Uploaded</span>
+                <span class="stat-value">$(bytes-in-nice)</span>
+            </div>
+        </div>
+
+        <!-- Only show if session-time-left is available and not empty -->
+        <div class="progress-section" id="timeProgress" style="display: none;">
+            <div class="progress-label">
+                <span>Session Validity</span>
+                <span id="timeLeftLabel">$(session-time-left)</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 100%"></div> <!-- Simplified: just a visual bar -->
+            </div>
+        </div>
+
+        <script>
+            // Simple logic to show progress bar only if session-time-left is real
+            const timeLeft = "$(session-time-left)";
+            if (timeLeft && timeLeft !== "" && timeLeft.indexOf("unlimited") === -1) {
+                document.getElementById('timeProgress').style.display = 'block';
+            }
+        </script>
+
+        <form action="$(link-logout)" name="logout" onSubmit="return openLogout()">
+            <div class="actions">
+                <button type="button" class="btn btn-refresh" onclick="location.reload()">
+                    <i class="fas fa-sync-alt"></i> Refresh
+                </button>
+                <button type="submit" class="btn btn-logout">
+                    <i class="fas fa-power-off"></i> Logout
+                </button>
+            </div>
+        </form>
+    </div>
+
+</body>
+
+</html>

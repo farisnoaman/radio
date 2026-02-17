@@ -15,6 +15,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"go.uber.org/zap"
+	"golang.org/x/time/rate"
 )
 
 // ListVoucherBatches retrieves the voucher batch list
@@ -326,6 +327,12 @@ type VoucherRedeemRequest struct {
 	Code string `json:"code" validate:"required"`
 }
 
+// VoucherExtendRequest - add time to voucher
+type VoucherExtendRequest struct {
+	Code         string `json:"code" validate:"required"`
+	ValidityDays int    `json:"validity_days" validate:"required,min=1,max=365"`
+}
+
 // RedeemVoucher activates a voucher and creates a Radius user
 // @Summary redeem a voucher
 // @Tags Voucher
@@ -421,6 +428,90 @@ func RedeemVoucher(c echo.Context) error {
 	tx.Commit()
 
 	return ok(c, user)
+}
+
+// ExtendVoucher adds time to a used voucher by extending the associated user's expiration.
+// It retrieves the voucher, validates it's in "used" status, finds the associated RadiusUser,
+// extends the user's expiration time by the specified days, and logs the extension.
+//
+// Parameters:
+//   - Code: The voucher code to extend
+//   - ValidityDays: Number of days to add (1-365)
+//
+// Returns:
+//   - Success: Extended user object with updated expiration
+//   - Error: Voucher not found, not used, or user not found
+//
+// Authorization: Admin only (check current_operator level)
+func ExtendVoucher(c echo.Context) error {
+	var req VoucherExtendRequest
+	if err := c.Bind(&req); err != nil {
+		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse request", err.Error())
+	}
+	if err := c.Validate(&req); err != nil {
+		return err
+	}
+
+	tx := GetDB(c).Begin()
+
+	// 1. Find voucher by code
+	var voucher domain.Voucher
+	if err := tx.Set("gorm:query_option", "FOR UPDATE").Where("code = ?", req.Code).First(&voucher).Error; err != nil {
+		tx.Rollback()
+		return fail(c, http.StatusNotFound, "VOUCHER_NOT_FOUND", "Voucher code not found", nil)
+	}
+
+	// 2. Verify voucher status is "used"
+	if voucher.Status != "used" {
+		tx.Rollback()
+		return fail(c, http.StatusConflict, "INVALID_STATUS", "Voucher must be in 'used' status to extend", nil)
+	}
+
+	// 3. Find associated RadiusUser
+	var user domain.RadiusUser
+	if err := tx.Set("gorm:query_option", "FOR UPDATE").Where("username = ?", voucher.Code).First(&user).Error; err != nil {
+		tx.Rollback()
+		return fail(c, http.StatusNotFound, "USER_NOT_FOUND", "Associated user not found", err.Error())
+	}
+
+	// 4. Calculate new expiration time
+	now := time.Now()
+	var currentExpire time.Time
+
+	// If user already expired, count from now; otherwise extend from current expiration
+	if user.ExpireTime.Before(now) {
+		currentExpire = now
+	} else {
+		currentExpire = user.ExpireTime
+	}
+
+	newExpire := currentExpire.Add(time.Duration(req.ValidityDays) * 24 * time.Hour)
+
+	// 5. Update user's ExpireTime
+	if err := tx.Model(&domain.RadiusUser{}).Where("id = ?", user.ID).Update("expire_time", newExpire).Error; err != nil {
+		tx.Rollback()
+		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "Failed to extend user expiration", err.Error())
+	}
+
+	// 6. Update voucher extension tracking
+	voucher.ExtendedCount++
+	voucher.LastExtendedAt = now
+	if err := tx.Save(&voucher).Error; err != nil {
+		tx.Rollback()
+		return fail(c, http.StatusInternalServerError, "VOUCHER_UPDATE_FAILED", "Failed to update voucher extension count", err.Error())
+	}
+
+	tx.Commit()
+
+	// Return updated user
+	user.ExpireTime = newExpire
+	return ok(c, map[string]interface{}{
+		"voucher":       voucher,
+		"user":          user,
+		"old_expire":    currentExpire,
+		"new_expire":    newExpire,
+		"days_added":    req.ValidityDays,
+	})
 }
 
 // BulkActivateVouchers activates all vouchers in a batch
@@ -644,5 +735,6 @@ func registerVoucherRoutes() {
 	webserver.ApiPOST("/voucher-batches/:id/restore", RestoreVoucherBatch)
 	webserver.ApiPOST("/voucher-batches/:id/refund", RefundUnusedVouchers)
 	webserver.ApiGET("/voucher-batches/:id/export", ExportVoucherBatch)
-	webserver.ApiPOST("/vouchers/redeem", RedeemVoucher)
+	webserver.ApiPOST("/vouchers/redeem", RedeemVoucher, webserver.RateLimitMiddleware(rate.Limit(5.0/60.0), 5))
+	webserver.ApiPOST("/vouchers/extend", ExtendVoucher)
 }

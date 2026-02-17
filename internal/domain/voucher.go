@@ -33,6 +33,8 @@ type Voucher struct {
 	Price          float64   `json:"price" form:"price"`
 	ActivatedAt    time.Time `json:"activated_at"`
 	ExpireTime     time.Time `json:"expire_time"`
+	ExtendedCount  int       `json:"extended_count"`     // Times extended
+	LastExtendedAt time.Time `json:"last_extended_at"`  // Last extension timestamp
 	IsDeleted      bool      `json:"is_deleted" gorm:"default:false"`
 	CreatedAt      time.Time `json:"created_at"`
 	UpdatedAt      time.Time `json:"updated_at"`

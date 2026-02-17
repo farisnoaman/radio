@@ -34,6 +34,8 @@ import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import { Link } from 'react-router-dom';
 
 import { httpClient } from '../utils/apiClient';
+import VoucherPrintDialog from '../components/VoucherPrintDialog';
+import PrintIcon from '@mui/icons-material/Print';
 
 // --- Voucher Batch ---
 
@@ -110,6 +112,9 @@ const BatchActions = () => {
     const user = userStr ? JSON.parse(userStr) : null;
     const isAdmin = user && user.level !== 'agent';
 
+    const [printOpen, setPrintOpen] = useState(false);
+    const { data: product } = useGetOne('products', { id: record.product_id });
+
     return (
         <Box display="flex">
             <Button
@@ -125,6 +130,9 @@ const BatchActions = () => {
                 <>
                     <Button label="Download" size="small" onClick={handleDownload}>
                         <DownloadIcon />
+                    </Button>
+                    <Button label="Print" size="small" onClick={() => setPrintOpen(true)}>
+                        <PrintIcon />
                     </Button>
                     <Button label="Activate" size="small" onClick={() => handleAction('activate')} color="primary">
                         <ToggleOnIcon />
@@ -148,6 +156,17 @@ const BatchActions = () => {
                         </Button>
                     )}
                 </>
+            )}
+            {printOpen && (
+                <VoucherPrintDialog
+                    open={printOpen}
+                    onClose={() => setPrintOpen(false)}
+                    batchId={record.id}
+                    batchName={record.name}
+                    productName={product ? product.name : ''}
+                    productColor={product ? product.color : '#000000'}
+                    productValidity={product ? product.validity_seconds : 0}
+                />
             )}
         </Box>
     );

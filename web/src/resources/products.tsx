@@ -23,6 +23,8 @@ import {
     CreateProps,
     EditProps,
 } from 'react-admin';
+import { useFormContext } from 'react-hook-form';
+import React from 'react';
 import { Box } from '@mui/material';
 
 const ProductTitle = () => {
@@ -68,6 +70,63 @@ export const ProductShow = (props: ShowProps) => (
     </Show>
 );
 
+const ValidityInput = () => {
+    const { setValue, getValues } = useFormContext();
+    // Default to 'days' unless value is small (e.g. < 1 hour)
+    const currentSeconds = getValues('validity_seconds') || 0;
+    const initialUnit = currentSeconds > 0 && currentSeconds % 86400 === 0 ? 'days' :
+        currentSeconds > 0 && currentSeconds % 3600 === 0 ? 'hours' : 'minutes';
+
+    // Calculate initial value based on unit
+    const initialValue = initialUnit === 'days' ? currentSeconds / 86400 :
+        initialUnit === 'hours' ? currentSeconds / 3600 :
+            currentSeconds / 60;
+
+    const [unit, setUnit] = React.useState(initialUnit);
+    const [val, setVal] = React.useState(initialValue > 0 ? initialValue : 30); // Default 30
+
+    // Effect to update the actual source field when unit or val changes
+    React.useEffect(() => {
+        let multiplier = 60;
+        if (unit === 'hours') multiplier = 3600;
+        if (unit === 'days') multiplier = 86400;
+
+        setValue('validity_seconds', val * multiplier);
+    }, [unit, val, setValue]);
+
+    return (
+        <Box display="flex" width="100%" gap={2}>
+            <Box flex={1}>
+                <NumberInput
+                    source="validity_value_virtual" // Virtual field
+                    label="Validity Duration"
+                    value={val}
+                    onChange={(e) => setVal(Number(e.target.value))}
+                    defaultValue={30}
+                    fullWidth
+                />
+            </Box>
+            <Box width="150px">
+                <SelectInput
+                    source="validity_unit_virtual" // Virtual field
+                    label="Unit"
+                    choices={[
+                        { id: 'minutes', name: 'Minutes' },
+                        { id: 'hours', name: 'Hours' },
+                        { id: 'days', name: 'Days' },
+                    ]}
+                    value={unit}
+                    onChange={(e) => setUnit(e.target.value)}
+                    defaultValue="days"
+                    fullWidth
+                    disableValue="validity_seconds" // Don't submit this field directly if not needed, but react-admin might send it. It's fine.
+                />
+            </Box>
+            <NumberInput source="validity_seconds" style={{ display: 'none' }} />
+        </Box>
+    );
+};
+
 export const ProductCreate = (props: CreateProps) => (
     <Create {...props}>
         <SimpleForm>
@@ -83,7 +142,14 @@ export const ProductCreate = (props: CreateProps) => (
                     <NumberInput source="cost_price" validate={[required()]} fullWidth />
                 </Box>
             </Box>
-            <NumberInput source="validity_seconds" defaultValue={2592000} fullWidth helperText="30 days = 2592000 seconds" />
+            <Box display={{ xs: 'block', sm: 'flex', width: '100%' }}>
+                <Box flex={1} mr={{ xs: 0, sm: '0.5em' }}>
+                    <TextInput source="color" type="color" fullWidth label="Product Color" defaultValue="#1976d2" />
+                </Box>
+                <Box flex={1} ml={{ xs: 0, sm: '0.5em' }}>
+                    <ValidityInput />
+                </Box>
+            </Box>
             <SelectInput source="status" choices={[
                 { id: 'enabled', name: 'Enabled' },
                 { id: 'disabled', name: 'Disabled' },
@@ -109,7 +175,14 @@ export const ProductEdit = (props: EditProps) => (
                     <NumberInput source="cost_price" validate={[required()]} fullWidth />
                 </Box>
             </Box>
-            <NumberInput source="validity_seconds" fullWidth />
+            <Box display={{ xs: 'block', sm: 'flex', width: '100%' }}>
+                <Box flex={1} mr={{ xs: 0, sm: '0.5em' }}>
+                    <TextInput source="color" type="color" fullWidth label="Product Color" />
+                </Box>
+                <Box flex={1} ml={{ xs: 0, sm: '0.5em' }}>
+                    <ValidityInput />
+                </Box>
+            </Box>
             <SelectInput source="status" choices={[
                 { id: 'enabled', name: 'Enabled' },
                 { id: 'disabled', name: 'Disabled' },
