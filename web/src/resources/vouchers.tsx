@@ -22,7 +22,7 @@ import {
     DateTimeInput,
     useGetOne,
 } from 'react-admin';
-import { Box, Dialog, DialogTitle, DialogContent, DialogActions, TextField as MuiTextField, Button as MuiButton } from '@mui/material';
+import { Box, Dialog, DialogTitle, DialogContent, DialogActions, /* TextField as MuiTextField, */ Button as MuiButton } from '@mui/material';
 import RedeemIcon from '@mui/icons-material/Redeem';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -37,7 +37,7 @@ import { httpClient } from '../utils/apiClient';
 
 // --- Voucher Batch ---
 
-const BatchActions = ({ label }: { label?: string }) => {
+const BatchActions = () => {
     const record = useRecordContext();
     const notify = useNotify();
     const refresh = useRefresh();
@@ -179,7 +179,7 @@ export const VoucherBatchList = (props: ListProps) => (
             <StatusField />
             <DateField source="expire_time" showTime label="Expiry Time" />
             <DateField source="created_at" showTime />
-            <BatchActions label="Actions" />
+            <BatchActions />
         </Datagrid>
     </List>
 );
