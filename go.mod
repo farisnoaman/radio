@@ -11,7 +11,7 @@ require (
 	github.com/golang-jwt/jwt/v4 v4.5.2
 	github.com/google/uuid v1.6.0
 	github.com/labstack/echo-jwt/v4 v4.3.1
-	github.com/labstack/echo/v4 v4.13.4
+	github.com/labstack/echo/v4 v4.15.0
 	github.com/labstack/gommon v0.4.2
 	github.com/panjf2000/ants/v2 v2.11.3
 	github.com/pkg/errors v0.9.1
@@ -71,7 +71,7 @@ require (
 	github.com/valyala/fasttemplate v1.2.2 // indirect
 	github.com/yusufpapurcu/wmi v1.2.4 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
-	golang.org/x/net v0.47.0 // indirect
+	golang.org/x/net v0.48.0 // indirect
 	golang.org/x/sys v0.40.0 // indirect
 	golang.org/x/time v0.14.0 // indirect
 )
