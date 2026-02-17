@@ -142,9 +142,16 @@ func ListOnlineSessions(c echo.Context) error {
 	}
 
 	query.Count(&total)
+	if err := query.Error; err != nil {
+		zap.L().Error("sessions: failed to count sessions", zap.Error(err))
+		return fail(c, http.StatusInternalServerError, "DB_ERROR", "Failed to count sessions", err)
+	}
 
 	offset := (page - 1) * perPage
-	query.Order(sortField + " " + order).Limit(perPage).Offset(offset).Find(&sessions)
+	if err := query.Order(sortField + " " + order).Limit(perPage).Offset(offset).Find(&sessions).Error; err != nil {
+		zap.L().Error("sessions: failed to query sessions", zap.Error(err))
+		return fail(c, http.StatusInternalServerError, "DB_ERROR", "Failed to query sessions", err)
+	}
 
 	return paged(c, sessions, total, page, perPage)
 }

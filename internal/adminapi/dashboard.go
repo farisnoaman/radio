@@ -2,6 +2,7 @@ package adminapi
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 
 	"github.com/labstack/echo/v4"
@@ -68,41 +69,84 @@ func GetDashboardStats(c echo.Context) error {
 	stats := &DashboardStats{}
 
 	// 1. Total users
-	db.Model(&domain.RadiusUser{}).Count(&stats.TotalUsers)
+	if err := db.Model(&domain.RadiusUser{}).Count(&stats.TotalUsers).Error; err != nil {
+		zap.L().Error("dashboard: failed to count total users", zap.Error(err))
+		return fail(c, http.StatusInternalServerError, "DB_ERROR", "Failed to get user count", err)
+	}
 
 	// 2. Online users
-	db.Model(&domain.RadiusOnline{}).Count(&stats.OnlineUsers)
+	if err := db.Model(&domain.RadiusOnline{}).Count(&stats.OnlineUsers).Error; err != nil {
+		zap.L().Error("dashboard: failed to count online users", zap.Error(err))
+		return fail(c, http.StatusInternalServerError, "DB_ERROR", "Failed to get online user count", err)
+	}
 
 	// 3. Total profiles
-	db.Model(&domain.RadiusProfile{}).Count(&stats.TotalProfiles)
+	if err := db.Model(&domain.RadiusProfile{}).Count(&stats.TotalProfiles).Error; err != nil {
+		zap.L().Error("dashboard: failed to count profiles", zap.Error(err))
+		return fail(c, http.StatusInternalServerError, "DB_ERROR", "Failed to get profile count", err)
+	}
 
 	// 4. Disabled users
-	db.Model(&domain.RadiusUser{}).Where("status = ?", "disabled").Count(&stats.DisabledUsers)
+	if err := db.Model(&domain.RadiusUser{}).Where("status = ?", "disabled").Count(&stats.DisabledUsers).Error; err != nil {
+		zap.L().Error("dashboard: failed to count disabled users", zap.Error(err))
+		return fail(c, http.StatusInternalServerError, "DB_ERROR", "Failed to get disabled user count", err)
+	}
 
 	// 5. Expired users
-	db.Model(&domain.RadiusUser{}).Where("expire_time < ?", now).Count(&stats.ExpiredUsers)
+	if err := db.Model(&domain.RadiusUser{}).Where("expire_time < ?", now).Count(&stats.ExpiredUsers).Error; err != nil {
+		zap.L().Error("dashboard: failed to count expired users", zap.Error(err))
+		return fail(c, http.StatusInternalServerError, "DB_ERROR", "Failed to get expired user count", err)
+	}
 
 	// 6. Today's authentication count (estimated from today's new online sessions)
-	db.Model(&domain.RadiusOnline{}).Where("acct_start_time >= ?", todayStart).Count(&stats.TodayAuthCount)
+	if err := db.Model(&domain.RadiusOnline{}).Where("acct_start_time >= ?", todayStart).Count(&stats.TodayAuthCount).Error; err != nil {
+		zap.L().Error("dashboard: failed to count today's auth", zap.Error(err))
+		return fail(c, http.StatusInternalServerError, "DB_ERROR", "Failed to get today's auth count", err)
+	}
 
 	// 7. Today's accounting record count
-	db.Model(&domain.RadiusAccounting{}).Where("acct_start_time >= ?", todayStart).Count(&stats.TodayAcctCount)
+	if err := db.Model(&domain.RadiusAccounting{}).Where("acct_start_time >= ?", todayStart).Count(&stats.TodayAcctCount).Error; err != nil {
+		zap.L().Error("dashboard: failed to count today's accounting", zap.Error(err))
+		return fail(c, http.StatusInternalServerError, "DB_ERROR", "Failed to get today's accounting count", err)
+	}
 
 	// 8. Today's traffic statistics (bytes to GB)
 	var flowStats struct {
 		TotalInput  int64
 		TotalOutput int64
 	}
-	db.Model(&domain.RadiusAccounting{}).
+	if err := db.Model(&domain.RadiusAccounting{}).
 		Select("COALESCE(SUM(acct_input_total), 0) as total_input, COALESCE(SUM(acct_output_total), 0) as total_output").
 		Where("acct_start_time >= ?", todayStart).
-		Scan(&flowStats)
+		Scan(&flowStats).Error; err != nil {
+		zap.L().Error("dashboard: failed to get traffic stats", zap.Error(err))
+		return fail(c, http.StatusInternalServerError, "DB_ERROR", "Failed to get traffic statistics", err)
+	}
 
 	stats.TodayInputGB = float64(flowStats.TotalInput) / bytesInGB
 	stats.TodayOutputGB = float64(flowStats.TotalOutput) / bytesInGB
-	stats.AuthTrend = fetchAuthTrend(db, now)
-	stats.Traffic24h = fetchTrafficStats(db, now)
-	stats.ProfileDistribution = fetchProfileDistribution(db)
+
+	// Fetch additional stats
+	authTrend, err := fetchAuthTrend(db, now)
+	if err != nil {
+		zap.L().Error("dashboard: failed to fetch auth trend", zap.Error(err))
+		return fail(c, http.StatusInternalServerError, "DB_ERROR", "Failed to get auth trend", err)
+	}
+	stats.AuthTrend = authTrend
+
+	trafficStats, err := fetchTrafficStats(db, now)
+	if err != nil {
+		zap.L().Error("dashboard: failed to fetch traffic stats", zap.Error(err))
+		return fail(c, http.StatusInternalServerError, "DB_ERROR", "Failed to get traffic stats", err)
+	}
+	stats.Traffic24h = trafficStats
+
+	profileDist, err := fetchProfileDistribution(db)
+	if err != nil {
+		zap.L().Error("dashboard: failed to fetch profile distribution", zap.Error(err))
+		return fail(c, http.StatusInternalServerError, "DB_ERROR", "Failed to get profile distribution", err)
+	}
+	stats.ProfileDistribution = profileDist
 
 	return ok(c, stats)
 }
@@ -112,7 +156,7 @@ func registerDashboardRoutes() {
 	webserver.ApiGET("/dashboard/stats", GetDashboardStats)
 }
 
-func fetchAuthTrend(db *gorm.DB, now time.Time) []DashboardAuthTrendPoint {
+func fetchAuthTrend(db *gorm.DB, now time.Time) ([]DashboardAuthTrendPoint, error) {
 	const days = 7
 	result := make([]DashboardAuthTrendPoint, days)
 	seriesEnd := startOfDay(now).Add(24 * time.Hour)
@@ -128,7 +172,7 @@ func fetchAuthTrend(db *gorm.DB, now time.Time) []DashboardAuthTrendPoint {
 		Group("bucket").
 		Order("bucket").
 		Scan(&rows).Error; err != nil {
-		logDashboardQueryError("fetch auth trend", err)
+		return nil, fmt.Errorf("auth trend query failed: %w", err)
 	}
 	counts := make(map[string]int64, len(rows))
 	for _, row := range rows {
@@ -142,10 +186,10 @@ func fetchAuthTrend(db *gorm.DB, now time.Time) []DashboardAuthTrendPoint {
 			Count: counts[key],
 		}
 	}
-	return result
+	return result, nil
 }
 
-func fetchTrafficStats(db *gorm.DB, now time.Time) []DashboardTrafficPoint {
+func fetchTrafficStats(db *gorm.DB, now time.Time) ([]DashboardTrafficPoint, error) {
 	const hours = 24
 	result := make([]DashboardTrafficPoint, hours)
 	hourEnd := startOfHour(now).Add(time.Hour)
@@ -162,7 +206,7 @@ func fetchTrafficStats(db *gorm.DB, now time.Time) []DashboardTrafficPoint {
 		Group("bucket").
 		Order("bucket").
 		Scan(&rows).Error; err != nil {
-		logDashboardQueryError("fetch traffic stats", err)
+		return nil, fmt.Errorf("traffic stats query failed: %w", err)
 	}
 	lookup := make(map[string]struct {
 		Upload   float64
@@ -183,10 +227,10 @@ func fetchTrafficStats(db *gorm.DB, now time.Time) []DashboardTrafficPoint {
 		}
 		result[i] = DashboardTrafficPoint{Hour: key, UploadGB: 0, DownloadGB: 0}
 	}
-	return result
+	return result, nil
 }
 
-func fetchProfileDistribution(db *gorm.DB) []DashboardProfileSlice {
+func fetchProfileDistribution(db *gorm.DB) ([]DashboardProfileSlice, error) {
 	var rows []struct {
 		ProfileID   int64
 		ProfileName string
@@ -202,7 +246,7 @@ func fetchProfileDistribution(db *gorm.DB) []DashboardProfileSlice {
 		Group("profile_id, profile_name").
 		Order("count DESC").
 		Scan(&rows).Error; err != nil {
-		logDashboardQueryError("fetch profile distribution", err)
+		return nil, fmt.Errorf("profile distribution query failed: %w", err)
 	}
 	result := make([]DashboardProfileSlice, 0, len(rows))
 	for _, row := range rows {
@@ -212,7 +256,7 @@ func fetchProfileDistribution(db *gorm.DB) []DashboardProfileSlice {
 			Value:       row.Count,
 		})
 	}
-	return result
+	return result, nil
 }
 
 func dateBucketExpression(db *gorm.DB, field, granularity string) string {
@@ -243,14 +287,4 @@ func startOfDay(t time.Time) time.Time {
 func startOfHour(t time.Time) time.Time {
 	loc := t.Location()
 	return time.Date(t.Year(), t.Month(), t.Day(), t.Hour(), 0, 0, 0, loc)
-}
-
-func logDashboardQueryError(action string, err error) {
-	if err == nil {
-		return
-	}
-	zap.L().Warn("dashboard query failed",
-		zap.Error(err),
-		zap.String("action", action),
-		zap.String("namespace", "adminapi"))
 }
