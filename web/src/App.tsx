@@ -80,6 +80,10 @@ import {
   AgentList,
   AgentCreate,
 } from './resources/agents';
+import {
+  VoucherBundleList,
+  VoucherBundleCreate,
+} from './resources/voucherBundles';
 import { SystemLogList } from './resources/systemLogs';
 
 const App = () => (
@@ -175,6 +179,12 @@ const App = () => (
     <Resource
       name="vouchers"
       list={VoucherList}
+    />
+
+    <Resource
+      name="voucher-bundles"
+      list={VoucherBundleList}
+      create={VoucherBundleCreate}
     />
 
     {/* Agents */}

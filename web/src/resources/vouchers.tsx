@@ -21,8 +21,10 @@ import {
     useRecordContext,
     DateTimeInput,
     useGetOne,
+    FunctionField,
+    BooleanInput,
 } from 'react-admin';
-import { Box, Dialog, DialogTitle, DialogContent, DialogActions, Button as MuiButton } from '@mui/material';
+import { Box, Dialog, DialogTitle, DialogContent, DialogActions, Button as MuiButton, Typography } from '@mui/material';
 import RedeemIcon from '@mui/icons-material/Redeem';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -35,7 +37,9 @@ import { Link } from 'react-router-dom';
 
 import { httpClient } from '../utils/apiClient';
 import VoucherPrintDialog from '../components/VoucherPrintDialog';
+import VoucherTransferDialog from '../components/VoucherTransferDialog';
 import PrintIcon from '@mui/icons-material/Print';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 
 // --- Voucher Batch ---
 
@@ -113,6 +117,7 @@ const BatchActions = () => {
     const isAdmin = user && user.level !== 'agent';
 
     const [printOpen, setPrintOpen] = useState(false);
+    const [transferOpen, setTransferOpen] = useState(false);
     const { data: product } = useGetOne('products', { id: record.product_id });
 
     return (
@@ -122,7 +127,7 @@ const BatchActions = () => {
                 size="small"
                 component={Link}
                 to={`/vouchers?filter=${JSON.stringify({ batch_id: record.id })}`}
-                onClick={(e) => e.stopPropagation()}
+                onClick={(e: any) => e.stopPropagation()}
             >
                 <VisibilityIcon />
             </Button>
@@ -139,6 +144,9 @@ const BatchActions = () => {
                     </Button>
                     <Button label="Deactivate" size="small" onClick={() => handleAction('deactivate')} color="warning">
                         <ToggleOffIcon />
+                    </Button>
+                    <Button label="Transfer" size="small" onClick={() => setTransferOpen(true)} color="secondary">
+                        <SwapHorizIcon />
                     </Button>
                     <Button label="Delete" size="small" onClick={handleDelete} color="error">
                         <DeleteIcon />
@@ -166,6 +174,14 @@ const BatchActions = () => {
                     productName={product ? product.name : ''}
                     productColor={product ? product.color : '#000000'}
                     productValidity={product ? product.validity_seconds : 0}
+                />
+            )}
+            {transferOpen && (
+                <VoucherTransferDialog
+                    open={transferOpen}
+                    onClose={() => setTransferOpen(false)}
+                    batchId={record.id}
+                    batchName={record.name}
                 />
             )}
         </Box>
@@ -304,6 +320,34 @@ const VoucherBatchInputs = () => {
                     <TextInput source="remark" multiline fullWidth />
                 </Box>
             </Box>
+
+            <Box mt={2}>
+                <Typography variant="h6" gutterBottom>Advanced Options</Typography>
+                <Box display={{ xs: 'block', sm: 'flex', width: '100%' }}>
+                    <Box flex={1} mr={{ xs: 0, sm: '0.5em' }}>
+                        <BooleanInput source="generate_pin" label="Generate PIN for Vouchers" defaultValue={false} />
+                    </Box>
+                    <Box flex={1} ml={{ xs: 0, sm: '0.5em' }}>
+                        <SelectInput source="expiration_type" choices={[
+                            { id: 'fixed', name: 'Fixed (From creation)' },
+                            { id: 'first_use', name: 'First-Use (From activation)' },
+                        ]} defaultValue="fixed" fullWidth />
+                    </Box>
+                </Box>
+
+                <Box display={{ xs: 'block', sm: 'flex', width: '100%' }}>
+                    <Box flex={1} mr={{ xs: 0, sm: '0.5em' }}>
+                        {useWatch({ control, name: 'generate_pin' }) && (
+                            <NumberInput source="pin_length" label="PIN Length" defaultValue={4} min={4} max={8} fullWidth />
+                        )}
+                    </Box>
+                    <Box flex={1} ml={{ xs: 0, sm: '0.5em' }}>
+                        {useWatch({ control, name: 'expiration_type' }) === 'first_use' && (
+                            <NumberInput source="validity_days" label="Validity Days" defaultValue={30} min={1} fullWidth />
+                        )}
+                    </Box>
+                </Box>
+            </Box>
         </>
     );
 };
@@ -384,6 +428,7 @@ export const VoucherList = (props: ListProps) => (
                 <TextField source="name" />
             </ReferenceField>
             <TextField source="price" />
+            <FunctionField label="PIN" render={(record: any) => record.require_pin ? (record.pin_view ? record.pin : '****') : 'N/A'} />
             <RedeemButton />
             <DateField source="expire_time" showTime />
             <DateField source="created_at" showTime />

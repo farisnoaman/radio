@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/talkincode/toughradius/v9/internal/domain"
 )
@@ -73,4 +74,16 @@ type NasRepository interface {
 
 	// GetByIPOrIdentifier finds a NAS by IP or identifier
 	GetByIPOrIdentifier(ctx context.Context, ip, identifier string) (*domain.NetNas, error)
+}
+
+// VoucherRepository manages vouchers
+type VoucherRepository interface {
+	// GetByCode finds a voucher by code
+	GetByCode(ctx context.Context, code string) (*domain.Voucher, error)
+
+	// UpdateFirstUsedAt updates the first used time and expire time
+	UpdateFirstUsedAt(ctx context.Context, code string, firstUsedAt, expireTime time.Time) error
+
+	// GetBatchByID finds a voucher batch by ID
+	GetBatchByID(ctx context.Context, batchID int64) (*domain.VoucherBatch, error)
 }

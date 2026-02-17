@@ -1,6 +1,7 @@
 package app
 
 import (
+	"fmt"
 	"os"
 	"time"
 
@@ -35,12 +36,135 @@ func (a *Application) initJob() {
 			Where("opt_time < ? ", time.Now().
 				Add(-time.Hour*24*365)).Delete(domain.SysOprLog{})
 	})
+	if err != nil {
+		zap.S().Errorf("init job error %s", err.Error())
+	}
 
+	_, err = a.sched.AddFunc("@every 1m", func() {
+		go a.SchedSubscriptionRenewalTask()
+	})
 	if err != nil {
 		zap.S().Errorf("init job error %s", err.Error())
 	}
 
 	a.sched.Start()
+}
+
+// SchedSubscriptionRenewalTask processes auto-renewals for active subscriptions
+func (a *Application) SchedSubscriptionRenewalTask() {
+	defer func() {
+		if err := recover(); err != nil {
+			zap.S().Error(err)
+		}
+	}()
+
+	var subs []domain.VoucherSubscription
+	now := time.Now()
+	// Find active subscriptions due for renewal
+	err := a.gormDB.Where("status = ? AND auto_renew = ? AND next_renewal_at <= ? AND is_deleted = ?",
+		"active", true, now, false).Find(&subs).Error
+	if err != nil {
+		zap.S().Errorf("Failed to fetch subscriptions for renewal: %v", err)
+		return
+	}
+
+	for _, sub := range subs {
+		a.processSubscriptionRenewal(sub)
+	}
+}
+
+func (a *Application) processSubscriptionRenewal(sub domain.VoucherSubscription) {
+	tx := a.gormDB.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
+	// 1. Get Voucher and verify it's active
+	var voucher domain.Voucher
+	if err := tx.Set("gorm:query_option", "FOR UPDATE").Where("code = ?", sub.VoucherCode).First(&voucher).Error; err != nil {
+		tx.Rollback()
+		zap.S().Errorf("Subscription renewal failed: Voucher %s not found", sub.VoucherCode)
+		return
+	}
+
+	if voucher.Status != "active" {
+		tx.Rollback()
+		return // Only renew active vouchers
+	}
+
+	// 2. Get Product price
+	var product domain.Product
+	if err := tx.First(&product, sub.ProductID).Error; err != nil {
+		tx.Rollback()
+		zap.S().Errorf("Subscription renewal failed: Product %d not found", sub.ProductID)
+		return
+	}
+
+	// 3. Handle Wallet deduction if agent-owned
+	if sub.AgentID > 0 {
+		var wallet domain.AgentWallet
+		if err := tx.Set("gorm:query_option", "FOR UPDATE").FirstOrCreate(&wallet, domain.AgentWallet{AgentID: sub.AgentID}).Error; err != nil {
+			tx.Rollback()
+			return
+		}
+
+		price := product.CostPrice
+		if price <= 0 {
+			price = product.Price
+		}
+
+		if wallet.Balance < price {
+			tx.Rollback()
+			zap.S().Warnf("Subscription renewal skipped: Insufficient balance for Agent %d", sub.AgentID)
+			return
+		}
+
+		// Deduct balance
+		wallet.Balance -= price
+		if err := tx.Save(&wallet).Error; err != nil {
+			tx.Rollback()
+			return
+		}
+
+		// Log transaction
+		tx.Create(&domain.WalletLog{
+			AgentID:     sub.AgentID,
+			Type:        "purchase",
+			Amount:      -price,
+			Balance:     wallet.Balance,
+			ReferenceID: fmt.Sprintf("sub-%d", sub.ID),
+			Remark:      fmt.Sprintf("Subscription renewal for voucher %s", voucher.Code),
+			CreatedAt:   time.Now(),
+		})
+	}
+
+	// 4. Extend RadiusUser expiry
+	var user domain.RadiusUser
+	if err := tx.Where("username = ?", voucher.Code).First(&user).Error; err == nil {
+		newExpire := user.ExpireTime.Add(time.Duration(sub.IntervalDays) * 24 * time.Hour)
+		if err := tx.Model(&user).Update("expire_time", newExpire).Error; err != nil {
+			tx.Rollback()
+			return
+		}
+		// Also update voucher expiry if it exists
+		if !voucher.ExpireTime.IsZero() {
+			tx.Model(&voucher).Update("expire_time", newExpire)
+		}
+	}
+
+	// 5. Update Subscription status
+	sub.LastRenewalAt = time.Now()
+	sub.NextRenewalAt = sub.NextRenewalAt.Add(time.Duration(sub.IntervalDays) * 24 * time.Hour)
+	sub.RenewalCount++
+	if err := tx.Save(&sub).Error; err != nil {
+		tx.Rollback()
+		return
+	}
+
+	tx.Commit()
+	zap.S().Infof("Voucher subscription renewed: %s, next renewal: %v", sub.VoucherCode, sub.NextRenewalAt)
 }
 
 // SchedSystemMonitorTask system monitor

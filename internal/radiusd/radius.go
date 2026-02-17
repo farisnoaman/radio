@@ -79,6 +79,7 @@ type RadiusService struct {
 	SessionRepo    repository.SessionRepository
 	AccountingRepo repository.AccountingRepository
 	NasRepo        repository.NasRepository
+	VoucherRepo    repository.VoucherRepository
 }
 
 func NewRadiusService(appCtx app.AppContext) *RadiusService {
@@ -104,6 +105,7 @@ func NewRadiusService(appCtx app.AppContext) *RadiusService {
 		SessionRepo:    repogorm.NewGormSessionRepository(db),
 		AccountingRepo: repogorm.NewGormAccountingRepository(db),
 		NasRepo:        repogorm.NewGormNasRepository(db),
+		VoucherRepo:    repogorm.NewGormVoucherRepository(db),
 	}
 
 	// Note: Plugin initialization is done externally after service creation

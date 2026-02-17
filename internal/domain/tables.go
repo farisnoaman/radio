@@ -19,4 +19,8 @@ var Tables = []interface{}{
 	&Voucher{},
 	&AgentWallet{},
 	&WalletLog{},
+	&VoucherTopup{},
+	&VoucherSubscription{},
+	&VoucherBundle{},
+	&VoucherBundleItem{},
 }

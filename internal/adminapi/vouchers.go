@@ -502,10 +502,11 @@ func RedeemVoucher(c echo.Context) error {
 	now := time.Now()
 
 	// Handle first_use expiration type: calculate expiry based on batch validity days
-	var expireTime time.Time
-	if batch.ExpirationType == "first_use" && batch.ValidityDays > 0 {
-		// First-use expiration: expiry is calculated from first login
-		expireTime = now.Add(time.Duration(batch.ValidityDays) * 24 * time.Hour)
+	expireTime := now.AddDate(1, 0, 0) // Default 1 year for first-use
+	if batch.ExpirationType == "first_use" {
+		// First-use expiration: Set to a far future date to allow initial login
+		// The actual expiration will be calculated and set by the FirstUseActivator plugin upon first login
+		expireTime, _ = time.Parse("2006-01-02", "9999-12-31")
 	} else {
 		// Fixed expiration: use product validity or batch expiry
 		if !voucher.ExpireTime.IsZero() {
@@ -643,9 +644,41 @@ func ExtendVoucher(c echo.Context) error {
 }
 
 // BulkActivateVouchers activates all vouchers in a batch
+// BulkActivateVouchers activates all vouchers in a batch
 func BulkActivateVouchers(c echo.Context) error {
 	id := c.Param("id")
-	if err := GetDB(c).Model(&domain.Voucher{}).Where("batch_id = ? AND status = ?", id, "unused").Update("status", "active").Error; err != nil {
+	batchID, _ := strconv.ParseInt(id, 10, 64)
+
+	db := GetDB(c)
+	var batch domain.VoucherBatch
+	if err := db.First(&batch, batchID).Error; err != nil {
+		return fail(c, http.StatusNotFound, "BATCH_NOT_FOUND", "Batch not found", err.Error())
+	}
+
+	var product domain.Product
+	if err := db.First(&product, batch.ProductID).Error; err != nil {
+		return fail(c, http.StatusNotFound, "PRODUCT_NOT_FOUND", "Product not found", err.Error())
+	}
+
+	now := time.Now()
+	updates := map[string]interface{}{
+		"status":       "active",
+		"activated_at": now,
+	}
+
+	// Calculate expiration for fixed type
+	if batch.ExpirationType != "first_use" {
+		if batch.ExpireTime != nil && !batch.ExpireTime.IsZero() {
+			updates["expire_time"] = *batch.ExpireTime
+		} else if product.ValiditySeconds > 0 {
+			updates["expire_time"] = now.Add(time.Duration(product.ValiditySeconds) * time.Second)
+		}
+	} else {
+		// ensure expire_time is zero for first_use
+		updates["expire_time"] = time.Time{}
+	}
+
+	if err := db.Model(&domain.Voucher{}).Where("batch_id = ? AND status = ?", batchID, "unused").Updates(updates).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "Failed to activate vouchers", err.Error())
 	}
 	return ok(c, nil)
@@ -910,6 +943,7 @@ func RefundUnusedVouchers(c echo.Context) error {
 }
 
 // ExportVoucherBatch exports batch vouchers to CSV
+// ExportVoucherBatch exports batch vouchers to CSV
 func ExportVoucherBatch(c echo.Context) error {
 	id := c.Param("id")
 
@@ -930,7 +964,7 @@ func ExportVoucherBatch(c echo.Context) error {
 
 	nowStr := time.Now().Format("02012006")
 	filename := fmt.Sprintf("%s-%s-%d-%s.csv", batch.Name, product.Name, batch.Count, nowStr)
-	// Sanitize filename to prevent header injection or invalid characters
+	// Sanitize filename
 	filename = strings.ReplaceAll(filename, " ", "_")
 
 	c.Response().Header().Set(echo.HeaderContentDisposition, fmt.Sprintf("attachment; filename=%s", filename))
@@ -938,24 +972,47 @@ func ExportVoucherBatch(c echo.Context) error {
 	c.Response().WriteHeader(http.StatusOK)
 
 	writer := csv.NewWriter(c.Response())
-	if err := writer.Write([]string{"ID", "Code", "Status", "Price", "ExpireTime"}); err != nil {
+	defer writer.Flush()
+
+	header := []string{
+		"batch_id", "code", "radius_user", "status", "agent_id", "price",
+		"activated_at", "expire_time", "extended_count", "last_extended_at",
+		"is_deleted", "created_at", "updated_at",
+	}
+
+	if err := writer.Write(header); err != nil {
 		zap.L().Error("Failed to write CSV header", zap.Error(err))
 		return fail(c, http.StatusInternalServerError, "EXPORT_FAILED", "Failed to write CSV header", err.Error())
 	}
+
+	formatTime := func(t time.Time) string {
+		if t.IsZero() {
+			return ""
+		}
+		return t.Format("2006-01-02 15:04:05")
+	}
+
 	for _, v := range vouchers {
 		row := []string{
-			fmt.Sprintf("%d", v.ID),
+			fmt.Sprintf("%d", v.BatchID),
 			v.Code,
+			v.RadiusUsername,
 			v.Status,
+			fmt.Sprintf("%d", v.AgentID),
 			fmt.Sprintf("%.2f", v.Price),
-			v.ExpireTime.Format("2006-01-02 15:04:05"),
+			formatTime(v.ActivatedAt),
+			formatTime(v.ExpireTime),
+			fmt.Sprintf("%d", v.ExtendedCount),
+			formatTime(v.LastExtendedAt),
+			strconv.FormatBool(v.IsDeleted),
+			formatTime(v.CreatedAt),
+			formatTime(v.UpdatedAt),
 		}
 		if err := writer.Write(row); err != nil {
 			zap.L().Error("Failed to write CSV row", zap.Int64("voucher_id", v.ID), zap.Error(err))
 			return fail(c, http.StatusInternalServerError, "EXPORT_FAILED", "Failed to write CSV row", err.Error())
 		}
 	}
-	writer.Flush()
 	return nil
 }
 

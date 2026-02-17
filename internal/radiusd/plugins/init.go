@@ -16,7 +16,13 @@ import (
 
 // InitPlugins initializes all plugins
 // sessionRepo and accountingRepo must be supplied externally to support dependency injection for plugins
-func InitPlugins(appCtx app.ConfigManagerProvider, sessionRepo repository.SessionRepository, accountingRepo repository.AccountingRepository) {
+func InitPlugins(
+	appCtx app.ConfigManagerProvider,
+	sessionRepo repository.SessionRepository,
+	accountingRepo repository.AccountingRepository,
+	voucherRepo repository.VoucherRepository,
+	userRepo repository.UserRepository,
+) {
 	// Register password validators (stateless plugins)
 	registry.RegisterPasswordValidator(&validators.PAPValidator{})
 	registry.RegisterPasswordValidator(&validators.CHAPValidator{})
@@ -31,6 +37,10 @@ func InitPlugins(appCtx app.ConfigManagerProvider, sessionRepo repository.Sessio
 	// Checkers that require dependency injection
 	if sessionRepo != nil {
 		registry.RegisterPolicyChecker(checkers.NewOnlineCountChecker(sessionRepo))
+	}
+
+	if voucherRepo != nil && userRepo != nil {
+		registry.RegisterPolicyChecker(checkers.NewFirstUseActivator(voucherRepo, userRepo))
 	}
 
 	// Register response enhancers
