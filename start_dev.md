@@ -67,3 +67,15 @@ The frontend will be available at `http://localhost:3000`.
 
 - **Username**: `admin`
 - **Password**: `toughradius`
+
+
+## Notes
+
+- Ensure the `toughradius.dev.yml` file is properly configured for your development environment.
+- The script assumes a Unix-like environment. Adjust paths or commands if using Windows.
+
+## Fetch Remote chanes:
+```bash
+git status && git remote -v
+git fetch --all
+git merge upstream/main

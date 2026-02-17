@@ -77,15 +77,40 @@ func NewAdminServer(appCtx app.AppContext) *AdminServer {
 	s.root.Use(ServerRecover(appconfig.System.Debug))
 	// Logging middleware
 	s.root.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
-		LogLatency: true,
-		LogMethod: true,
-		LogURI: true,
+		LogLatency:   true,
+		LogMethod:    true,
+		LogURI:       true,
 		LogUserAgent: true,
-		LogStatus: true,
-		LogError: true,
-		LogRemoteIP: true,
+		LogStatus:    true,
+		LogError:     true,
+		LogRemoteIP:  true,
 		LogRequestID: true,
-		HandleError: true,
+		HandleError:  true,
+		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
+			if v.Error != nil {
+				zap.S().Errorw("request error",
+					"id", v.RequestID,
+					"remote_ip", v.RemoteIP,
+					"method", v.Method,
+					"uri", v.URI,
+					"status", v.Status,
+					"latency", v.Latency,
+					"user_agent", v.UserAgent,
+					"error", v.Error,
+				)
+			} else {
+				zap.S().Infow("request",
+					"id", v.RequestID,
+					"remote_ip", v.RemoteIP,
+					"method", v.Method,
+					"uri", v.URI,
+					"status", v.Status,
+					"latency", v.Latency,
+					"user_agent", v.UserAgent,
+				)
+			}
+			return nil
+		},
 	}))
 	// p := prometheus.NewPrometheus("toughradius", nil)
 	// p.Use(s.root)
