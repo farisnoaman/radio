@@ -150,10 +150,13 @@ func generateVoucherCode(length int, charType string) string {
 	)
 
 	charset := mixed
-	if charType == "number" {
+	switch charType {
+	case "number":
 		charset = numbers
-	} else if charType == "alpha" {
+	case "alpha":
 		charset = alpha
+	default:
+		charset = mixed
 	}
 
 	// Remove confusing characters
@@ -360,12 +363,6 @@ func RedeemVoucher(c echo.Context) error {
 
 	// 2. Get Product and Profile
 	var product domain.Product
-	if err := tx.First(&product, voucher.BatchID).Error; err == nil {
-		// Try finding by Batch's ProductID if relation exists, 
-		// but Voucher model doesn't directly store ProductID, it's on Batch.
-		// Let's get Batch first.
-	}
-	
 	var batch domain.VoucherBatch
 	if err := tx.First(&batch, voucher.BatchID).Error; err != nil {
 		tx.Rollback()
@@ -616,15 +613,22 @@ func ExportVoucherBatch(c echo.Context) error {
 	c.Response().WriteHeader(http.StatusOK)
 
 	writer := csv.NewWriter(c.Response())
-	writer.Write([]string{"ID", "Code", "Status", "Price", "ExpireTime"})
+	if err := writer.Write([]string{"ID", "Code", "Status", "Price", "ExpireTime"}); err != nil {
+		zap.L().Error("Failed to write CSV header", zap.Error(err))
+		return fail(c, http.StatusInternalServerError, "EXPORT_FAILED", "Failed to write CSV header", err.Error())
+	}
 	for _, v := range vouchers {
-		writer.Write([]string{
+		row := []string{
 			fmt.Sprintf("%d", v.ID),
 			v.Code,
 			v.Status,
 			fmt.Sprintf("%.2f", v.Price),
 			v.ExpireTime.Format("2006-01-02 15:04:05"),
-		})
+		}
+		if err := writer.Write(row); err != nil {
+			zap.L().Error("Failed to write CSV row", zap.Int64("voucher_id", v.ID), zap.Error(err))
+			return fail(c, http.StatusInternalServerError, "EXPORT_FAILED", "Failed to write CSV row", err.Error())
+		}
 	}
 	writer.Flush()
 	return nil
