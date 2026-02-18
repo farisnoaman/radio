@@ -173,10 +173,18 @@ type LogConfig struct {
 //   - TOUGHRADIUS_BACKUP_CRON
 //   - TOUGHRADIUS_BACKUP_MAX_BACKUPS
 type BackupConfig struct {
-	Enabled    bool   `yaml:"enabled" json:"enabled"`
-	Cron       string `yaml:"cron" json:"cron"`
-	MaxBackups int    `yaml:"max_backups" json:"max_backups"`
+	Enabled    bool              `yaml:"enabled" json:"enabled"`
+	Cron       string            `yaml:"cron" json:"cron"`
+	MaxBackups int               `yaml:"max_backups" json:"max_backups"`
+	GoogleDrive GoogleDriveConfig `yaml:"google_drive" json:"google_drive"`
 }
+
+type GoogleDriveConfig struct {
+	Enabled            bool   `yaml:"enabled" json:"enabled"`
+	ServiceAccountJSON string `yaml:"service_account_json" json:"service_account_json"`
+	FolderID           string `yaml:"folder_id" json:"folder_id"`
+}
+
 
 // AppConfig is the root configuration structure for ToughRADIUS.
 //
@@ -197,7 +205,20 @@ type AppConfig struct {
 	Radiusd  RadiusdConfig `yaml:"radiusd" json:"radiusd"`
 	Logger   LogConfig     `yaml:"logger" json:"logger"`
 	Backup   BackupConfig  `yaml:"backup" json:"backup"`
+	Tunnel   TunnelConfig  `yaml:"tunnel" json:"tunnel"`
 }
+
+// TunnelConfig holds the configuration for tunnel services
+type TunnelConfig struct {
+	Enabled       bool   `yaml:"enabled" json:"enabled"`
+	Type          string `yaml:"type" json:"type"` // "reverse_proxy" or "cloudflare"
+	ServerAddr    string `yaml:"server_addr" json:"server_addr"`
+	Token         string `yaml:"token" json:"token"` // Cloudflare Tunnel Token or Auth Token
+	LocalPort     int    `yaml:"local_port" json:"local_port"`
+	RemotePort    int    `yaml:"remote_port" json:"remote_port"`
+	AllowInsecure bool   `yaml:"allow_insecure" json:"allow_insecure"`
+}
+
 
 // GetLogDir returns the full path to the logs directory.
 //
@@ -490,8 +511,19 @@ var DefaultAppConfig = &AppConfig{
 		Enabled:    true,
 		Cron:       "@daily",
 		MaxBackups: 7,
+		GoogleDrive: GoogleDriveConfig{
+			Enabled: false,
+		},
+	},
+
+	Tunnel: TunnelConfig{
+		Enabled:    false,
+		Type:       "cloudflare",
+		LocalPort:  1816,
+		RemotePort: 8080,
 	},
 }
+
 
 // LoadConfig loads application configuration from YAML file and environment variables.
 //
@@ -586,6 +618,18 @@ func LoadConfig(cfile string) *AppConfig {
 	setEnvBoolValue("TOUGHRADIUS_BACKUP_ENABLED", &cfg.Backup.Enabled)
 	setEnvValue("TOUGHRADIUS_BACKUP_CRON", &cfg.Backup.Cron)
 	setEnvIntValue("TOUGHRADIUS_BACKUP_MAX_BACKUPS", &cfg.Backup.MaxBackups)
+	
+	setEnvBoolValue("TOUGHRADIUS_BACKUP_GDRIVE_ENABLED", &cfg.Backup.GoogleDrive.Enabled)
+	setEnvValue("TOUGHRADIUS_BACKUP_GDRIVE_JSON", &cfg.Backup.GoogleDrive.ServiceAccountJSON)
+	setEnvValue("TOUGHRADIUS_BACKUP_GDRIVE_FOLDER", &cfg.Backup.GoogleDrive.FolderID)
+
+
+	setEnvBoolValue("TOUGHRADIUS_TUNNEL_ENABLED", &cfg.Tunnel.Enabled)
+	setEnvValue("TOUGHRADIUS_TUNNEL_TYPE", &cfg.Tunnel.Type)
+	setEnvValue("TOUGHRADIUS_TUNNEL_TOKEN", &cfg.Tunnel.Token)
+
+	return cfg
+
 
 	return cfg
 }

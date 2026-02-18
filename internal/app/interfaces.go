@@ -5,7 +5,10 @@ import (
 	"github.com/talkincode/toughradius/v9/config"
 	"github.com/talkincode/toughradius/v9/internal/app/backup"
 	"github.com/talkincode/toughradius/v9/internal/app/maintenance"
+	"github.com/talkincode/toughradius/v9/internal/app/tunnel"
+
 	"github.com/talkincode/toughradius/v9/internal/app/websocket"
+
 
 
 	"gorm.io/gorm"
@@ -62,4 +65,6 @@ type AppContext interface {
 
 	BackupMgr() backup.BackupManager
 	WsHub() *websocket.Hub
+	TunnelMgr() tunnel.TunnelManager
 }
+

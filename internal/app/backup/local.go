@@ -17,13 +17,25 @@ import (
 type LocalBackupManager struct {
 	cfg       *config.AppConfig
 	backupDir string
+	gdrive    *GoogleDriveProvider
 }
 
 func NewLocalBackupManager(cfg *config.AppConfig) *LocalBackupManager {
-	return &LocalBackupManager{
+	mgr := &LocalBackupManager{
 		cfg:       cfg,
 		backupDir: cfg.GetBackupDir(),
 	}
+
+	if cfg.Backup.GoogleDrive.Enabled {
+		provider, err := NewGoogleDriveProvider(cfg.Backup.GoogleDrive.ServiceAccountJSON, cfg.Backup.GoogleDrive.FolderID)
+		if err != nil {
+			zap.S().Errorf("Failed to initialize Google Drive provider: %v", err)
+		} else {
+			mgr.gdrive = provider
+		}
+	}
+
+	return mgr
 }
 
 func (m *LocalBackupManager) CreateBackup() (string, error) {
@@ -43,6 +55,18 @@ func (m *LocalBackupManager) CreateBackup() (string, error) {
 
 	if err != nil {
 		return "", err
+	}
+
+	// Upload to Google Drive if enabled
+	if m.gdrive != nil {
+		go func() {
+			fullPath := filepath.Join(m.backupDir, filename)
+			if err := m.gdrive.Upload(fullPath); err != nil {
+				zap.S().Errorf("Failed to upload backup to Google Drive: %v", err)
+			} else {
+				zap.S().Infof("Uploaded backup to Google Drive: %s", filename)
+			}
+		}()
 	}
 
 	return filename, nil

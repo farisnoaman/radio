@@ -1,17 +1,17 @@
 package adminapi
 
 import (
-	"crypto/rand"
 	"encoding/csv"
 	"fmt"
-	"math/big"
 	"net/http"
+
 	"strconv"
 	"strings"
 	"time"
 
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
+
 
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
@@ -153,60 +153,8 @@ type VoucherBatchRequest struct {
 	ValidityDays   int    `json:"validity_days" validate:"omitempty,min=1,max=365"` // Days of validity for first_use type
 }
 
-// generatePIN generates a numeric PIN of specified length
-func generatePIN(length int) string {
-	if length < 4 {
-		length = 4
-	}
-	if length > 8 {
-		length = 8
-	}
-	numbers := "0123456789"
-	result := make([]byte, length)
-	maxParam := big.NewInt(int64(len(numbers)))
+// Local generation functions removed in favor of pkg/common
 
-	for i := 0; i < length; i++ {
-		n, _ := rand.Int(rand.Reader, maxParam)
-		result[i] = numbers[n.Int64()]
-	}
-
-	return string(result)
-}
-
-func generateVoucherCode(length int, charType string) string {
-	const (
-		numbers = "0123456789"
-		alpha   = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-		mixed   = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	)
-
-	var charset string
-	switch charType {
-	case "number":
-		charset = numbers
-	case "alpha":
-		charset = alpha
-	default:
-		charset = mixed
-	}
-
-	// Remove confusing characters
-	charset = strings.ReplaceAll(charset, "0", "")
-	charset = strings.ReplaceAll(charset, "O", "")
-	charset = strings.ReplaceAll(charset, "1", "")
-	charset = strings.ReplaceAll(charset, "I", "")
-	charset = strings.ReplaceAll(charset, "l", "")
-
-	result := make([]byte, length)
-	maxParam := big.NewInt(int64(len(charset)))
-
-	for i := 0; i < length; i++ {
-		n, _ := rand.Int(rand.Reader, maxParam)
-		result[i] = charset[n.Int64()]
-	}
-
-	return string(result)
-}
 
 // CreateVoucherBatch generates vouchers
 // @Summary create voucher batch
@@ -344,7 +292,8 @@ func CreateVoucherBatch(c echo.Context) error {
 	}
 
 	for i := 0; i < req.Count; i++ {
-		code := req.Prefix + generateVoucherCode(req.Length, req.Type)
+		code := req.Prefix + common.GenerateVoucherCode(req.Length, req.Type)
+
 
 		voucher := domain.Voucher{
 			BatchID:     batch.ID,
@@ -367,8 +316,9 @@ func CreateVoucherBatch(c echo.Context) error {
 
 		// Generate PIN if required
 		if req.GeneratePIN {
-			voucher.PIN = generatePIN(pinLength)
+			voucher.PIN = common.GeneratePIN(pinLength)
 		}
+
 
 		vouchers = append(vouchers, voucher)
 	}
@@ -1391,7 +1341,8 @@ func generateVouchersForBundle(db *gorm.DB, product domain.Product, bundle domai
 	vouchers := make([]domain.Voucher, 0, count)
 
 	for i := 0; i < count; i++ {
-		code := generateVoucherCode(12, "mixed")
+		code := common.GenerateVoucherCode(12, "mixed")
+
 		voucher := domain.Voucher{
 			BatchID:    bundle.ID, // Link to bundle
 			Code:       code,

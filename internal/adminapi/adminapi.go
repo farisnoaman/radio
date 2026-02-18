@@ -27,4 +27,10 @@ func Init(appCtx app.AppContext) {
 	registerWebsocketRoutes()
 	registerPrivacyRoutes()
 	registerTopologyRoutes()
+	registerTunnelRoutes()
+	registerAnalyticsRoutes()
+	registerCampaignRoutes()
 }
+
+
+

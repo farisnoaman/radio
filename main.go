@@ -94,7 +94,8 @@ func main() {
 	defer radiusService.Release()
 
 	// Initialize plugin system after RadiusService is created
-	plugins.InitPlugins(application, radiusService.SessionRepo, radiusService.AccountingRepo, radiusService.VoucherRepo, radiusService.UserRepo)
+	plugins.InitPlugins(application, application.DB(), radiusService.SessionRepo, radiusService.AccountingRepo, radiusService.VoucherRepo, radiusService.UserRepo)
+
 
 	// Start RADIUS Auth server
 	g.Go(func() error {

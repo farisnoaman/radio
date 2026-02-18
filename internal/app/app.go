@@ -11,8 +11,11 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/app/backup"
 	"github.com/talkincode/toughradius/v9/internal/app/logging"
 	"github.com/talkincode/toughradius/v9/internal/app/maintenance"
+	"github.com/talkincode/toughradius/v9/internal/app/tunnel"
+
 	"github.com/talkincode/toughradius/v9/internal/app/websocket"
 	"github.com/talkincode/toughradius/v9/internal/domain"
+
 	"github.com/talkincode/toughradius/v9/pkg/metrics"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
@@ -34,7 +37,9 @@ type Application struct {
 	maintManager  *maintenance.MaintenanceManager
 	wsHub         *websocket.Hub
 	archivalMgr   *logging.ArchivalManager
+	tunnelManager tunnel.TunnelManager
 }
+
 
 // Ensure Application implements all interfaces
 var (
@@ -166,7 +171,19 @@ func (a *Application) Init(cfg *config.AppConfig) {
 	// Initialize Archival Manager
 	a.archivalMgr = logging.NewArchivalManager(a.gormDB, cfg)
 
+	// Initialize Tunnel Manager
+	a.tunnelManager = tunnel.NewTunnelManager(cfg.Tunnel)
+	// Auto-start tunnel if enabled
+	if cfg.Tunnel.Enabled {
+		go func() {
+			if err := a.tunnelManager.StartTunnel(); err != nil {
+				zap.S().Errorf("Failed to auto-start tunnel: %v", err)
+			}
+		}()
+	}
+
 	a.initJob()
+
 }
 
 func (a *Application) MigrateDB(track bool) (err error) {
@@ -257,6 +274,12 @@ func (a *Application) MaintMgr() *maintenance.MaintenanceManager {
 func (a *Application) WsHub() *websocket.Hub {
 	return a.wsHub
 }
+
+// TunnelMgr returns the tunnel manager instance
+func (a *Application) TunnelMgr() tunnel.TunnelManager {
+	return a.tunnelManager
+}
+
 
 // checkDefaultPNode check default node
 func (a *Application) checkDefaultPNode() {

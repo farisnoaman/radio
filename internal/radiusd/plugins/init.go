@@ -18,8 +18,10 @@ import (
 // sessionRepo and accountingRepo must be supplied externally to support dependency injection for plugins
 func InitPlugins(
 	appCtx app.ConfigManagerProvider,
+	db *gorm.DB,
 	sessionRepo repository.SessionRepository,
 	accountingRepo repository.AccountingRepository,
+
 	voucherRepo repository.VoucherRepository,
 	userRepo repository.UserRepository,
 ) {
@@ -67,8 +69,15 @@ func InitPlugins(
 		registry.RegisterAccountingHandler(handlers.NewStartHandler(sessionRepo, accountingRepo))
 		registry.RegisterAccountingHandler(handlers.NewUpdateHandler(sessionRepo))
 		registry.RegisterAccountingHandler(handlers.NewStopHandler(sessionRepo, accountingRepo))
+		registry.RegisterAccountingHandler(handlers.NewStopHandler(sessionRepo, accountingRepo))
 		registry.RegisterAccountingHandler(handlers.NewNasStateHandler(sessionRepo))
+		
+		// Advanced Lifecycle: Session Logging
+		if db != nil {
+			registry.RegisterAccountingHandler(handlers.NewSessionLogHandler(db))
+		}
 	}
+
 
 	// Register EAP handlers
 	registry.RegisterEAPHandler(eaphandlers.NewMD5Handler())

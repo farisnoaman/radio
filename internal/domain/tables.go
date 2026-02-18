@@ -23,4 +23,8 @@ var Tables = []interface{}{
 	&VoucherSubscription{},
 	&VoucherBundle{},
 	&VoucherBundleItem{},
+	// Lifecycle
+	&SessionLog{},
+	&VoucherCampaign{},
 }
+
