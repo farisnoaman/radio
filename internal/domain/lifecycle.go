@@ -25,21 +25,3 @@ type SessionLog struct {
 func (SessionLog) TableName() string {
 	return "tr_session_logs"
 }
-
-// VoucherCampaign manages bulk voucher generation
-type VoucherCampaign struct {
-	ID          int64     `json:"id" gorm:"primaryKey;autoIncrement"`
-	Name        string    `json:"name" gorm:"size:128;not null"`
-	Prefix      string    `json:"prefix" gorm:"size:16"`
-	Length      int       `json:"length"` // Length of code excluding prefix
-	Count       int       `json:"count"`  // Number of vouchers to generate
-	Value       int64     `json:"value"`  // Monetary value
-	PlanId      int64     `json:"plan_id"`
-	Status      string    `json:"status" gorm:"size:16;default:'pending';index"` // pending, generating, completed
-
-	CreatedAt   time.Time `json:"created_at" gorm:"autoCreateTime"`
-}
-
-func (VoucherCampaign) TableName() string {
-	return "tr_voucher_campaigns"
-}

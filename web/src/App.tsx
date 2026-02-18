@@ -88,7 +88,6 @@ import {
   VoucherBundleCreate,
 } from './resources/voucherBundles';
 import { SystemLogList } from './resources/systemLogs';
-import { CampaignList, CampaignCreate } from './resources/campaigns';
 
 const App = () => (
   <Admin
@@ -202,13 +201,6 @@ const App = () => (
     <Resource
       name="system/logs"
       list={SystemLogList}
-    />
-
-    {/* Voucher Campaigns */}
-    <Resource
-      name="campaigns"
-      list={CampaignList}
-      create={CampaignCreate}
     />
 
     {/* 自定义路由 */}

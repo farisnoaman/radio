@@ -1,4 +1,8 @@
 #!/bin/bash
+echo -e "${GREEN}Ensuring No background process from former sessions of ToughRadius Development Environment is running behind...${NC}"
+
+pkill -9 -f "go run main.go" || true && pkill -9 -f "toughradius.dev.yml" || true && pkill -9 -f "vite" || true && ps aux | grep -E "go run main.go|toughradius.dev.yml|vite" | grep -v grep
+ps aux | grep -E "go run main.go|toughradius.dev.yml|vite" | grep -v grep || echo "No processes found"
 
 # Configuration
 CONFIG_FILE="toughradius.dev.yml"
