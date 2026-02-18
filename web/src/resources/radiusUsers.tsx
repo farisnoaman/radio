@@ -32,23 +32,26 @@ import {
   useListContext,
   SortButton,
   RaRecord,
-  FunctionField
+  FunctionField,
+  EditButton,
 } from 'react-admin';
+import UserAnonymizeDialog from '../components/UserAnonymizeDialog';
+import NoAccountsIcon from '@mui/icons-material/NoAccounts';
 import {
   Box,
   Chip,
-  Typography,
-  Paper,
   Card,
   CardContent,
-  Stack,
-  alpha,
-  Avatar,
+  Typography,
   IconButton,
   Tooltip,
-  Skeleton,
-  useTheme,
   useMediaQuery,
+  Paper,
+  alpha,
+  useTheme,
+  Stack,
+  Avatar,
+  Skeleton,
   TextField as MuiTextField
 } from '@mui/material';
 import { Theme } from '@mui/material/styles';
@@ -116,7 +119,7 @@ const formatExpireTime = (expireTime?: string): { text: string; color: 'success'
   const expireDate = new Date(expireTime);
   const now = new Date();
   const diffDays = Math.ceil((expireDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-  
+
   if (diffDays < 0) {
     return { text: `已过期 ${Math.abs(diffDays)} 天`, color: 'error' };
   } else if (diffDays <= 7) {
@@ -147,8 +150,8 @@ const DetailItem = ({ label, value, highlight = false }: DetailItemProps) => (
         highlight
           ? alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.15 : 0.06)
           : theme.palette.mode === 'dark'
-          ? 'rgba(255, 255, 255, 0.02)'
-          : 'rgba(0, 0, 0, 0.02)',
+            ? 'rgba(255, 255, 255, 0.02)'
+            : 'rgba(0, 0, 0, 0.02)',
       border: theme =>
         highlight
           ? `1px solid ${alpha(theme.palette.primary.main, 0.3)}`
@@ -159,8 +162,8 @@ const DetailItem = ({ label, value, highlight = false }: DetailItemProps) => (
           highlight
             ? alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.2 : 0.08)
             : theme.palette.mode === 'dark'
-            ? 'rgba(255, 255, 255, 0.04)'
-            : 'rgba(0, 0, 0, 0.03)',
+              ? 'rgba(255, 255, 255, 0.04)'
+              : 'rgba(0, 0, 0, 0.03)',
       },
     }}
   >
@@ -865,6 +868,35 @@ const UserListActions = () => {
 
 // ============ 内部列表内容组件 ============
 
+const AnonymizeButton = () => {
+  const record = useRecordContext<RadiusUser>();
+  const [open, setOpen] = useState(false);
+
+  if (!record) return null;
+
+  const handleOpen = (e: any) => {
+    e.stopPropagation();
+    setOpen(true);
+  };
+
+  return (
+    <>
+      <Tooltip title="Anonymize User (GDPR)">
+        <IconButton onClick={handleOpen} size="small" color="default">
+          <NoAccountsIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
+      {open && (
+        <UserAnonymizeDialog
+          open={open}
+          onClose={() => setOpen(false)}
+          username={record.username || ''}
+        />
+      )}
+    </>
+  );
+};
+
 const RadiusUserListContent = () => {
   const translate = useTranslate();
   const theme = useTheme();
@@ -1035,6 +1067,14 @@ const RadiusUserListContent = () => {
               source="created_at"
               label={translate('resources.radius/users.fields.created_at', { _: '创建时间' })}
               showTime
+            />
+            <FunctionField
+              render={() => (
+                <Box sx={{ display: 'flex', gap: 1 }}>
+                  <EditButton />
+                  <AnonymizeButton />
+                </Box>
+              )}
             />
           </Datagrid>
         </Box>
@@ -1291,48 +1331,48 @@ export const RadiusUserCreate = () => (
         </FieldGrid>
       </FormSection>
 
-        <FormSection
-          title="联系方式"
-          description="联系信息和地址"
-        >
-          <FieldGrid columns={{ xs: 1, sm: 2 }}>
-            <FieldGridItem>
-              <TextInput
-                source="email"
-                label="邮箱"
-                type="email"
-                validate={[email(), maxLength(100)]}
-                helperText="用于接收通知和找回密码"
-                autoComplete="email"
-                fullWidth
-                size="small"
-              />
-            </FieldGridItem>
-            <FieldGridItem>
-              <TextInput
-                source="mobile"
-                label="手机号"
-                validate={[maxLength(20)]}
-                helperText="手机号码（可选），最多20个字符"
-                autoComplete="tel"
-                fullWidth
-                size="small"
-              />
-            </FieldGridItem>
-            <FieldGridItem span={{ xs: 1, sm: 2 }}>
-              <TextInput
-                source="address"
-                label="地址"
-                multiline
-                minRows={2}
-                helperText="详细地址信息"
-                autoComplete="street-address"
-                fullWidth
-                size="small"
-              />
-            </FieldGridItem>
-          </FieldGrid>
-        </FormSection>
+      <FormSection
+        title="联系方式"
+        description="联系信息和地址"
+      >
+        <FieldGrid columns={{ xs: 1, sm: 2 }}>
+          <FieldGridItem>
+            <TextInput
+              source="email"
+              label="邮箱"
+              type="email"
+              validate={[email(), maxLength(100)]}
+              helperText="用于接收通知和找回密码"
+              autoComplete="email"
+              fullWidth
+              size="small"
+            />
+          </FieldGridItem>
+          <FieldGridItem>
+            <TextInput
+              source="mobile"
+              label="手机号"
+              validate={[maxLength(20)]}
+              helperText="手机号码（可选），最多20个字符"
+              autoComplete="tel"
+              fullWidth
+              size="small"
+            />
+          </FieldGridItem>
+          <FieldGridItem span={{ xs: 1, sm: 2 }}>
+            <TextInput
+              source="address"
+              label="地址"
+              multiline
+              minRows={2}
+              helperText="详细地址信息"
+              autoComplete="street-address"
+              fullWidth
+              size="small"
+            />
+          </FieldGridItem>
+        </FieldGrid>
+      </FormSection>
 
       <FormSection
         title="服务配置"
@@ -1456,8 +1496,8 @@ const UserHeaderCard = () => {
               ? `linear-gradient(135deg, ${alpha(theme.palette.primary.dark, 0.4)} 0%, ${alpha(theme.palette.info.dark, 0.3)} 100%)`
               : `linear-gradient(135deg, ${alpha(theme.palette.grey[800], 0.5)} 0%, ${alpha(theme.palette.grey[700], 0.3)} 100%)`
             : isEnabled
-            ? `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.info.main, 0.08)} 100%)`
-            : `linear-gradient(135deg, ${alpha(theme.palette.grey[400], 0.15)} 0%, ${alpha(theme.palette.grey[300], 0.1)} 100%)`,
+              ? `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.info.main, 0.08)} 100%)`
+              : `linear-gradient(135deg, ${alpha(theme.palette.grey[400], 0.15)} 0%, ${alpha(theme.palette.grey[300], 0.1)} 100%)`,
         border: theme => `1px solid ${alpha(isEnabled ? theme.palette.primary.main : theme.palette.grey[500], 0.2)}`,
         overflow: 'hidden',
         position: 'relative',

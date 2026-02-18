@@ -418,6 +418,37 @@ const RedeemButton = () => {
     );
 };
 
+import VoucherExtensionDialog from '../components/VoucherExtensionDialog';
+import UpdateIcon from '@mui/icons-material/Update';
+
+const ExtendButton = () => {
+    const record = useRecordContext();
+    const [open, setOpen] = useState(false);
+
+    if (!record || (record.status !== 'used' && record.status !== 'expired')) return null;
+
+    const handleOpen = (e: any) => {
+        e.stopPropagation();
+        setOpen(true);
+    };
+
+    return (
+        <>
+            <Button label="Extend" onClick={handleOpen} size="small" color="secondary">
+                <UpdateIcon />
+            </Button>
+            {open && (
+                <VoucherExtensionDialog
+                    open={open}
+                    onClose={() => setOpen(false)}
+                    voucherCode={record.code}
+                    currentExpiry={record.expire_time}
+                />
+            )}
+        </>
+    );
+};
+
 export const VoucherList = (props: ListProps) => (
     <List {...props} sort={{ field: 'id', order: 'DESC' }}>
         <Datagrid>
@@ -430,8 +461,10 @@ export const VoucherList = (props: ListProps) => (
             <TextField source="price" />
             <FunctionField label="PIN" render={(record: any) => record.require_pin ? (record.pin_view ? record.pin : '****') : 'N/A'} />
             <RedeemButton />
+            <ExtendButton />
             <DateField source="expire_time" showTime />
             <DateField source="created_at" showTime />
         </Datagrid>
     </List>
 );
+

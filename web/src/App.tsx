@@ -9,6 +9,8 @@ import AccountSettings from './pages/AccountSettings';
 import { SystemConfigPage } from './pages/SystemConfigPage';
 import FinancialPerformance from './pages/FinancialPerformance';
 import { LoginPage } from './pages/LoginPage';
+import { TunnelSettings } from './pages/Settings/TunnelSettings';
+import { BackupSettings } from './pages/Settings/BackupSettings';
 import { CustomLayout, CustomError } from './components';
 import { theme, darkTheme } from './theme';
 
@@ -85,6 +87,7 @@ import {
   VoucherBundleCreate,
 } from './resources/voucherBundles';
 import { SystemLogList } from './resources/systemLogs';
+import { CampaignList, CampaignCreate } from './resources/campaigns';
 
 const App = () => (
   <Admin
@@ -200,10 +203,19 @@ const App = () => (
       list={SystemLogList}
     />
 
+    {/* Voucher Campaigns */}
+    <Resource
+      name="campaigns"
+      list={CampaignList}
+      create={CampaignCreate}
+    />
+
     {/* 自定义路由 */}
     <CustomRoutes>
       <Route path="/account/settings" element={<AccountSettings />} />
       <Route path="/system/config" element={<SystemConfigPage />} />
+      <Route path="/settings/tunnel" element={<TunnelSettings />} />
+      <Route path="/settings/backup" element={<BackupSettings />} />
       <Route path="/financial/performance" element={<FinancialPerformance />} />
     </CustomRoutes>
   </Admin >

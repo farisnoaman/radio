@@ -14,10 +14,13 @@ import {
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
 import ReactECharts from 'echarts-for-react';
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useTranslate, useGetIdentity } from 'react-admin';
 import { useApiQuery } from '../hooks/useApiQuery';
 import AgentDashboard from '../dashboard/AgentDashboard';
+import { ForecastChart } from '../components/ForecastChart';
+import { useDashboardWebSocket } from '../hooks/useDashboardWebSocket';
+
 
 interface DashboardStats {
   total_users: number;
@@ -72,6 +75,8 @@ const Dashboard = () => {
   const translate = useTranslate();
   const { data: identity, isLoading: identityLoading } = useGetIdentity();
 
+  const [stats, setStats] = useState<DashboardStats>(emptyStats);
+
   const { data: statsPayload, isFetching } = useApiQuery<DashboardStats>({
     path: '/dashboard/stats',
     queryKey: ['dashboard', 'stats'],
@@ -81,6 +86,27 @@ const Dashboard = () => {
     enabled: identity?.level !== 'agent', // Only fetch if not an agent
   });
 
+  useEffect(() => {
+    if (statsPayload) {
+      setStats(statsPayload);
+    }
+  }, [statsPayload]);
+
+  // WebSocket Integration
+  const { realtimeStats } = useDashboardWebSocket();
+  useEffect(() => {
+    if (realtimeStats) {
+      setStats((prev) => ({
+        ...prev,
+        online_users: realtimeStats.online_count ?? prev.online_users,
+        today_input_gb: realtimeStats.today_input_gb ?? prev.today_input_gb,
+        today_output_gb: realtimeStats.today_output_gb ?? prev.today_output_gb,
+        today_auth_count: realtimeStats.today_auth_count ?? prev.today_auth_count,
+        today_acct_count: realtimeStats.today_acct_count ?? prev.today_acct_count,
+      }));
+    }
+  }, [realtimeStats]);
+
   if (identityLoading) return <LinearProgress />;
 
   // Render specialized dashboard for agents
@@ -88,7 +114,7 @@ const Dashboard = () => {
     return <AgentDashboard />;
   }
 
-  const stats = statsPayload ?? emptyStats;
+
 
   const dateFormatter = useMemo(() => new Intl.DateTimeFormat(undefined, { month: 'short', day: 'numeric' }), []);
   const hourFormatter = useMemo(
@@ -478,9 +504,12 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </Grid>
-      </Grid>
+        <Grid item xs={12}>
+          <ForecastChart />
+        </Grid>
+      </Grid >
 
-    </Box>
+    </Box >
   );
 };
 
