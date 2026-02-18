@@ -25,6 +25,7 @@ const resourcePathMap: Record<string, string> = {
   'radius/accounting': 'accounting',
   'radius/profiles': 'radius-profiles',
   'system/config/schemas': 'system/config/schemas',
+  'campaigns': 'system/campaigns',
 };
 
 const resolveResource = (resource: string) =>
@@ -38,7 +39,7 @@ const baseDataProvider = simpleRestProvider(API_BASE, httpClient);
 // 自定义 dataProvider 以适配后端 API 格式
 export const dataProvider: DataProvider = {
   ...baseDataProvider,
-  
+
   getList: async (resource, params) => {
     const { page = 1, perPage = 10 } = params.pagination || {};
     const { field = 'id', order = 'ASC' } = params.sort || {};

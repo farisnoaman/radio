@@ -38,7 +38,7 @@ export const TunnelSettings = () => {
     const [token, setToken] = useState('');
 
     const { data: config, isLoading: configLoading } = useApiQuery<TunnelConfig>({
-        path: '/admin/tunnel/config',
+        path: '/system/tunnel/config',
         queryKey: ['tunnel', 'config'],
     });
 
@@ -49,7 +49,7 @@ export const TunnelSettings = () => {
     }, [config]);
 
     const { data: status, refetch: refetchStatus } = useApiQuery<TunnelStatus>({
-        path: '/admin/tunnel/status',
+        path: '/system/tunnel/status',
         queryKey: ['tunnel', 'status'],
         refetchInterval: 5000,
     });
@@ -57,7 +57,7 @@ export const TunnelSettings = () => {
     const handleSave = async () => {
         setSaving(true);
         try {
-            await httpClient('/admin/tunnel/config', {
+            await httpClient('/system/tunnel/config', {
                 method: 'POST',
                 body: JSON.stringify({ tunnel_type: 'cloudflare', token }),
             });
@@ -73,7 +73,7 @@ export const TunnelSettings = () => {
     const handleRestart = async () => {
         setRestarting(true);
         try {
-            await httpClient('/admin/tunnel/restart', { method: 'POST' });
+            await httpClient('/system/tunnel/restart', { method: 'POST' });
             notify('Tunnel service restart initiated', { type: 'success' });
             refetchStatus();
         } catch (error: any) {

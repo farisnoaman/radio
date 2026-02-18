@@ -86,3 +86,9 @@ func (m *DefaultTunnelManager) UpdateConfig(cfg config.TunnelConfig) error {
 	m.cfg = cfg
 	return nil
 }
+
+func (m *DefaultTunnelManager) GetConfig() config.TunnelConfig {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	return m.cfg
+}

@@ -12,6 +12,9 @@ import SupportAgentOutlinedIcon from '@mui/icons-material/SupportAgentOutlined';
 import ConfirmationNumberOutlinedIcon from '@mui/icons-material/ConfirmationNumberOutlined';
 import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
 import HistoryOutlinedIcon from '@mui/icons-material/HistoryOutlined';
+import CampaignOutlinedIcon from '@mui/icons-material/CampaignOutlined';
+import VpnKeyOutlinedIcon from '@mui/icons-material/VpnKeyOutlined';
+import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
 import { Box, useTheme } from '@mui/material';
 import { MenuItemLink, MenuProps, useGetIdentity, useTranslate } from 'react-admin';
 
@@ -29,6 +32,9 @@ const menuItems = [
   { to: '/products', labelKey: 'Products', icon: <Inventory2OutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/agents', labelKey: 'Agents', icon: <SupportAgentOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/financial/performance', labelKey: 'Financial Performance', icon: <AssessmentOutlinedIcon />, permissions: ['super', 'admin'] },
+  { to: '/campaigns', labelKey: 'Campaigns', icon: <CampaignOutlinedIcon />, permissions: ['super', 'admin'] },
+  { to: '/settings/tunnel', labelKey: 'Tunnel Settings', icon: <VpnKeyOutlinedIcon />, permissions: ['super', 'admin'] },
+  { to: '/settings/backup', labelKey: 'Backup Settings', icon: <CloudUploadOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/voucher-batches', labelKey: 'Vouchers', icon: <ConfirmationNumberOutlinedIcon /> }, // Everyone
 ];
 

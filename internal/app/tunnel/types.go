@@ -36,5 +36,6 @@ type TunnelManager interface {
 	StopTunnel() error
 	GetStatus() (*TunnelStatus, error)
 	UpdateConfig(cfg TunnelConfig) error
+	GetConfig() TunnelConfig
 }
 

@@ -14,9 +14,9 @@ import (
 )
 
 func registerCampaignRoutes() {
-	webserver.ApiGET("/campaigns", ListCampaigns)
-	webserver.ApiPOST("/campaigns", CreateCampaign)
-	webserver.ApiPOST("/campaigns/:id/start", StartCampaign)
+	webserver.ApiGET("/system/campaigns", ListCampaigns)
+	webserver.ApiPOST("/system/campaigns", CreateCampaign)
+	webserver.ApiPOST("/system/campaigns/:id/start", StartCampaign)
 }
 
 // ListCampaigns retrieves the campaign list

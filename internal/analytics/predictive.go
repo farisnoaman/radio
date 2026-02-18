@@ -78,35 +78,67 @@ func (e *PredictiveEngine) Forecast(req PredictionRequest) (*PredictionResult, e
 
 func (e *PredictiveEngine) getTrafficHistory(days int) ([]DataPoint, error) {
 	startDate := time.Now().AddDate(0, 0, -days)
-	_ = startDate // suppress unused error for now
 	var results []struct {
-		Date  string
+		Date  time.Time
 		Total float64
 	}
-	_ = results // suppress unused error for now
 
-
-	// Note: This logic depends on DB dialect. 
-	// Detailed implementation would need to handle "date(start_time)" vs "to_char(start_time...)"
-	// For now, we mock returning some data if table is empty or query complex.
-	
-	// Real implementation:
-	/*
-	err := e.db.Model(&domain.RadiusAccounting{}).
+	// Group by date and sum traffic
+	// Using generic SQL compatible with SQLite/PG for date grouping
+	err := e.db.Table("tr_radius_accountings").
 		Select("date(acct_start_time) as date, sum(acct_input_octets + acct_output_octets) as total").
 		Where("acct_start_time > ?", startDate).
-		Group("date(acct_start_time)").
-		Order("date(acct_start_time)").
+		Group("date").
+		Order("date").
 		Scan(&results).Error
-	*/
-	
-	// Fallback/Mock for initial version to pass tests and run
-	return []DataPoint{}, nil 
+
+	if err != nil {
+		return nil, err
+	}
+
+	dataPoints := make([]DataPoint, len(results))
+	for i, r := range results {
+		dataPoints[i] = DataPoint{
+			Timestamp: r.Date,
+			Value:     r.Total / 1024 / 1024, // MB
+		}
+	}
+	return dataPoints, nil
 }
 
 func (e *PredictiveEngine) getUserHistory(days int) ([]DataPoint, error) {
-	// similar logic for user growth
-	return []DataPoint{}, nil
+	startDate := time.Now().AddDate(0, 0, -days)
+	var results []struct {
+		Date  time.Time
+		Count int64
+	}
+
+	err := e.db.Table("tr_radius_users").
+		Select("date(created_at) as date, count(*) as count").
+		Where("created_at > ?", startDate).
+		Group("date").
+		Order("date").
+		Scan(&results).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	// We need cumulative count for user growth
+	var cumulative int64
+	
+	// Get initial count before startDate
+	e.db.Table("tr_radius_users").Where("created_at <= ?", startDate).Count(&cumulative)
+
+	dataPoints := make([]DataPoint, len(results))
+	for i, r := range results {
+		cumulative += r.Count
+		dataPoints[i] = DataPoint{
+			Timestamp: r.Date,
+			Value:     float64(cumulative),
+		}
+	}
+	return dataPoints, nil
 }
 
 func (e *PredictiveEngine) calculateLinearRegression(history []DataPoint, futureDays int) []DataPoint {

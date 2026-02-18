@@ -31,10 +31,18 @@ interface BackupConfig {
     gdrive_folder_id?: string;
 }
 
+interface BackupItem {
+    id: string;
+    filename: string;
+    size: number;
+    time: string;
+}
+
 export const BackupSettings = () => {
     const notify = useNotify();
     const [saving, setSaving] = useState(false);
     const [testing, setTesting] = useState(false);
+    const [restoring, setRestoring] = useState(false);
     const [config, setConfig] = useState<BackupConfig>({
         provider: 'local',
         retention_days: 7,
@@ -42,22 +50,37 @@ export const BackupSettings = () => {
     });
 
     const { data: remoteConfig, isLoading: configLoading } = useApiQuery<BackupConfig>({
-        path: '/admin/backup/config',
+        path: '/system/settings?type=backup', // Changed to settings
         queryKey: ['backup', 'config'],
     });
 
+    const { data: backups, refetch: refetchBackups } = useApiQuery<BackupItem[]>({
+        path: '/system/backup',
+        queryKey: ['backup', 'list'],
+    });
+
     React.useEffect(() => {
-        if (remoteConfig) {
-            setConfig(remoteConfig);
+        if (remoteConfig && (remoteConfig as any).data) {
+            const data = (remoteConfig as any).data;
+            if (Array.isArray(data)) {
+                const configSetting = data.find((s: any) => s.name === 'config');
+                if (configSetting?.value) {
+                    try {
+                        setConfig(JSON.parse(configSetting.value));
+                    } catch (e) {
+                        console.error("Failed to parse backup config", e);
+                    }
+                }
+            }
         }
     }, [remoteConfig]);
 
     const handleSave = async () => {
         setSaving(true);
         try {
-            await httpClient('/admin/backup/config', {
+            await httpClient('/system/settings', { // Changed to settings
                 method: 'POST',
-                body: JSON.stringify(config),
+                body: JSON.stringify({ type: 'backup', name: 'config', value: JSON.stringify(config) }),
             });
             notify('Backup configuration saved', { type: 'success' });
         } catch (error: any) {
@@ -70,12 +93,30 @@ export const BackupSettings = () => {
     const handleTestUpload = async () => {
         setTesting(true);
         try {
-            await httpClient('/admin/backup/test', { method: 'POST' });
-            notify('Test backup upload initiated successfully', { type: 'success' });
+            await httpClient('/system/backup', { method: 'POST' });
+            notify('Backup created successfully', { type: 'success' });
+            refetchBackups();
         } catch (error: any) {
-            notify(error?.body?.msg || 'Test backup failed', { type: 'error' });
+            notify(error?.body?.msg || 'Backup failed', { type: 'error' });
         } finally {
             setTesting(false);
+        }
+    };
+
+    const handleDownload = (id: string) => {
+        window.open(`/api/v1/system/backup/${id}/download?token=${localStorage.getItem('token')}`, '_blank');
+    };
+
+    const handleRestore = async (id: string) => {
+        if (!window.confirm('Are you sure you want to restore this backup? This will overwrite the current database!')) return;
+        setRestoring(true);
+        try {
+            await httpClient(`/system/backup/${id}/restore`, { method: 'POST' });
+            notify('Database restored successfully', { type: 'success' });
+        } catch (error: any) {
+            notify(error?.body?.msg || 'Restore failed', { type: 'error' });
+        } finally {
+            setRestoring(false);
         }
     };
 
@@ -89,11 +130,12 @@ export const BackupSettings = () => {
                     Backup & Disaster Recovery
                 </Typography>
                 <Typography variant="body1" color="textSecondary">
-                    Configure automated backups to local storage or cloud providers.
+                    Configure automated backups and manage database snapshots.
                 </Typography>
             </Box>
 
             <Stack spacing={3}>
+                {/* Existing Config Cards */}
                 <Card>
                     <CardHeader title="General Settings" />
                     <CardContent>
@@ -180,9 +222,33 @@ export const BackupSettings = () => {
                         onClick={handleTestUpload}
                         disabled={saving || testing}
                     >
-                        {testing ? 'Uploading...' : 'Test Cloud Upload'}
+                        {testing ? 'Creating Backup...' : 'Backup Now'}
                     </Button>
                 </Box>
+
+                {/* Backup List */}
+                <Card>
+                    <CardHeader title="Available Backups" />
+                    <CardContent>
+                        <Stack spacing={2}>
+                            {backups?.map((item) => (
+                                <Box key={item.id} sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', p: 1, borderBottom: '1px solid #eee' }}>
+                                    <Box>
+                                        <Typography variant="subtitle2">{item.filename}</Typography>
+                                        <Typography variant="caption" color="textSecondary">
+                                            {item.time} | {(item.size / 1024 / 1024).toFixed(2)} MB
+                                        </Typography>
+                                    </Box>
+                                    <Stack direction="row" spacing={1}>
+                                        <Button size="small" onClick={() => handleDownload(item.id)}>Download</Button>
+                                        <Button size="small" color="error" onClick={() => handleRestore(item.id)} disabled={restoring}>Restore</Button>
+                                    </Stack>
+                                </Box>
+                            ))}
+                            {(!backups || backups.length === 0) && <Typography variant="body2" color="textSecondary">No backups found.</Typography>}
+                        </Stack>
+                    </CardContent>
+                </Card>
             </Stack>
         </Box>
     );

@@ -11,9 +11,15 @@ import (
 
 func registerTunnelRoutes() {
 	webserver.ApiGET("/system/tunnel/status", GetTunnelStatus)
+	webserver.ApiGET("/system/tunnel/config", GetTunnelConfig)
 	webserver.ApiPOST("/system/tunnel/start", StartTunnel)
 	webserver.ApiPOST("/system/tunnel/stop", StopTunnel)
 	webserver.ApiPOST("/system/tunnel/config", UpdateTunnelConfig)
+}
+
+func GetTunnelConfig(c echo.Context) error {
+	cfg := GetAppContext(c).TunnelMgr().GetConfig()
+	return ok(c, cfg)
 }
 
 func GetTunnelStatus(c echo.Context) error {
