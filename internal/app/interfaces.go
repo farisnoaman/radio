@@ -4,6 +4,7 @@ import (
 	"github.com/robfig/cron/v3"
 	"github.com/talkincode/toughradius/v9/config"
 	"github.com/talkincode/toughradius/v9/internal/app/backup"
+	"github.com/talkincode/toughradius/v9/internal/app/logging"
 	"github.com/talkincode/toughradius/v9/internal/app/maintenance"
 	"github.com/talkincode/toughradius/v9/internal/app/tunnel"
 
@@ -47,6 +48,11 @@ type ProfileCacheProvider interface {
 	ProfileCache() *ProfileCache
 }
 
+// ArchivalProvider provides archival manager access
+type ArchivalProvider interface {
+	ArchivalMgr() *logging.ArchivalManager
+}
+
 // AppContext combines all provider interfaces for full application context
 // Services should depend on specific providers or this combined interface
 type AppContext interface {
@@ -56,6 +62,7 @@ type AppContext interface {
 	SchedulerProvider
 	ConfigManagerProvider
 	ProfileCacheProvider
+	ArchivalProvider
 
 	// Application lifecycle methods
 	MigrateDB(track bool) error

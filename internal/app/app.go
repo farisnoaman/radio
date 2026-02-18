@@ -280,6 +280,11 @@ func (a *Application) TunnelMgr() tunnel.TunnelManager {
 	return a.tunnelManager
 }
 
+// ArchivalMgr returns the archival manager instance
+func (a *Application) ArchivalMgr() *logging.ArchivalManager {
+	return a.archivalMgr
+}
+
 
 // checkDefaultPNode check default node
 func (a *Application) checkDefaultPNode() {

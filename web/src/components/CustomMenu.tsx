@@ -15,6 +15,7 @@ import HistoryOutlinedIcon from '@mui/icons-material/HistoryOutlined';
 import CampaignOutlinedIcon from '@mui/icons-material/CampaignOutlined';
 import VpnKeyOutlinedIcon from '@mui/icons-material/VpnKeyOutlined';
 import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
+import ConstructionIcon from '@mui/icons-material/Construction';
 import { Box, useTheme } from '@mui/material';
 import { MenuItemLink, MenuProps, useGetIdentity, useTranslate } from 'react-admin';
 
@@ -35,6 +36,7 @@ const menuItems = [
   { to: '/campaigns', labelKey: 'Campaigns', icon: <CampaignOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/settings/tunnel', labelKey: 'Tunnel Settings', icon: <VpnKeyOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/settings/backup', labelKey: 'Backup Settings', icon: <CloudUploadOutlinedIcon />, permissions: ['super', 'admin'] },
+  { to: '/system/maintenance', labelKey: 'menu.maintenance', icon: <ConstructionIcon />, permissions: ['super', 'admin'] },
   { to: '/voucher-batches', labelKey: 'Vouchers', icon: <ConfirmationNumberOutlinedIcon /> }, // Everyone
 ];
 

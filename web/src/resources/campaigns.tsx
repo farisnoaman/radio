@@ -29,7 +29,7 @@ const StartCampaignButton = () => {
     const handleStart = async (e: any) => {
         e.stopPropagation();
         try {
-            await httpClient(`/campaigns/${record.id}/start`, { method: 'POST' });
+            await httpClient(`/system/campaigns/${record.id}/start`, { method: 'POST' });
             notify('Campaign started successfully', { type: 'success' });
             refresh();
         } catch (error: any) {

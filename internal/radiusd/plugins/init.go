@@ -12,6 +12,7 @@ import (
 	eaphandlers "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/handlers"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/registry"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/repository"
+	"gorm.io/gorm"
 )
 
 // InitPlugins initializes all plugins

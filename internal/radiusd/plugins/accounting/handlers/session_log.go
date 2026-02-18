@@ -1,7 +1,7 @@
 package handlers
 
 import (
-	"context"
+	"fmt"
 	"time"
 
 	"github.com/talkincode/toughradius/v9/internal/domain"
@@ -58,7 +58,7 @@ func (h *SessionLogHandler) handleStop(ctx *accounting.AccountingContext) error 
 		AcctSessionTime: int(val),
 		AcctInputTotal:  int64(input),
 		AcctOutputTotal: int64(output),
-		TerminateCause:  rfc2866.AcctTerminateCause_GetString(ctx.Request.Packet),
+		TerminateCause:  fmt.Sprintf("%v", rfc2866.AcctTerminateCause_Get(ctx.Request.Packet)),
 	}
 
 	if err := h.DB.Create(&log).Error; err != nil {

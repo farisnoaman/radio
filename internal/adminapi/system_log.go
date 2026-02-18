@@ -1,7 +1,9 @@
 package adminapi
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 	"strings"
 
 	"github.com/labstack/echo/v4"
@@ -11,6 +13,36 @@ import (
 
 func registerSystemLogRoutes() {
 	webserver.ApiGET("/system/logs", ListSystemLogs)
+	webserver.ApiPOST("/system/logs/archive", ArchiveLogs)
+}
+
+func ArchiveLogs(c echo.Context) error {
+	// Permission check
+	currentUser, err := resolveOperatorFromContext(c)
+	if err != nil {
+		return fail(c, http.StatusUnauthorized, "UNAUTHORIZED", "Authentication failed", err.Error())
+	}
+
+	// Only super admin and admin can trigger archival
+	if currentUser.Level != "super" && currentUser.Level != "admin" {
+		return fail(c, http.StatusForbidden, "PERMISSION_DENIED", "Access denied", nil)
+	}
+
+	daysStr := c.QueryParam("days")
+	days, _ := strconv.Atoi(daysStr)
+	if days <= 0 {
+		days = 30 // Default 30 days
+	}
+
+	appCtx := GetAppContext(c)
+	err = appCtx.ArchivalMgr().ArchiveSystemLogs(days)
+	if err != nil {
+		return fail(c, http.StatusInternalServerError, "ARCHIVE_ERROR", "Failed to archive logs", err.Error())
+	}
+
+	return ok(c, map[string]string{
+		"message": fmt.Sprintf("System logs older than %d days archived and compressed successfully", days),
+	})
 }
 
 // ListSystemLogs retrieves the system operation logs

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import ReactECharts from 'echarts-for-react';
 import { Card, CardContent, CardHeader, Typography, Box, CircularProgress, useTheme } from '@mui/material';
 import { useApiQuery } from '../hooks/useApiQuery';

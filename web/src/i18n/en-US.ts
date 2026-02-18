@@ -30,6 +30,7 @@ const customEnglishMessages: TranslationMessages = {
     operators: 'Operators Management',
     system_config: 'System Configuration',
     account_settings: 'Account Settings',
+    maintenance: 'System Maintenance',
   },
   appbar: {
     switch_language: 'Switch Language',
