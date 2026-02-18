@@ -11,6 +11,9 @@ type Product struct {
 	Name            string    `json:"name" form:"name"`
 	Price           float64   `json:"price" form:"price"`                     // Retail price
 	CostPrice       float64   `json:"cost_price" form:"cost_price"`           // Cost to agent
+	UpRate          int       `json:"up_rate" form:"up_rate"`                 // Upload rate in Kbps
+	DownRate        int       `json:"down_rate" form:"down_rate"`             // Download rate in Kbps
+	DataQuota       int64     `json:"data_quota" form:"data_quota"`           // Data quota in MB (0 = unlimited)
 	ValiditySeconds int64     `json:"validity_seconds" form:"validity_seconds"` // Validity duration (0 = unlimited)
 	Status          string    `json:"status" form:"status"`                   // enabled, disabled
 	Color           string    `json:"color" form:"color"`                     // Display color

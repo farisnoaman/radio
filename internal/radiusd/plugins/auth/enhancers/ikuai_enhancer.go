@@ -40,10 +40,11 @@ func (e *IkuaiAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthCon
 	upRate := user.GetUpRate(profileCache)
 	downRate := user.GetDownRate(profileCache)
 
-	up := clampInt64(int64(upRate)*1024*8, math.MaxInt32)
-	down := clampInt64(int64(downRate)*1024*8, math.MaxInt32)
-
-	_ = ikuai.RPUpstreamSpeedLimit_Set(resp, ikuai.RPUpstreamSpeedLimit(up))       //nolint:errcheck,gosec // G115: clamped to MaxInt32
-	_ = ikuai.RPDownstreamSpeedLimit_Set(resp, ikuai.RPDownstreamSpeedLimit(down)) //nolint:errcheck,gosec // G115: clamped to MaxInt32
+	if upRate > 0 || downRate > 0 {
+		up := clampInt64(int64(upRate)*1024*8, math.MaxInt32)
+		down := clampInt64(int64(downRate)*1024*8, math.MaxInt32)
+		_ = ikuai.RPUpstreamSpeedLimit_Set(resp, ikuai.RPUpstreamSpeedLimit(up))       //nolint:errcheck,gosec // G115: clamped to MaxInt32
+		_ = ikuai.RPDownstreamSpeedLimit_Set(resp, ikuai.RPDownstreamSpeedLimit(down)) //nolint:errcheck,gosec // G115: clamped to MaxInt32
+	}
 	return nil
 }

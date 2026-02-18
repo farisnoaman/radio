@@ -18,6 +18,7 @@ import {
     SimpleShowLayout,
     required,
     useRecordContext,
+    useTranslate,
     ListProps,
     ShowProps,
     CreateProps,
@@ -26,6 +27,12 @@ import {
 import { useFormContext } from 'react-hook-form';
 import React from 'react';
 import { Box } from '@mui/material';
+import {
+    FormSection,
+    FieldGrid,
+    FieldGridItem,
+    formLayoutSx,
+} from '../components';
 
 const ProductTitle = () => {
     const record = useRecordContext();
@@ -41,8 +48,9 @@ export const ProductList = (props: ListProps) => (
                 <TextField source="name" />
             </ReferenceField>
             <NumberField source="price" options={{ style: 'currency', currency: 'USD' }} />
-            <NumberField source="cost_price" options={{ style: 'currency', currency: 'USD' }} />
-            <NumberField source="validity_seconds" />
+            <NumberField source="up_rate" label="Up Rate (Kbps)" />
+            <NumberField source="down_rate" label="Down Rate (Kbps)" />
+            <NumberField source="data_quota" label="Quota (MB)" />
             <TextField source="status" />
             <DateField source="updated_at" showTime />
             <EditButton />
@@ -59,9 +67,18 @@ export const ProductShow = (props: ShowProps) => (
             <ReferenceField source="radius_profile_id" reference="radius-profiles">
                 <TextField source="name" />
             </ReferenceField>
-            <NumberField source="price" options={{ style: 'currency', currency: 'USD' }} />
-            <NumberField source="cost_price" options={{ style: 'currency', currency: 'USD' }} />
-            <NumberField source="validity_seconds" />
+            <Box display="flex" gap={2}>
+                <NumberField source="price" options={{ style: 'currency', currency: 'USD' }} />
+                <NumberField source="cost_price" options={{ style: 'currency', currency: 'USD' }} />
+            </Box>
+            <Box display="flex" gap={2}>
+                <NumberField source="up_rate" label="Upload Rate (Kbps)" />
+                <NumberField source="down_rate" label="Download Rate (Kbps)" />
+            </Box>
+            <Box display="flex" gap={2}>
+                <NumberField source="data_quota" label="Data Quota (MB)" />
+                <NumberField source="validity_seconds" label="Validity (Seconds)" />
+            </Box>
             <TextField source="status" />
             <TextField source="remark" />
             <DateField source="created_at" showTime />
@@ -95,8 +112,8 @@ const ValidityInput = () => {
     }, [unit, val, setValue]);
 
     return (
-        <Box display="flex" width="100%" gap={2}>
-            <Box flex={1}>
+        <FieldGrid columns={{ xs: 1, sm: 2 }}>
+            <FieldGridItem>
                 <NumberInput
                     source="validity_value_virtual" // Virtual field
                     label="Validity Duration"
@@ -105,8 +122,8 @@ const ValidityInput = () => {
                     defaultValue={30}
                     fullWidth
                 />
-            </Box>
-            <Box width="150px">
+            </FieldGridItem>
+            <FieldGridItem>
                 <SelectInput
                     source="validity_unit_virtual" // Virtual field
                     label="Unit"
@@ -119,75 +136,218 @@ const ValidityInput = () => {
                     onChange={(e) => setUnit(e.target.value)}
                     defaultValue="days"
                     fullWidth
-                    disableValue="validity_seconds" // Don't submit this field directly if not needed, but react-admin might send it. It's fine.
+                    disableValue="validity_seconds"
                 />
-            </Box>
+            </FieldGridItem>
             <NumberInput source="validity_seconds" style={{ display: 'none' }} />
-        </Box>
+        </FieldGrid>
     );
 };
 
-export const ProductCreate = (props: CreateProps) => (
-    <Create {...props}>
-        <SimpleForm>
-            <TextInput source="name" validate={[required()]} fullWidth />
-            <ReferenceInput source="radius_profile_id" reference="radius-profiles">
-                <SelectInput optionText="name" validate={[required()]} />
-            </ReferenceInput>
-            <Box display={{ xs: 'block', sm: 'flex', width: '100%' }}>
-                <Box flex={1} mr={{ xs: 0, sm: '0.5em' }}>
-                    <NumberInput source="price" validate={[required()]} fullWidth />
-                </Box>
-                <Box flex={1} ml={{ xs: 0, sm: '0.5em' }}>
-                    <NumberInput source="cost_price" validate={[required()]} fullWidth />
-                </Box>
-            </Box>
-            <Box display={{ xs: 'block', sm: 'flex', width: '100%' }}>
-                <Box flex={1} mr={{ xs: 0, sm: '0.5em' }}>
-                    <TextInput source="color" type="color" fullWidth label="Product Color" defaultValue="#1976d2" />
-                </Box>
-                <Box flex={1} ml={{ xs: 0, sm: '0.5em' }}>
-                    <ValidityInput />
-                </Box>
-            </Box>
-            <SelectInput source="status" choices={[
-                { id: 'enabled', name: 'Enabled' },
-                { id: 'disabled', name: 'Disabled' },
-            ]} defaultValue="enabled" fullWidth />
-            <TextInput source="remark" multiline fullWidth />
-        </SimpleForm>
-    </Create>
-);
+const DataQuotaInput = () => {
+    const { setValue, getValues } = useFormContext();
+    const currentMB = getValues('data_quota') || 0;
+    const initialUnit = currentMB > 0 && currentMB % 1024 === 0 ? 'GB' : 'MB';
+    const initialValue = initialUnit === 'GB' ? currentMB / 1024 : currentMB;
 
-export const ProductEdit = (props: EditProps) => (
-    <Edit {...props} title={<ProductTitle />}>
-        <SimpleForm>
-            <TextInput source="id" disabled />
-            <TextInput source="name" validate={[required()]} fullWidth />
-            <ReferenceInput source="radius_profile_id" reference="radius-profiles">
-                <SelectInput optionText="name" validate={[required()]} />
-            </ReferenceInput>
-            <Box display={{ xs: 'block', sm: 'flex', width: '100%' }}>
-                <Box flex={1} mr={{ xs: 0, sm: '0.5em' }}>
-                    <NumberInput source="price" validate={[required()]} fullWidth />
-                </Box>
-                <Box flex={1} ml={{ xs: 0, sm: '0.5em' }}>
-                    <NumberInput source="cost_price" validate={[required()]} fullWidth />
-                </Box>
-            </Box>
-            <Box display={{ xs: 'block', sm: 'flex', width: '100%' }}>
-                <Box flex={1} mr={{ xs: 0, sm: '0.5em' }}>
-                    <TextInput source="color" type="color" fullWidth label="Product Color" />
-                </Box>
-                <Box flex={1} ml={{ xs: 0, sm: '0.5em' }}>
+    const [unit, setUnit] = React.useState(initialUnit);
+    const [val, setVal] = React.useState(initialValue);
+
+    React.useEffect(() => {
+        const multiplier = unit === 'GB' ? 1024 : 1;
+        setValue('data_quota', val * multiplier);
+    }, [unit, val, setValue]);
+
+    return (
+        <FieldGrid columns={{ xs: 1, sm: 2 }}>
+            <FieldGridItem>
+                <NumberInput
+                    source="data_quota_virtual"
+                    label="Data Quota"
+                    value={val}
+                    onChange={(e) => setVal(Number(e.target.value))}
+                    fullWidth
+                />
+            </FieldGridItem>
+            <FieldGridItem>
+                <SelectInput
+                    source="data_quota_unit_virtual"
+                    label="Unit"
+                    choices={[
+                        { id: 'MB', name: 'MB' },
+                        { id: 'GB', name: 'GB' },
+                    ]}
+                    value={unit}
+                    onChange={(e) => setUnit(e.target.value)}
+                    fullWidth
+                />
+            </FieldGridItem>
+            <NumberInput source="data_quota" style={{ display: 'none' }} />
+        </FieldGrid>
+    );
+};
+
+export const ProductCreate = (props: CreateProps) => {
+    const translate = useTranslate();
+    return (
+        <Create {...props}>
+            <SimpleForm sx={formLayoutSx}>
+                <FormSection
+                    title={translate('resources.products.section.basic', { _: 'Basic Information' })}
+                >
+                    <FieldGrid columns={{ xs: 1, sm: 2 }}>
+                        <FieldGridItem>
+                            <TextInput source="name" validate={[required()]} fullWidth />
+                        </FieldGridItem>
+                        <FieldGridItem>
+                            <ReferenceInput source="radius_profile_id" reference="radius-profiles">
+                                <SelectInput optionText="name" validate={[required()]} fullWidth />
+                            </ReferenceInput>
+                        </FieldGridItem>
+                        <FieldGridItem>
+                            <TextInput source="color" type="color" fullWidth label="Product Color" defaultValue="#1976d2" />
+                        </FieldGridItem>
+                        <FieldGridItem>
+                            <SelectInput source="status" choices={[
+                                { id: 'enabled', name: 'Enabled' },
+                                { id: 'disabled', name: 'Disabled' },
+                            ]} defaultValue="enabled" fullWidth />
+                        </FieldGridItem>
+                    </FieldGrid>
+                </FormSection>
+
+                <FormSection
+                    title={translate('resources.products.section.pricing', { _: 'Pricing' })}
+                >
+                    <FieldGrid columns={{ xs: 1, sm: 2 }}>
+                        <FieldGridItem>
+                            <NumberInput source="price" validate={[required()]} fullWidth />
+                        </FieldGridItem>
+                        <FieldGridItem>
+                            <NumberInput source="cost_price" validate={[required()]} fullWidth />
+                        </FieldGridItem>
+                    </FieldGrid>
+                </FormSection>
+
+                <FormSection
+                    title={translate('resources.products.section.bandwidth', { _: 'Bandwidth Limit' })}
+                >
+                    <FieldGrid columns={{ xs: 1, sm: 2 }}>
+                        <FieldGridItem>
+                            <NumberInput source="up_rate" label="Upload Rate (Kbps)" defaultValue={0} fullWidth helperText="0 = Unlimited" />
+                        </FieldGridItem>
+                        <FieldGridItem>
+                            <NumberInput source="down_rate" label="Download Rate (Kbps)" defaultValue={0} fullWidth helperText="0 = Unlimited" />
+                        </FieldGridItem>
+                    </FieldGrid>
+                </FormSection>
+
+                <FormSection
+                    title={translate('resources.products.section.data_quota', { _: 'Data Quota' })}
+                >
+                    <DataQuotaInput />
+                </FormSection>
+
+                <FormSection
+                    title={translate('resources.products.section.validity', { _: 'Validity Limit' })}
+                >
                     <ValidityInput />
-                </Box>
-            </Box>
-            <SelectInput source="status" choices={[
-                { id: 'enabled', name: 'Enabled' },
-                { id: 'disabled', name: 'Disabled' },
-            ]} fullWidth />
-            <TextInput source="remark" multiline fullWidth />
-        </SimpleForm>
-    </Edit>
-);
+                </FormSection>
+
+                <FormSection
+                    title={translate('resources.products.section.remark', { _: 'Remark' })}
+                >
+                    <FieldGrid columns={{ xs: 1 }}>
+                        <FieldGridItem>
+                            <TextInput source="remark" multiline fullWidth minRows={3} />
+                        </FieldGridItem>
+                    </FieldGrid>
+                </FormSection>
+            </SimpleForm>
+        </Create>
+    );
+};
+
+export const ProductEdit = (props: EditProps) => {
+    const translate = useTranslate();
+    return (
+        <Edit {...props} title={<ProductTitle />}>
+            <SimpleForm sx={formLayoutSx}>
+                <FormSection
+                    title={translate('resources.products.section.basic', { _: 'Basic Information' })}
+                >
+                    <FieldGrid columns={{ xs: 1, sm: 2 }}>
+                        <FieldGridItem>
+                            <TextInput source="id" disabled fullWidth />
+                        </FieldGridItem>
+                        <FieldGridItem>
+                            <TextInput source="name" validate={[required()]} fullWidth />
+                        </FieldGridItem>
+                        <FieldGridItem>
+                            <ReferenceInput source="radius_profile_id" reference="radius-profiles">
+                                <SelectInput optionText="name" validate={[required()]} fullWidth />
+                            </ReferenceInput>
+                        </FieldGridItem>
+                        <FieldGridItem>
+                            <TextInput source="color" type="color" fullWidth label="Product Color" />
+                        </FieldGridItem>
+                        <FieldGridItem>
+                            <SelectInput source="status" choices={[
+                                { id: 'enabled', name: 'Enabled' },
+                                { id: 'disabled', name: 'Disabled' },
+                            ]} fullWidth />
+                        </FieldGridItem>
+                    </FieldGrid>
+                </FormSection>
+
+                <FormSection
+                    title={translate('resources.products.section.pricing', { _: 'Pricing' })}
+                >
+                    <FieldGrid columns={{ xs: 1, sm: 2 }}>
+                        <FieldGridItem>
+                            <NumberInput source="price" validate={[required()]} fullWidth />
+                        </FieldGridItem>
+                        <FieldGridItem>
+                            <NumberInput source="cost_price" validate={[required()]} fullWidth />
+                        </FieldGridItem>
+                    </FieldGrid>
+                </FormSection>
+
+                <FormSection
+                    title={translate('resources.products.section.bandwidth', { _: 'Bandwidth Limit' })}
+                >
+                    <FieldGrid columns={{ xs: 1, sm: 2 }}>
+                        <FieldGridItem>
+                            <NumberInput source="up_rate" label="Upload Rate (Kbps)" fullWidth helperText="0 = Unlimited" />
+                        </FieldGridItem>
+                        <FieldGridItem>
+                            <NumberInput source="down_rate" label="Download Rate (Kbps)" fullWidth helperText="0 = Unlimited" />
+                        </FieldGridItem>
+                    </FieldGrid>
+                </FormSection>
+
+                <FormSection
+                    title={translate('resources.products.section.data_quota', { _: 'Data Quota' })}
+                >
+                    <DataQuotaInput />
+                </FormSection>
+
+                <FormSection
+                    title={translate('resources.products.section.validity', { _: 'Validity Limit' })}
+                >
+                    <ValidityInput />
+                </FormSection>
+
+                <FormSection
+                    title={translate('resources.products.section.remark', { _: 'Remark' })}
+                >
+                    <FieldGrid columns={{ xs: 1 }}>
+                        <FieldGridItem>
+                            <TextInput source="remark" multiline fullWidth minRows={3} />
+                        </FieldGridItem>
+                    </FieldGrid>
+                </FormSection>
+            </SimpleForm>
+        </Edit>
+    );
+};

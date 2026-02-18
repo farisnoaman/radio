@@ -516,6 +516,22 @@ func RedeemVoucher(c echo.Context) error {
 		}
 	}
 
+	// 519: user := domain.RadiusUser{ ... }
+	// We need to decide which rates to use.
+	userUpRate := product.UpRate
+	userDownRate := product.DownRate
+	userDataQuota := product.DataQuota
+
+	if userUpRate == 0 {
+		userUpRate = profile.UpRate
+	}
+	if userDownRate == 0 {
+		userDownRate = profile.DownRate
+	}
+	if userDataQuota == 0 {
+		userDataQuota = profile.DataQuota
+	}
+
 	user := domain.RadiusUser{
 		Username:   voucher.Code,
 		Password:   voucher.Code,
@@ -524,14 +540,10 @@ func RedeemVoucher(c echo.Context) error {
 		ExpireTime: expireTime,
 		CreatedAt:  now,
 		UpdatedAt:  now,
-		// Inherit limits from Profile if needed, or rely on ProfileID linkage in Radius Server
-		// Usually distinct limits are copied to user to allow overrides,
-		// but if Radius Server checks Profile, we just need the link.
-		// Checking RadiusUser struct... it has UpRate/DownRate.
-		// Let's copy them from Profile to be safe/consistent.
-		UpRate:   profile.UpRate,
-		DownRate: profile.DownRate,
-		AddrPool: profile.AddrPool,
+		UpRate:     userUpRate,
+		DownRate:   userDownRate,
+		DataQuota:  userDataQuota,
+		AddrPool:   profile.AddrPool,
 	}
 
 	if err := tx.Create(&user).Error; err != nil {
@@ -661,6 +673,13 @@ func BulkActivateVouchers(c echo.Context) error {
 	}
 
 	now := time.Now()
+	zap.L().Debug("bulk activate vouchers",
+		zap.Int64("batch_id", batchID),
+		zap.String("expiration_type", batch.ExpirationType),
+		zap.Int64("product_id", batch.ProductID),
+		zap.Int64("product_validity_seconds", product.ValiditySeconds),
+		zap.Time("batch_expire_time", func() time.Time { if batch.ExpireTime != nil { return *batch.ExpireTime }; return time.Time{} }()),
+	)
 	updates := map[string]interface{}{
 		"status":       "active",
 		"activated_at": now,
@@ -672,11 +691,18 @@ func BulkActivateVouchers(c echo.Context) error {
 			updates["expire_time"] = *batch.ExpireTime
 		} else if product.ValiditySeconds > 0 {
 			updates["expire_time"] = now.Add(time.Duration(product.ValiditySeconds) * time.Second)
+		} else {
+			// Default: set expire time to 30 days from now if no validity specified
+			updates["expire_time"] = now.AddDate(0, 0, 30)
 		}
 	} else {
 		// ensure expire_time is zero for first_use
 		updates["expire_time"] = time.Time{}
 	}
+
+	zap.L().Debug("bulk activate vouchers updates",
+		zap.Any("updates", updates),
+	)
 
 	if err := db.Model(&domain.Voucher{}).Where("batch_id = ? AND status = ?", batchID, "unused").Updates(updates).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "Failed to activate vouchers", err.Error())

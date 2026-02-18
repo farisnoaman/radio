@@ -16,6 +16,7 @@ type RadiusProfile struct {
 	ActiveNum      int       `json:"active_num" form:"active_num"`             // Concurrent sessions
 	UpRate         int       `json:"up_rate" form:"up_rate"`                   // Upload rate in Kb
 	DownRate       int       `json:"down_rate" form:"down_rate"`               // Download rate in Kb
+	DataQuota      int64     `json:"data_quota" form:"data_quota"`             // Data quota in MB (0 = unlimited)
 	Domain         string    `json:"domain" form:"domain"`                     // Domain, corresponds to NAS device domain attribute, e.g., Huawei domain_code
 	IPv6PrefixPool string    `json:"ipv6_prefix_pool" form:"ipv6_prefix_pool"` // IPv6 prefix pool name for NAS-side allocation
 	BindMac        int       `json:"bind_mac" form:"bind_mac"`                 // Bind MAC
@@ -45,6 +46,7 @@ type RadiusUser struct {
 	ActiveNum       int       `gorm:"index" json:"active_num" form:"active_num"`        // Concurrent sessions
 	UpRate          int       `json:"up_rate" form:"up_rate"`                           // Upload rate
 	DownRate        int       `json:"down_rate" form:"down_rate"`                       // Download rate
+	DataQuota       int64     `json:"data_quota" form:"data_quota"`                     // Data quota in MB (0 = unlimited)
 	Vlanid1         int       `json:"vlanid1" form:"vlanid1"`                           // VLAN ID 1
 	Vlanid2         int       `json:"vlanid2" form:"vlanid2"`                           // VLAN ID 2
 	IpAddr          string    `json:"ip_addr" form:"ip_addr"`                           // Static IP

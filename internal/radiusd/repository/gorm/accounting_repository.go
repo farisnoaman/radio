@@ -53,3 +53,13 @@ func (r *GormAccountingRepository) UpdateStop(ctx context.Context, sessionId str
 
 	return nil
 }
+
+func (r *GormAccountingRepository) GetTotalUsage(ctx context.Context, username string) (int64, error) {
+	var total int64
+	err := r.db.WithContext(ctx).
+		Model(&domain.RadiusAccounting{}).
+		Where("username = ?", username).
+		Select("SUM(acct_input_total + acct_output_total)").
+		Scan(&total).Error
+	return total, err
+}

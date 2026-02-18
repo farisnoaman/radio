@@ -111,11 +111,21 @@ const formatTimestamp = (value?: string | number): string => {
 };
 
 const formatRate = (rate?: number): string => {
-  if (!rate || rate === 0) return '-';
+  if (rate === undefined || rate === null) return '-';
+  if (rate === 0) return 'Unlimited';
   if (rate >= 1024) {
     return `${(rate / 1024).toFixed(1)} Mbps`;
   }
   return `${rate} Kbps`;
+};
+
+const formatQuota = (quota?: number): string => {
+  if (quota === undefined || quota === null) return '-';
+  if (quota === 0) return 'Unlimited';
+  if (quota >= 1024) {
+    return `${(quota / 1024).toFixed(1)} GB`;
+  }
+  return `${quota} MB`;
 };
 
 // ============ 列表加载骨架屏 ============
@@ -466,14 +476,32 @@ const ProfileNameField = () => {
 const RateField = ({ source }: { source: 'up_rate' | 'down_rate' }) => {
   const record = useRecordContext<RadiusProfile>();
   if (!record) return null;
-  
+
   const rate = record[source];
+  const isUnlimited = rate === 0;
   return (
     <Chip
       label={formatRate(rate)}
       size="small"
-      color="info"
-      variant="outlined"
+      color={isUnlimited ? 'success' : 'info'}
+      variant={isUnlimited ? 'filled' : 'outlined'}
+      sx={{ fontFamily: 'monospace', fontSize: '0.8rem', height: 24 }}
+    />
+  );
+};
+
+const QuotaField = () => {
+  const record = useRecordContext<RadiusProfile>();
+  if (!record) return null;
+
+  const quota = record.data_quota;
+  const isUnlimited = quota === 0;
+  return (
+    <Chip
+      label={formatQuota(quota)}
+      size="small"
+      color={isUnlimited ? 'success' : 'warning'}
+      variant={isUnlimited ? 'filled' : 'outlined'}
       sx={{ fontFamily: 'monospace', fontSize: '0.8rem', height: 24 }}
     />
   );
@@ -654,6 +682,11 @@ const ProfileListContent = () => {
               label={translate('resources.radius/profiles.fields.down_rate', { _: '下行速率' })}
               render={() => <RateField source="down_rate" />}
             />
+            <FunctionField
+              source="data_quota"
+              label={translate('resources.radius/profiles.fields.data_quota', { _: '数据配额' })}
+              render={() => <QuotaField />}
+            />
             <TextField
               source="addr_pool"
               label={translate('resources.radius/profiles.fields.addr_pool', { _: '地址池' })}
@@ -693,7 +726,7 @@ export const RadiusProfileList = () => {
 
 export const RadiusProfileEdit = () => {
   const translate = useTranslate();
-  
+
   return (
     <Edit>
       <SimpleForm toolbar={<ProfileFormToolbar />} sx={formLayoutSx}>
@@ -764,7 +797,18 @@ export const RadiusProfileEdit = () => {
                 source="down_rate"
                 label={translate('resources.radius/profiles.fields.down_rate', { _: '下行速率 (Kbps)' })}
                 min={0}
-                helperText={translate('resources.radius/profiles.helpers.down_rate', { _: '下行带宽限制，单位 Kbps' })}
+                helperText={translate('resources.radius/profiles.helpers.down_rate', { _: '下行带宽限制，单位 Kbps (0为不限制)' })}
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
+
+            <FieldGridItem>
+              <NumberInput
+                source="data_quota"
+                label={translate('resources.radius/profiles.fields.data_quota', { _: '数据配额 (MB)' })}
+                min={0}
+                helperText={translate('resources.radius/profiles.helpers.data_quota', { _: '总数据流量限制，单位 MB (0为不限制)' })}
                 fullWidth
                 size="small"
               />
@@ -860,7 +904,7 @@ export const RadiusProfileEdit = () => {
 
 export const RadiusProfileCreate = () => {
   const translate = useTranslate();
-  
+
   return (
     <Create>
       <SimpleForm sx={formLayoutSx}>
@@ -925,7 +969,19 @@ export const RadiusProfileCreate = () => {
                 label={translate('resources.radius/profiles.fields.down_rate', { _: '下行速率 (Kbps)' })}
                 min={0}
                 defaultValue={1024}
-                helperText={translate('resources.radius/profiles.helpers.down_rate', { _: '下行带宽限制，单位 Kbps' })}
+                helperText={translate('resources.radius/profiles.helpers.down_rate', { _: '下行带宽限制，单位 Kbps (0为不限制)' })}
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
+
+            <FieldGridItem>
+              <NumberInput
+                source="data_quota"
+                label={translate('resources.radius/profiles.fields.data_quota', { _: '数据配额 (MB)' })}
+                min={0}
+                defaultValue={0}
+                helperText={translate('resources.radius/profiles.helpers.data_quota', { _: '总数据流量限制，单位 MB (0为不限制)' })}
                 fullWidth
                 size="small"
               />
@@ -1052,8 +1108,8 @@ const ProfileHeaderCard = () => {
               ? `linear-gradient(135deg, ${alpha(theme.palette.primary.dark, 0.4)} 0%, ${alpha(theme.palette.info.dark, 0.3)} 100%)`
               : `linear-gradient(135deg, ${alpha(theme.palette.grey[800], 0.5)} 0%, ${alpha(theme.palette.grey[700], 0.3)} 100%)`
             : isEnabled
-            ? `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.info.main, 0.08)} 100%)`
-            : `linear-gradient(135deg, ${alpha(theme.palette.grey[400], 0.15)} 0%, ${alpha(theme.palette.grey[300], 0.1)} 100%)`,
+              ? `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.info.main, 0.08)} 100%)`
+              : `linear-gradient(135deg, ${alpha(theme.palette.grey[400], 0.15)} 0%, ${alpha(theme.palette.grey[300], 0.1)} 100%)`,
         border: theme => `1px solid ${alpha(isEnabled ? theme.palette.primary.main : theme.palette.grey[500], 0.2)}`,
         overflow: 'hidden',
         position: 'relative',
@@ -1243,6 +1299,25 @@ const ProfileHeaderCard = () => {
               {record.addr_pool || '-'}
             </Typography>
           </Box>
+
+          <Box
+            sx={{
+              p: 2,
+              borderRadius: 2,
+              bgcolor: theme => alpha(theme.palette.background.paper, 0.8),
+              backdropFilter: 'blur(8px)',
+            }}
+          >
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+              <SpeedIcon sx={{ fontSize: '1.1rem', color: 'error.main' }} />
+              <Typography variant="caption" color="text.secondary">
+                {translate('resources.radius/profiles.fields.data_quota', { _: '数据配额' })}
+              </Typography>
+            </Box>
+            <Typography variant="body2" sx={{ fontWeight: 600, fontFamily: 'monospace' }}>
+              {formatQuota(record.data_quota)}
+            </Typography>
+          </Box>
         </Box>
       </CardContent>
     </Card>
@@ -1276,7 +1351,7 @@ const printStyles = `
 const ProfileDetails = () => {
   const record = useRecordContext<RadiusProfile>();
   const translate = useTranslate();
-  
+
   if (!record) {
     return null;
   }

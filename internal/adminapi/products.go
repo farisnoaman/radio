@@ -94,8 +94,12 @@ type ProductRequest struct {
 	RadiusProfileID string  `json:"radius_profile_id" validate:"required"`
 	Price           float64 `json:"price" validate:"gte=0"`
 	CostPrice       float64 `json:"cost_price" validate:"gte=0"`
+	UpRate          int     `json:"up_rate" validate:"gte=0"`
+	DownRate        int     `json:"down_rate" validate:"gte=0"`
+	DataQuota       int64   `json:"data_quota" validate:"gte=0"`
 	ValiditySeconds int64   `json:"validity_seconds" validate:"gte=0"`
 	Status          string  `json:"status"`
+	Color           string  `json:"color"`
 	Remark          string  `json:"remark" validate:"omitempty,max=500"`
 }
 
@@ -129,8 +133,12 @@ func CreateProduct(c echo.Context) error {
 		RadiusProfileID: profileID,
 		Price:           req.Price,
 		CostPrice:       req.CostPrice,
+		UpRate:          req.UpRate,
+		DownRate:        req.DownRate,
+		DataQuota:       req.DataQuota,
 		ValiditySeconds: req.ValiditySeconds,
 		Status:          req.Status,
+		Color:           req.Color,
 		Remark:          req.Remark,
 		CreatedAt:       time.Now(),
 		UpdatedAt:       time.Now(),
@@ -138,6 +146,10 @@ func CreateProduct(c echo.Context) error {
 
 	if product.Status == "" {
 		product.Status = "enabled"
+	}
+
+	if product.Color == "" {
+		product.Color = "#1976d2" // Default blue color
 	}
 
 	if err := GetDB(c).Create(&product).Error; err != nil {
@@ -189,8 +201,12 @@ func UpdateProduct(c echo.Context) error {
 	product.RadiusProfileID = profileID
 	product.Price = req.Price
 	product.CostPrice = req.CostPrice
+	product.UpRate = req.UpRate
+	product.DownRate = req.DownRate
+	product.DataQuota = req.DataQuota
 	product.ValiditySeconds = req.ValiditySeconds
 	product.Status = req.Status
+	product.Color = req.Color
 	product.Remark = req.Remark
 	product.UpdatedAt = time.Now()
 

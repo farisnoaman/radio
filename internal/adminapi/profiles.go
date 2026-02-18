@@ -113,6 +113,7 @@ type ProfileRequest struct {
 	ActiveNum      int         `json:"active_num" validate:"gte=0,lte=100"`
 	UpRate         int         `json:"up_rate" validate:"gte=0,lte=10000000"`
 	DownRate       int         `json:"down_rate" validate:"gte=0,lte=10000000"`
+	DataQuota      int64       `json:"data_quota" validate:"gte=0"`
 	Domain         string      `json:"domain" validate:"omitempty,max=50"`
 	IPv6PrefixPool string      `json:"ipv6_prefix_pool" validate:"omitempty"`
 	BindMac        interface{} `json:"bind_mac"`  // Can be int or boolean
@@ -129,6 +130,7 @@ func (pr *ProfileRequest) toRadiusProfile() *domain.RadiusProfile {
 		ActiveNum:      pr.ActiveNum,
 		UpRate:         pr.UpRate,
 		DownRate:       pr.DownRate,
+		DataQuota:      pr.DataQuota,
 		Domain:         pr.Domain,
 		IPv6PrefixPool: pr.IPv6PrefixPool,
 		Remark:         pr.Remark,
@@ -192,6 +194,7 @@ type ProfileUpdateRequest struct {
 	ActiveNum      int         `json:"active_num" validate:"gte=0,lte=100"`
 	UpRate         int         `json:"up_rate" validate:"gte=0,lte=10000000"`
 	DownRate       int         `json:"down_rate" validate:"gte=0,lte=10000000"`
+	DataQuota      int64       `json:"data_quota" validate:"gte=0"`
 	Domain         string      `json:"domain" validate:"omitempty,max=50"`
 	IPv6PrefixPool string      `json:"ipv6_prefix_pool" validate:"omitempty"`
 	BindMac        interface{} `json:"bind_mac"`  // Can be int or boolean
@@ -208,6 +211,7 @@ func (pr *ProfileUpdateRequest) toRadiusProfile() *domain.RadiusProfile {
 		ActiveNum:      pr.ActiveNum,
 		UpRate:         pr.UpRate,
 		DownRate:       pr.DownRate,
+		DataQuota:      pr.DataQuota,
 		Domain:         pr.Domain,
 		IPv6PrefixPool: pr.IPv6PrefixPool,
 		Remark:         pr.Remark,
@@ -360,6 +364,9 @@ func UpdateProfile(c echo.Context) error {
 	}
 	if updateData.DownRate >= 0 {
 		updates["down_rate"] = updateData.DownRate
+	}
+	if updateData.DataQuota >= 0 {
+		updates["data_quota"] = updateData.DataQuota
 	}
 	if updateData.Domain != "" {
 		updates["domain"] = updateData.Domain

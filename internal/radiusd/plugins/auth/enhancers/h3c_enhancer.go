@@ -40,14 +40,16 @@ func (e *H3CAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthConte
 	upRate := user.GetUpRate(profileCache)
 	downRate := user.GetDownRate(profileCache)
 
-	up := clampInt64(int64(upRate)*1024, math.MaxInt32)
-	down := clampInt64(int64(downRate)*1024, math.MaxInt32)
-	upPeak := clampInt64(up*4, math.MaxInt32)
-	downPeak := clampInt64(down*4, math.MaxInt32)
+	if upRate > 0 || downRate > 0 {
+		up := clampInt64(int64(upRate)*1024, math.MaxInt32)
+		down := clampInt64(int64(downRate)*1024, math.MaxInt32)
+		upPeak := clampInt64(up*4, math.MaxInt32)
+		downPeak := clampInt64(down*4, math.MaxInt32)
 
-	_ = h3c.H3CInputAverageRate_Set(resp, h3c.H3CInputAverageRate(up))     //nolint:errcheck,gosec // G115: clamped to MaxInt32
-	_ = h3c.H3CInputPeakRate_Set(resp, h3c.H3CInputPeakRate(upPeak))       //nolint:errcheck,gosec // G115: clamped to MaxInt32
-	_ = h3c.H3COutputAverageRate_Set(resp, h3c.H3COutputAverageRate(down)) //nolint:errcheck,gosec // G115: clamped to MaxInt32
-	_ = h3c.H3COutputPeakRate_Set(resp, h3c.H3COutputPeakRate(downPeak))   //nolint:errcheck,gosec // G115: clamped to MaxInt32
+		_ = h3c.H3CInputAverageRate_Set(resp, h3c.H3CInputAverageRate(up))     //nolint:errcheck,gosec // G115: clamped to MaxInt32
+		_ = h3c.H3CInputPeakRate_Set(resp, h3c.H3CInputPeakRate(upPeak))       //nolint:errcheck,gosec // G115: clamped to MaxInt32
+		_ = h3c.H3COutputAverageRate_Set(resp, h3c.H3COutputAverageRate(down)) //nolint:errcheck,gosec // G115: clamped to MaxInt32
+		_ = h3c.H3COutputPeakRate_Set(resp, h3c.H3COutputPeakRate(downPeak))   //nolint:errcheck,gosec // G115: clamped to MaxInt32
+	}
 	return nil
 }

@@ -39,6 +39,10 @@ func InitPlugins(
 		registry.RegisterPolicyChecker(checkers.NewOnlineCountChecker(sessionRepo))
 	}
 
+	if accountingRepo != nil {
+		registry.RegisterPolicyChecker(checkers.NewQuotaChecker(accountingRepo))
+	}
+
 	if voucherRepo != nil && userRepo != nil {
 		registry.RegisterPolicyChecker(checkers.NewFirstUseActivator(voucherRepo, userRepo))
 	}

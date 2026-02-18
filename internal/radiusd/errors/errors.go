@@ -228,6 +228,11 @@ func NewUserExpiredError() error {
 	return NewAuthError(app.MetricsRadiusRejectExpire, "user expired")
 }
 
+// NewUserQuotaError creates an error for users who have exceeded their data quota
+func NewUserQuotaError() error {
+	return NewAuthError(app.MetricsRadiusRejectLimit, "user data quota exceeded")
+}
+
 // NewPasswordMismatchError creates an error for password validation failures
 func NewPasswordMismatchError() error {
 	return NewAuthError(app.MetricsRadiusRejectPasswdError, "password mismatch")
