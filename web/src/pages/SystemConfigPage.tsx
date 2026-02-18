@@ -107,6 +107,12 @@ export const SystemConfigPage: React.FC = () => {
   }, [settingsQuery.data]);
 
   const configGroups = useMemo(() => ({
+    web: {
+      title: translate('pages.system_config.groups.web.title'),
+      description: translate('pages.system_config.groups.web.description'),
+      icon: <SettingsIcon />,
+      color: '#9c27b0',
+    },
     radius: {
       title: translate('pages.system_config.groups.radius.title'),
       description: translate('pages.system_config.groups.radius.description'),
@@ -391,88 +397,88 @@ export const SystemConfigPage: React.FC = () => {
           </Alert>
 
           {Object.entries(groupedSchemas).map(([groupKey, groupSchemas]) => {
-          const groupConfig = configGroups[groupKey as keyof typeof configGroups] || {
-            title: groupKey,
-            description: `${groupKey} 相关配置`,
-            icon: <SettingsIcon />,
-            color: '#666',
-          };
+            const groupConfig = configGroups[groupKey as keyof typeof configGroups] || {
+              title: groupKey,
+              description: `${groupKey} 相关配置`,
+              icon: <SettingsIcon />,
+              color: '#666',
+            };
 
-          const isExpanded = expandedGroups.includes(groupKey);
+            const isExpanded = expandedGroups.includes(groupKey);
 
-          return (
-            <Accordion 
-              key={groupKey} 
-              expanded={isExpanded}
-              onChange={() => handleGroupToggle(groupKey)}
-              sx={{ mb: 2 }}
-            >
-              <AccordionSummary 
-                expandIcon={<ExpandMoreIcon />}
-                sx={{ 
-                  backgroundColor: `${groupConfig.color}15`,
-                  '&:hover': { backgroundColor: `${groupConfig.color}25` }
-                }}
+            return (
+              <Accordion
+                key={groupKey}
+                expanded={isExpanded}
+                onChange={() => handleGroupToggle(groupKey)}
+                sx={{ mb: 2 }}
               >
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-                  <Box sx={{ color: groupConfig.color }}>
-                    {groupConfig.icon}
+                <AccordionSummary
+                  expandIcon={<ExpandMoreIcon />}
+                  sx={{
+                    backgroundColor: `${groupConfig.color}15`,
+                    '&:hover': { backgroundColor: `${groupConfig.color}25` }
+                  }}
+                >
+                  <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                    <Box sx={{ color: groupConfig.color }}>
+                      {groupConfig.icon}
+                    </Box>
+                    <Box>
+                      <Typography variant="h6" sx={{ color: groupConfig.color }}>
+                        {groupConfig.title}
+                      </Typography>
+                      <Typography variant="body2" color="textSecondary">
+                        {groupConfig.description} ({groupSchemas.length} {translate('pages.system_config.config_items')})
+                      </Typography>
+                    </Box>
                   </Box>
-                  <Box>
-                    <Typography variant="h6" sx={{ color: groupConfig.color }}>
-                      {groupConfig.title}
-                    </Typography>
-                    <Typography variant="body2" color="textSecondary">
-                      {groupConfig.description} ({groupSchemas.length} {translate('pages.system_config.config_items')})
-                    </Typography>
-                  </Box>
-                </Box>
-              </AccordionSummary>
-              
-              <AccordionDetails>
-                <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 3 }}>
-                  {groupSchemas.map((schema) => {
-                    const schemaTitle = resolveSchemaTitle(schema);
-                    const schemaDescription = resolveSchemaDescription(schema);
-                    return (
-                      <Box key={schema.key} sx={{ mb: 2 }}>
-                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
-                          <Typography variant="subtitle2">
-                            {schemaTitle}
-                          </Typography>
-                          <Tooltip title={schemaDescription}>
-                            <IconButton size="small">
-                              <InfoIcon fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                          <Chip 
-                            label={schema.type} 
-                            size="small" 
-                            variant="outlined"
-                            sx={{ ml: 'auto' }}
-                          />
+                </AccordionSummary>
+
+                <AccordionDetails>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 3 }}>
+                    {groupSchemas.map((schema) => {
+                      const schemaTitle = resolveSchemaTitle(schema);
+                      const schemaDescription = resolveSchemaDescription(schema);
+                      return (
+                        <Box key={schema.key} sx={{ mb: 2 }}>
+                          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
+                            <Typography variant="subtitle2">
+                              {schemaTitle}
+                            </Typography>
+                            <Tooltip title={schemaDescription}>
+                              <IconButton size="small">
+                                <InfoIcon fontSize="small" />
+                              </IconButton>
+                            </Tooltip>
+                            <Chip
+                              label={schema.type}
+                              size="small"
+                              variant="outlined"
+                              sx={{ ml: 'auto' }}
+                            />
+                          </Box>
+                          {renderConfigInput(schema, schemaTitle, schemaDescription)}
+                          {schema.enum && (
+                            <Typography variant="caption" color="textSecondary" sx={{ mt: 0.5, display: 'block' }}>
+                              {translate('pages.system_config.available_values')}: {schema.enum.join(', ')}
+                            </Typography>
+                          )}
+                          {(schema.min !== undefined || schema.max !== undefined) && (
+                            <Typography variant="caption" color="textSecondary" sx={{ mt: 0.5, display: 'block' }}>
+                              {translate('pages.system_config.value_range')}: {schema.min !== undefined ? `${translate('pages.system_config.min')} ${schema.min}` : ''}
+                              {schema.min !== undefined && schema.max !== undefined ? ', ' : ''}
+                              {schema.max !== undefined ? `${translate('pages.system_config.max')} ${schema.max}` : ''}
+                            </Typography>
+                          )}
                         </Box>
-                        {renderConfigInput(schema, schemaTitle, schemaDescription)}
-                        {schema.enum && (
-                          <Typography variant="caption" color="textSecondary" sx={{ mt: 0.5, display: 'block' }}>
-                            {translate('pages.system_config.available_values')}: {schema.enum.join(', ')}
-                          </Typography>
-                        )}
-                        {(schema.min !== undefined || schema.max !== undefined) && (
-                          <Typography variant="caption" color="textSecondary" sx={{ mt: 0.5, display: 'block' }}>
-                            {translate('pages.system_config.value_range')}: {schema.min !== undefined ? `${translate('pages.system_config.min')} ${schema.min}` : ''} 
-                            {schema.min !== undefined && schema.max !== undefined ? ', ' : ''}
-                            {schema.max !== undefined ? `${translate('pages.system_config.max')} ${schema.max}` : ''}
-                          </Typography>
-                        )}
-                      </Box>
-                    );
-                  })}
-                </Box>
-              </AccordionDetails>
-            </Accordion>
-          );
-        })}
+                      );
+                    })}
+                  </Box>
+                </AccordionDetails>
+              </Accordion>
+            );
+          })}
         </Box>
       )}
 
@@ -508,40 +514,40 @@ export const SystemConfigPage: React.FC = () => {
 
       {/* 重置确认对话框 */}
       <Dialog
-      open={resetDialogOpen}
-      onClose={() => setResetDialogOpen(false)}
-      aria-labelledby="reset-dialog-title"
-      aria-describedby="reset-dialog-description"
-    >
-      <DialogTitle id="reset-dialog-title">
-        {translate('pages.system_config.confirm_reset')}
-      </DialogTitle>
-      <DialogContent>
-        <DialogContentText id="reset-dialog-description">
-          {translate('pages.system_config.reset_warning')}
-          <br />
-          <br />
-          <strong>注意：</strong>此操作将清除您对以下配置项的自定义设置：
-          <br />
-          {schemaQuery.data?.map(schema => (
-            <span key={schema.key}>
-              • {schema.key.split('.')[1]} ({schema.description})
-              <br />
-            </span>
-          ))}
-          <br />
-          {translate('pages.system_config.reset_notice')}
-        </DialogContentText>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={() => setResetDialogOpen(false)}>
-          {translate('pages.system_config.cancel')}
-        </Button>
-        <Button onClick={handleResetConfigs} color="warning" variant="contained">
-          {translate('pages.system_config.confirm')}
-        </Button>
-      </DialogActions>
-    </Dialog>
+        open={resetDialogOpen}
+        onClose={() => setResetDialogOpen(false)}
+        aria-labelledby="reset-dialog-title"
+        aria-describedby="reset-dialog-description"
+      >
+        <DialogTitle id="reset-dialog-title">
+          {translate('pages.system_config.confirm_reset')}
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText id="reset-dialog-description">
+            {translate('pages.system_config.reset_warning')}
+            <br />
+            <br />
+            <strong>注意：</strong>此操作将清除您对以下配置项的自定义设置：
+            <br />
+            {schemaQuery.data?.map(schema => (
+              <span key={schema.key}>
+                • {schema.key.split('.')[1]} ({schema.description})
+                <br />
+              </span>
+            ))}
+            <br />
+            {translate('pages.system_config.reset_notice')}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setResetDialogOpen(false)}>
+            {translate('pages.system_config.cancel')}
+          </Button>
+          <Button onClick={handleResetConfigs} color="warning" variant="contained">
+            {translate('pages.system_config.confirm')}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

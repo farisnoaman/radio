@@ -540,6 +540,10 @@ const customEnglishMessages: TranslationMessages = {
       no_config_warning: 'No configuration items found. Please check if backend API is working properly.',
       success_message: 'Successfully loaded {schemaCount} configuration definitions, {configCount} configuration values',
       groups: {
+        web: {
+          title: 'Web Interface',
+          description: 'Web interface and dashboard related configuration',
+        },
         radius: {
           title: 'RADIUS Configuration',
           description: 'RADIUS authentication and accounting related configuration',
@@ -561,6 +565,12 @@ const customEnglishMessages: TranslationMessages = {
     },
   },
   config: {
+    web: {
+      cache_ttl: {
+        title: 'Dashboard Cache TTL',
+        description: 'Dashboard statistics cache TTL in seconds (0=disabled, default 60s). Controls how long dashboard data is cached before refreshing from database.',
+      },
+    },
     radius: {
       eap_method: {
         title: 'EAP Method',

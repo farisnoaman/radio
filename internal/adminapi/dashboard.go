@@ -164,16 +164,17 @@ func GetDashboardStats(c echo.Context) error {
 	}
 	stats.ProfileDistribution = profileDist
 
-	stats.ProfileDistribution = profileDist
-
-	stats.ProfileDistribution = profileDist
-
 	// Cache the result
-	// Get TTL from config, default to 60s if 0 (though default config sets it)
-	ttl := time.Duration(GetAppContext(c).Config().Web.CacheTTL) * time.Second
-	if ttl == 0 {
-		ttl = 60 * time.Second
+	// Get TTL from ConfigManager (database settings) with fallback to YAML config
+	ttlSeconds := GetAppContext(c).ConfigMgr().GetInt64("web", "CacheTTL")
+	if ttlSeconds == 0 {
+		// Fallback to YAML config
+		ttlSeconds = int64(GetAppContext(c).Config().Web.CacheTTL)
+		if ttlSeconds == 0 {
+			ttlSeconds = 60 // Default fallback
+		}
 	}
+	ttl := time.Duration(ttlSeconds) * time.Second
 	dashboardCache.Set(cacheKey, stats, ttl)
 
 	return ok(c, stats)

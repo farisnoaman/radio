@@ -540,6 +540,10 @@ const customChineseMessages: TranslationMessages = {
       no_config_warning: '没有找到配置项，请检查后端API是否正常工作。',
       success_message: '成功加载 {schemaCount} 个配置定义，{configCount} 个配置值',
       groups: {
+        web: {
+          title: 'Web 界面',
+          description: 'Web 界面和仪表盘相关配置',
+        },
         radius: {
           title: 'RADIUS 配置',
           description: 'RADIUS 认证和计费相关配置',
@@ -561,6 +565,12 @@ const customChineseMessages: TranslationMessages = {
     },
   },
   config: {
+    web: {
+      cache_ttl: {
+        title: '仪表盘缓存 TTL',
+        description: '仪表盘统计数据缓存时间（秒），0 表示禁用缓存，默认 60 秒。控制仪表盘数据在刷新前从数据库缓存多长时间。',
+      },
+    },
     radius: {
       eap_method: {
         title: 'EAP 认证方式',
