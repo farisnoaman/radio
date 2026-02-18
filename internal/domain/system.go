@@ -25,10 +25,11 @@ type SysOpr struct {
 	Realname  string    `json:"realname" form:"realname"`
 	Mobile    string    `json:"mobile" form:"mobile"`
 	Email     string    `json:"email" form:"email"`
-	Username  string    `json:"username" form:"username"`
+	Username  string    `gorm:"index" json:"username" form:"username"`
 	Password  string    `json:"password" form:"password"`
-	Level     string    `json:"level" form:"level"`
-	Status    string    `json:"status" form:"status"`
+	Level     string    `gorm:"index" json:"level" form:"level"`
+	Status    string    `gorm:"index" json:"status" form:"status"`
+
 	Remark    string    `json:"remark" form:"remark"`
 	LastLogin time.Time `json:"last_login" form:"last_login"`
 	CreatedAt time.Time `json:"created_at"`
@@ -42,11 +43,12 @@ func (SysOpr) TableName() string {
 
 type SysOprLog struct {
 	ID        int64     `json:"id,string"`
-	OprName   string    `json:"opr_name"`
+	OprName   string    `gorm:"index" json:"opr_name"`
 	OprIp     string    `json:"opr_ip"`
-	OptAction string    `json:"opt_action"`
+	OptAction string    `gorm:"index" json:"opt_action"`
 	OptDesc   string    `json:"opt_desc"`
-	OptTime   time.Time `json:"opt_time"`
+	OptTime   time.Time `gorm:"index" json:"opt_time"`
+
 }
 
 // TableName Specify table name

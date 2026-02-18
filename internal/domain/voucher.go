@@ -8,8 +8,8 @@ import (
 type VoucherBatch struct {
 	ID           int64      `json:"id,string" form:"id"`
 	Name         string     `json:"name" form:"name"`
-	ProductID    int64      `json:"product_id,string" form:"product_id"`
-	AgentID      int64      `json:"agent_id,string" form:"agent_id"` // Nullable if admin generated, but we use int64. 0 means system/admin.
+	ProductID    int64      `gorm:"index" json:"product_id,string" form:"product_id"`
+	AgentID      int64      `gorm:"index" json:"agent_id,string" form:"agent_id"` // Nullable if admin generated, but we use int64. 0 means system/admin.
 	Count        int        `json:"count" form:"count"`
 	Prefix       string     `json:"prefix" form:"prefix"`
 	Remark      string     `json:"remark" form:"remark"`
@@ -20,7 +20,8 @@ type VoucherBatch struct {
 	ExpirationType string    `json:"expiration_type" form:"expiration_type"` // "fixed" or "first_use"
 	ValidityDays   int       `json:"validity_days" form:"validity_days"`     // Days of validity (for first_use type)
 	IsDeleted      bool      `json:"is_deleted" gorm:"default:false"`
-	CreatedAt    time.Time  `json:"created_at"`
+	CreatedAt    time.Time  `gorm:"index" json:"created_at"`
+
 }
 
 func (VoucherBatch) TableName() string {
@@ -30,14 +31,15 @@ func (VoucherBatch) TableName() string {
 // Voucher Individual prepaid code
 type Voucher struct {
 	ID              int64     `json:"id,string" form:"id"`
-	BatchID         int64     `json:"batch_id,string" form:"batch_id"`
+	BatchID         int64     `gorm:"index" json:"batch_id,string" form:"batch_id"`
 	Code            string    `json:"code" gorm:"uniqueIndex" form:"code"` // The username/password
-	RadiusUsername  string    `json:"radius_username" form:"radius_username"` // Populated after activation
-	Status          string    `json:"status" form:"status"` // unused, active, used, expired
-	AgentID         int64     `json:"agent_id,string" form:"agent_id"`
+	RadiusUsername  string    `gorm:"index" json:"radius_username" form:"radius_username"` // Populated after activation
+	Status          string    `gorm:"index" json:"status" form:"status"` // unused, active, used, expired
+	AgentID         int64     `gorm:"index" json:"agent_id,string" form:"agent_id"`
 	Price           float64   `json:"price" form:"price"`
 	ActivatedAt     time.Time `json:"activated_at"`
-	ExpireTime      time.Time `json:"expire_time"`
+	ExpireTime      time.Time `gorm:"index" json:"expire_time"`
+
 	ExtendedCount   int       `json:"extended_count"`     // Times extended
 	LastExtendedAt  time.Time `json:"last_extended_at"`  // Last extension timestamp
 	FirstUsedAt     time.Time `json:"first_used_at"`     // First login timestamp for first_use expiration
@@ -56,16 +58,17 @@ func (Voucher) TableName() string {
 type VoucherTopup struct {
 	ID              int64     `json:"id,string" form:"id"`
 	VoucherID       int64     `json:"voucher_id,string" form:"voucher_id"`
-	VoucherCode     string    `json:"voucher_code" form:"voucher_code"`
-	AgentID         int64     `json:"agent_id,string" form:"agent_id"`
+	VoucherCode     string    `gorm:"index" json:"voucher_code" form:"voucher_code"`
+	AgentID         int64     `gorm:"index" json:"agent_id,string" form:"agent_id"`
 	DataQuota       int64     `json:"data_quota" form:"data_quota"`      // Additional data in MB
 	TimeQuota       int64     `json:"time_quota" form:"time_quota"`      // Additional time in seconds
 	Price           float64   `json:"price" form:"price"`                // Price paid for topup
-	Status          string    `json:"status" form:"status"`               // active, used, expired
+	Status          string    `gorm:"index" json:"status" form:"status"`               // active, used, expired
 	ActivatedAt     time.Time `json:"activated_at"`
 	ExpireTime      time.Time `json:"expire_time"`
 	IsDeleted       bool      `json:"is_deleted" gorm:"default:false"`
-	CreatedAt       time.Time `json:"created_at"`
+	CreatedAt       time.Time `gorm:"index" json:"created_at"`
+
 	UpdatedAt       time.Time `json:"updated_at"`
 }
 
@@ -76,11 +79,12 @@ func (VoucherTopup) TableName() string {
 // VoucherSubscription represents a recurring subscription for automatic voucher renewal
 type VoucherSubscription struct {
 	ID              int64     `json:"id,string" form:"id"`
-	VoucherCode     string    `json:"voucher_code" form:"voucher_code"`
+	VoucherCode     string    `gorm:"index" json:"voucher_code" form:"voucher_code"`
 	ProductID       int64     `json:"product_id,string" form:"product_id"`
-	AgentID         int64     `json:"agent_id,string" form:"agent_id"`
+	AgentID         int64     `gorm:"index" json:"agent_id,string" form:"agent_id"`
 	IntervalDays    int       `json:"interval_days" form:"interval_days"` // Days between renewals
-	Status          string    `json:"status" form:"status"`                 // active, paused, cancelled
+	Status          string    `gorm:"index" json:"status" form:"status"`                 // active, paused, cancelled
+
 	AutoRenew       bool      `json:"auto_renew" form:"auto_renew"`        // Whether to auto-renew
 	LastRenewalAt   time.Time `json:"last_renewal_at"`
 	NextRenewalAt   time.Time `json:"next_renewal_at"`
@@ -99,11 +103,12 @@ type VoucherBundle struct {
 	ID          int64     `json:"id,string" form:"id"`
 	Name        string    `json:"name" form:"name"`
 	Description string    `json:"description" form:"description"`
-	AgentID     int64     `json:"agent_id,string" form:"agent_id"`
+	AgentID     int64     `gorm:"index" json:"agent_id,string" form:"agent_id"`
 	ProductID   int64     `json:"product_id,string" form:"product_id"`
 	VoucherCount int      `json:"voucher_count" form:"voucher_count"` // Number of vouchers in bundle
 	Price       float64   `json:"price" form:"price"`                  // Bundle price
-	Status      string    `json:"status" form:"status"`                 // active, inactive
+	Status      string    `gorm:"index" json:"status" form:"status"`                 // active, inactive
+
 	IsDeleted   bool      `json:"is_deleted" gorm:"default:false"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`

@@ -101,7 +101,9 @@ type WebConfig struct {
 	Port    int    `yaml:"port"`
 	TlsPort int    `yaml:"tls_port"`
 	Secret  string `yaml:"secret"`
+	CacheTTL int    `yaml:"cache_ttl"` // Dashboard cache TTL in seconds
 }
+
 
 // RadiusdConfig holds RADIUS protocol service settings.
 //
@@ -159,6 +161,23 @@ type LogConfig struct {
 	Filename   string `yaml:"filename"`
 }
 
+// BackupConfig holds database backup settings.
+//
+// Configures automated local backups:
+//   - Enabled: whether to run scheduled backups
+//   - Cron: cron expression for schedule (default: "@daily")
+//   - MaxBackups: number of backups to keep (default: 7)
+//
+// Environment variable overrides:
+//   - TOUGHRADIUS_BACKUP_ENABLED
+//   - TOUGHRADIUS_BACKUP_CRON
+//   - TOUGHRADIUS_BACKUP_MAX_BACKUPS
+type BackupConfig struct {
+	Enabled    bool   `yaml:"enabled" json:"enabled"`
+	Cron       string `yaml:"cron" json:"cron"`
+	MaxBackups int    `yaml:"max_backups" json:"max_backups"`
+}
+
 // AppConfig is the root configuration structure for ToughRADIUS.
 //
 // It aggregates all subsystem configurations and provides helper methods
@@ -177,6 +196,7 @@ type AppConfig struct {
 	Database DBConfig      `yaml:"database" json:"database"`
 	Radiusd  RadiusdConfig `yaml:"radiusd" json:"radiusd"`
 	Logger   LogConfig     `yaml:"logger" json:"logger"`
+	Backup   BackupConfig  `yaml:"backup" json:"backup"`
 }
 
 // GetLogDir returns the full path to the logs directory.
@@ -435,7 +455,9 @@ var DefaultAppConfig = &AppConfig{
 		Port:    1816,
 		TlsPort: 1817,
 		Secret:  "9b6de5cc-0731-1203-xxtt-0f568ac9da37",
+		CacheTTL: 60,
 	},
+
 	Database: DBConfig{
 		Type:     "sqlite",    // Default to SQLite for development and testing
 		Host:     "127.0.0.1", // PostgreSQL configuration (used when type is postgres)
@@ -463,6 +485,11 @@ var DefaultAppConfig = &AppConfig{
 		Mode:       "development",
 		FileEnable: true,
 		Filename:   "/var/toughradius/toughradius.log",
+	},
+	Backup: BackupConfig{
+		Enabled:    true,
+		Cron:       "@daily",
+		MaxBackups: 7,
 	},
 }
 
@@ -529,6 +556,8 @@ func LoadConfig(cfile string) *AppConfig {
 	setEnvValue("TOUGHRADIUS_WEB_SECRET", &cfg.Web.Secret)
 	setEnvIntValue("TOUGHRADIUS_WEB_PORT", &cfg.Web.Port)
 	setEnvIntValue("TOUGHRADIUS_WEB_TLS_PORT", &cfg.Web.TlsPort)
+	setEnvIntValue("TOUGHRADIUS_WEB_CACHE_TTL", &cfg.Web.CacheTTL)
+
 
 	// DB
 	setEnvValue("TOUGHRADIUS_DB_TYPE", &cfg.Database.Type)
@@ -553,6 +582,10 @@ func LoadConfig(cfile string) *AppConfig {
 
 	setEnvValue("TOUGHRADIUS_LOGGER_MODE", &cfg.Logger.Mode)
 	setEnvBoolValue("TOUGHRADIUS_LOGGER_FILE_ENABLE", &cfg.Logger.FileEnable)
+
+	setEnvBoolValue("TOUGHRADIUS_BACKUP_ENABLED", &cfg.Backup.Enabled)
+	setEnvValue("TOUGHRADIUS_BACKUP_CRON", &cfg.Backup.Cron)
+	setEnvIntValue("TOUGHRADIUS_BACKUP_MAX_BACKUPS", &cfg.Backup.MaxBackups)
 
 	return cfg
 }

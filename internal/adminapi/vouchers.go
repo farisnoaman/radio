@@ -20,6 +20,9 @@ import (
 	"golang.org/x/time/rate"
 )
 
+// init function removed to avoid duplication/conflict if registerVoucherRoutes is used.
+
+
 // ListVoucherBatches retrieves the voucher batch list
 // @Summary get the voucher batch list
 // @Tags Voucher
@@ -504,9 +507,13 @@ func RedeemVoucher(c echo.Context) error {
 	// Handle first_use expiration type: calculate expiry based on batch validity days
 	expireTime := now.AddDate(1, 0, 0) // Default 1 year for first-use
 	if batch.ExpirationType == "first_use" {
-		// First-use expiration: Set to a far future date to allow initial login
-		// The actual expiration will be calculated and set by the FirstUseActivator plugin upon first login
-		expireTime, _ = time.Parse("2006-01-02", "9999-12-31")
+		// First-use expiration: Since we set FirstUsedAt = now below, we start the clock now.
+		if batch.ValidityDays > 0 {
+			expireTime = now.AddDate(0, 0, batch.ValidityDays)
+		} else {
+			expireTime, _ = time.Parse("2006-01-02", "9999-12-31")
+		}
+
 	} else {
 		// Fixed expiration: use product validity or batch expiry
 		if !voucher.ExpireTime.IsZero() {
@@ -593,12 +600,14 @@ func ExtendVoucher(c echo.Context) error {
 
 	tx := GetDB(c).Begin()
 
-	// 1. Find voucher by code
 	var voucher domain.Voucher
-	if err := tx.Set("gorm:query_option", "FOR UPDATE").Where("code = ?", req.Code).First(&voucher).Error; err != nil {
+	if err := tx.Where("code = ?", req.Code).First(&voucher).Error; err != nil {
 		tx.Rollback()
 		return fail(c, http.StatusNotFound, "VOUCHER_NOT_FOUND", "Voucher code not found", nil)
 	}
+
+
+
 
 	// 2. Verify voucher status is "used"
 	if voucher.Status != "used" {
@@ -1478,7 +1487,46 @@ func registerVoucherRoutes() {
 	webserver.ApiPOST("/vouchers/subscriptions/:id/cancel", CancelVoucherSubscription)
 	webserver.ApiPOST("/voucher-bundles", CreateVoucherBundle)
 	webserver.ApiGET("/voucher-bundles", ListVoucherBundles)
+	webserver.ApiPOST("/vouchers/bulk/delete", BulkDeleteVouchers)
+	webserver.ApiPOST("/vouchers/bulk/status", BulkUpdateVoucherStatus)
 
 	// Public routes (no authentication required) - use root group
 	webserver.GET("/public/vouchers/status", PublicVoucherStatus)
+}
+
+func BulkDeleteVouchers(c echo.Context) error {
+	var req struct {
+		IDs []int64 `json:"ids" validate:"required,min=1"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Invalid request body", err.Error())
+	}
+
+	if err := GetDB(c).Delete(&domain.Voucher{}, req.IDs).Error; err != nil {
+		return fail(c, http.StatusInternalServerError, "DB_ERROR", "Failed to delete vouchers", err.Error())
+	}
+
+	return ok(c, map[string]interface{}{
+		"count": len(req.IDs),
+		"message": "Vouchers deleted successfully",
+	})
+}
+
+func BulkUpdateVoucherStatus(c echo.Context) error {
+	var req struct {
+		IDs    []int64 `json:"ids" validate:"required,min=1"`
+		Status string  `json:"status" validate:"required,oneof=active used expired disabled"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Invalid request body", err.Error())
+	}
+
+	if err := GetDB(c).Model(&domain.Voucher{}).Where("id IN ?", req.IDs).Update("status", req.Status).Error; err != nil {
+		return fail(c, http.StatusInternalServerError, "DB_ERROR", "Failed to update voucher status", err.Error())
+	}
+
+	return ok(c, map[string]interface{}{
+		"count": len(req.IDs),
+		"message": "Vouchers updated successfully",
+	})
 }

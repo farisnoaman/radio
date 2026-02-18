@@ -166,6 +166,7 @@ func NewAdminServer(appCtx app.AppContext) *AdminServer {
 	// init api -------------------------------
 	s.api = s.root.Group(apiBasePath)
 	s.api.Use(echojwt.WithConfig(s.jwtConfig))
+	s.api.Use(MaintenanceMiddleware(s.appCtx))
 
 	// Add middleware to inject appCtx into each request context
 	s.root.Use(func(next echo.HandlerFunc) echo.HandlerFunc {

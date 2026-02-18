@@ -3,6 +3,11 @@ package app
 import (
 	"github.com/robfig/cron/v3"
 	"github.com/talkincode/toughradius/v9/config"
+	"github.com/talkincode/toughradius/v9/internal/app/backup"
+	"github.com/talkincode/toughradius/v9/internal/app/maintenance"
+	"github.com/talkincode/toughradius/v9/internal/app/websocket"
+
+
 	"gorm.io/gorm"
 )
 
@@ -53,4 +58,8 @@ type AppContext interface {
 	MigrateDB(track bool) error
 	InitDb()
 	DropAll()
+	MaintMgr() *maintenance.MaintenanceManager
+
+	BackupMgr() backup.BackupManager
+	WsHub() *websocket.Hub
 }

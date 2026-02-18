@@ -89,14 +89,14 @@ func TestListSystemLogs(t *testing.T) {
 		if assert.NoError(t, ListSystemLogs(c)) {
 			assert.Equal(t, http.StatusOK, rec.Code)
 			
-			var resp map[string]interface{}
+			var resp struct {
+				Data []domain.SysOprLog `json:"data"`
+				Meta Meta              `json:"meta"`
+			}
 			json.Unmarshal(rec.Body.Bytes(), &resp)
 			
-			data, _ := json.Marshal(resp["items"])
-			var returnedLogs []domain.SysOprLog
-			json.Unmarshal(data, &returnedLogs)
-			
-			assert.Len(t, returnedLogs, 3)
+			assert.Len(t, resp.Data, 3)
+
 		}
 	})
 
@@ -110,9 +110,12 @@ func TestListSystemLogs(t *testing.T) {
 		if assert.NoError(t, ListSystemLogs(c)) {
 			assert.Equal(t, http.StatusOK, rec.Code)
 			
-			var resp map[string]interface{}
+			var resp struct {
+				Meta Meta `json:"meta"`
+			}
 			json.Unmarshal(rec.Body.Bytes(), &resp)
-			assert.Equal(t, float64(1), resp["total"])
+			assert.Equal(t, int64(1), resp.Meta.Total)
+
 		}
 	})
 
@@ -126,9 +129,12 @@ func TestListSystemLogs(t *testing.T) {
 		if assert.NoError(t, ListSystemLogs(c)) {
 			assert.Equal(t, http.StatusOK, rec.Code)
 			
-			var resp map[string]interface{}
+			var resp struct {
+				Meta Meta `json:"meta"`
+			}
 			json.Unmarshal(rec.Body.Bytes(), &resp)
-			assert.Equal(t, float64(1), resp["total"])
+			assert.Equal(t, int64(1), resp.Meta.Total)
+
 		}
 	})
 

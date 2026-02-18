@@ -176,5 +176,99 @@ func TestGetDashboardStats(t *testing.T) {
 	premiumProfile := profileMap[profiles[1].ID]
 	require.Equal(t, profiles[1].Name, premiumProfile.ProfileName)
 	assert.Equal(t, int64(1), premiumProfile.Value)
+	assert.Equal(t, int64(1), premiumProfile.Value)
 	assert.Equal(t, int64(1), unassignedCount)
+
+	// Test Caching
+	// Add a new user
+	newUser := &domain.RadiusUser{
+		Username:   "dave",
+		ProfileId:  profiles[0].ID,
+		Status:     "enabled",
+		ExpireTime: now.Add(24 * time.Hour),
+	}
+	err = db.Create(newUser).Error
+	require.NoError(t, err)
+
+	// User count should still be 3 due to cache
+	rec2 := httptest.NewRecorder()
+	// Create new context for second request
+	c2 := CreateTestContext(e, db, req, rec2, appCtx)
+	err = GetDashboardStats(c2)
+	require.NoError(t, err)
+
+	var response2 Response
+	err = json.Unmarshal(rec2.Body.Bytes(), &response2)
+	require.NoError(t, err)
+	dataBytes2, _ := json.Marshal(response2.Data)
+	var stats2 DashboardStats
+	json.Unmarshal(dataBytes2, &stats2)
+
+	assert.Equal(t, int64(3), stats2.TotalUsers, "TotalUsers should be cached (3)")
+
+	// Flush cache
+	dashboardCache.Flush()
+
+	// User count should now be 4
+	rec3 := httptest.NewRecorder()
+	c3 := CreateTestContext(e, db, req, rec3, appCtx)
+	err = GetDashboardStats(c3)
+	require.NoError(t, err)
+
+	var response3 Response
+	err = json.Unmarshal(rec3.Body.Bytes(), &response3)
+	require.NoError(t, err)
+	dataBytes3, _ := json.Marshal(response3.Data)
+	var stats3 DashboardStats
+	json.Unmarshal(dataBytes3, &stats3)
+
+	assert.Equal(t, int64(4), stats3.TotalUsers, "TotalUsers should update after cache flush (4)")
+
+	// Test Short TTL
+	appCtx.Config().Web.CacheTTL = 1 // Set TTL to 1 second
+	dashboardCache.Flush()
+
+	// Request 4: Cache the result with 1s TTL
+	c4 := CreateTestContext(e, db, req, httptest.NewRecorder(), appCtx)
+	err = GetDashboardStats(c4)
+	require.NoError(t, err)
+
+	// Add another user (total 5)
+	user5 := &domain.RadiusUser{
+		Username:   "eve",
+		ProfileId:  profiles[0].ID,
+		Status:     "enabled",
+		ExpireTime: now.Add(24 * time.Hour),
+	}
+	err = db.Create(user5).Error
+	require.NoError(t, err)
+
+	// Immediate request: Should still be cached (4 users)
+	rec5 := httptest.NewRecorder()
+	c5 := CreateTestContext(e, db, req, rec5, appCtx)
+	err = GetDashboardStats(c5)
+	require.NoError(t, err)
+	var stats5 DashboardStats
+	json.Unmarshal(rec5.Body.Bytes(), &struct{ Data *DashboardStats }{Data: &stats5})
+	assert.Equal(t, int64(4), stats5.TotalUsers, "Should return cached data immediately")
+
+	// Wait 1.1s for expiration
+	time.Sleep(1100 * time.Millisecond)
+
+	// Request 6: Should fetch fresh data (5 users)
+	rec6 := httptest.NewRecorder()
+	c6 := CreateTestContext(e, db, req, rec6, appCtx)
+	err = GetDashboardStats(c6)
+	require.NoError(t, err)
+
+	var response6 Response
+	err = json.Unmarshal(rec6.Body.Bytes(), &response6)
+	require.NoError(t, err)
+	dataBytes6, _ := json.Marshal(response6.Data)
+	var stats6 DashboardStats
+	json.Unmarshal(dataBytes6, &stats6)
+
+	assert.Equal(t, int64(5), stats6.TotalUsers, "Should return fresh data after TTL expiration")
 }
+
+

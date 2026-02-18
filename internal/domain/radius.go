@@ -9,7 +9,8 @@ import (
 // RadiusProfile RADIUS billing profile
 type RadiusProfile struct {
 	ID             int64     `json:"id,string" form:"id"`                      // Primary key ID
-	NodeId         int64     `json:"node_id,string" form:"node_id"`            // Node ID
+	NodeId         int64     `gorm:"index" json:"node_id,string" form:"node_id"`            // Node ID
+
 	Name           string    `json:"name" form:"name"`                         // Profile name
 	Status         string    `gorm:"index" json:"status" form:"status"`        // Profile status: 0=disabled 1=enabled
 	AddrPool       string    `json:"addr_pool" form:"addr_pool"`               // Address pool
@@ -36,9 +37,10 @@ type RadiusUser struct {
 	ID              int64     `json:"id,string" form:"id"`                              // Primary key ID
 	NodeId          int64     `json:"node_id,string" form:"node_id"`                    // Node ID
 	ProfileId       int64     `gorm:"index" json:"profile_id,string" form:"profile_id"` // RADIUS profile ID
-	Realname        string    `json:"realname" form:"realname"`                         // Contact name
+	Realname        string    `gorm:"index" json:"realname" form:"realname"`                         // Contact name
 	Email           string    `json:"email" form:"email"`                               // Email address
-	Mobile          string    `json:"mobile" form:"mobile"`                             // Contact phone
+	Mobile          string    `gorm:"index" json:"mobile" form:"mobile"`                             // Contact phone
+
 	Address         string    `json:"address" form:"address"`                           // Contact address
 	Username        string    `json:"username" gorm:"uniqueIndex" form:"username"`      // Account name
 	Password        string    `json:"password" form:"password"`                         // Password
@@ -76,16 +78,17 @@ func (RadiusUser) TableName() string {
 type RadiusOnline struct {
 	ID                  int64     `json:"id,string"` // Primary key ID
 	Username            string    `gorm:"index" json:"username"`
-	NasId               string    `json:"nas_id"`
+	NasId               string    `gorm:"index" json:"nas_id"`
 	NasAddr             string    `json:"nas_addr"`
 	NasPaddr            string    `json:"nas_paddr"`
 	SessionTimeout      int       `json:"session_timeout"`
-	FramedIpaddr        string    `json:"framed_ipaddr"`
+	FramedIpaddr        string    `gorm:"index" json:"framed_ipaddr"`
 	FramedNetmask       string    `json:"framed_netmask"`
 	FramedIpv6Prefix    string    `json:"framed_ipv6_prefix"`
 	FramedIpv6Address   string    `json:"framed_ipv6_address"`
 	DelegatedIpv6Prefix string    `json:"delegated_ipv6_prefix"`
-	MacAddr             string    `json:"mac_addr"`
+	MacAddr             string    `gorm:"index" json:"mac_addr"`
+
 	NasPort             int64     `json:"nas_port,string"`
 	NasClass            string    `json:"nas_class"`
 	NasPortId           string    `json:"nas_port_id"`
@@ -112,16 +115,17 @@ type RadiusAccounting struct {
 	ID                  int64     `json:"id,string"` // Primary key ID
 	Username            string    `gorm:"index" json:"username"`
 	AcctSessionId       string    `gorm:"index" json:"acct_session_id"`
-	NasId               string    `json:"nas_id"`
+	NasId               string    `gorm:"index" json:"nas_id"`
 	NasAddr             string    `json:"nas_addr"`
 	NasPaddr            string    `json:"nas_paddr"`
 	SessionTimeout      int       `json:"session_timeout"`
-	FramedIpaddr        string    `json:"framed_ipaddr"`
+	FramedIpaddr        string    `gorm:"index" json:"framed_ipaddr"`
 	FramedNetmask       string    `json:"framed_netmask"`
 	FramedIpv6Prefix    string    `json:"framed_ipv6_prefix"`
 	FramedIpv6Address   string    `json:"framed_ipv6_address"`
 	DelegatedIpv6Prefix string    `json:"delegated_ipv6_prefix"`
-	MacAddr             string    `json:"mac_addr"`
+	MacAddr             string    `gorm:"index" json:"mac_addr"`
+
 	NasPort             int64     `json:"nas_port,string"`
 	NasClass            string    `json:"nas_class"`
 	NasPortId           string    `json:"nas_port_id"`

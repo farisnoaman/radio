@@ -22,4 +22,9 @@ func Init(appCtx app.AppContext) {
 	registerAgentRoutes()
 	registerFinancialRoutes()
 	registerSystemLogRoutes()
+	registerBackupRoutes()
+	registerMaintenanceRoutes()
+	registerWebsocketRoutes()
+	registerPrivacyRoutes()
+	registerTopologyRoutes()
 }

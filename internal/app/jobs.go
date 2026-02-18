@@ -32,9 +32,7 @@ func (a *Application) initJob() {
 	}
 
 	_, err = a.sched.AddFunc("@daily", func() {
-		a.gormDB.
-			Where("opt_time < ? ", time.Now().
-				Add(-time.Hour*24*365)).Delete(domain.SysOprLog{})
+		go a.SchedLogArchivalTask()
 	})
 	if err != nil {
 		zap.S().Errorf("init job error %s", err.Error())
@@ -42,6 +40,24 @@ func (a *Application) initJob() {
 
 	_, err = a.sched.AddFunc("@every 1m", func() {
 		go a.SchedSubscriptionRenewalTask()
+	})
+	if err != nil {
+		zap.S().Errorf("init job error %s", err.Error())
+	}
+
+	// Backup task
+	if a.appConfig.Backup.Enabled {
+		_, err = a.sched.AddFunc(a.appConfig.Backup.Cron, func() {
+			go a.SchedBackupTask()
+		})
+		if err != nil {
+			zap.S().Errorf("init backup job error %s", err.Error())
+		}
+	}
+
+	// Expire Strategy Task
+	_, err = a.sched.AddFunc("@every 1h", func() {
+		go a.SchedExpireStrategyTask()
 	})
 	if err != nil {
 		zap.S().Errorf("init job error %s", err.Error())
@@ -177,14 +193,32 @@ func (a *Application) SchedSystemMonitorTask() {
 
 	// Collect CPU usage
 	_cpuuse, err := cpu.Percent(0, false)
+	var cpuUsage int64
 	if err == nil && len(_cpuuse) > 0 {
-		metrics.SetGauge("system_cpuuse", int64(_cpuuse[0]*100)) // Store as percentage * 100
+		cpuUsage = int64(_cpuuse[0] * 100)
+		metrics.SetGauge("system_cpuuse", cpuUsage) // Store as percentage * 100
 	}
 
 	// Collect memory usage
 	_meminfo, err := mem.VirtualMemory()
+	var memUsage, memTotal int64
 	if err == nil {
-		metrics.SetGauge("system_memuse", int64(_meminfo.Used/1024/1024)) //nolint:gosec // G115: memory MB value fits in int64
+		memUsage = int64(_meminfo.Used / 1024 / 1024)
+		memTotal = int64(_meminfo.Total / 1024 / 1024)
+		metrics.SetGauge("system_memuse", memUsage) //nolint:gosec // G115: memory MB value fits in int64
+	}
+
+	// Broadcast to WebSocket
+	if a.wsHub != nil {
+		a.wsHub.Broadcast(map[string]interface{}{
+			"type": "system_metrics",
+			"data": map[string]interface{}{
+				"cpu_usage": float64(cpuUsage) / 100.0,
+				"mem_usage": memUsage,
+				"mem_total": memTotal,
+				"timestamp": time.Now().Unix(),
+			},
+		})
 	}
 }
 
@@ -233,4 +267,78 @@ func (a *Application) SchedClearExpireData() {
 	a.gormDB.
 		Where("acct_stop_time < ? ", time.Now().
 			Add(-time.Hour*24*time.Duration(idays))).Delete(domain.RadiusAccounting{})
+}
+
+func (a *Application) SchedBackupTask() {
+	defer func() {
+		if err := recover(); err != nil {
+			zap.S().Error(err)
+		}
+	}()
+	
+	zap.S().Info("Starting scheduled backup...")
+	filename, err := a.BackupMgr().CreateBackup()
+	if err != nil {
+		zap.S().Errorf("Backup failed: %v", err)
+		return
+	}
+	zap.S().Infof("Backup created successfully: %s", filename)
+	
+	// Prune old backups
+	err = a.BackupMgr().PruneBackups(a.appConfig.Backup.MaxBackups)
+	if err != nil {
+		zap.S().Warnf("Failed to prune backups: %v", err)
+	}
+}
+
+func (a *Application) SchedLogArchivalTask() {
+	defer func() {
+		if err := recover(); err != nil {
+			zap.S().Error(err)
+		}
+	}()
+	
+	// Archive logs older than 90 days (configurable ideally)
+	err := a.archivalMgr.ArchiveSystemLogs(90)
+	if err != nil {
+		zap.S().Errorf("Log archival failed: %v", err)
+	}
+}
+
+// SchedExpireStrategyTask handles actions for expired users (disable/delete/notify)
+func (a *Application) SchedExpireStrategyTask() {
+	defer func() {
+		if err := recover(); err != nil {
+			zap.S().Error(err)
+		}
+	}()
+
+	// 1. Disable expired users (if not already disabled)
+	// Find users with expire_time < now AND status = 'enabled'
+	now := time.Now()
+	var expiredUsers []domain.RadiusUser
+	err := a.gormDB.Where("expire_time < ? AND status = ?", now, "enabled").Find(&expiredUsers).Error
+	if err != nil {
+		zap.S().Errorf("Failed to fetch expired users: %v", err)
+		return
+	}
+
+	if len(expiredUsers) > 0 {
+		zap.S().Infof("Found %d expired users to disable", len(expiredUsers))
+		// Bulk update status to 'disabled'
+		err = a.gormDB.Model(&domain.RadiusUser{}).
+			Where("expire_time < ? AND status = ?", now, "enabled").
+			Update("status", "disabled").Error
+		if err != nil {
+			zap.S().Errorf("Failed to disable expired users: %v", err)
+		} else {
+			// Optional: Trigger Disconnect for these users if they are online
+			// This would require iterating and calling DisconnectSession
+			zap.S().Infof("Successfully disabled %d expired users", len(expiredUsers))
+		}
+	}
+
+	// 2. (Optional) Archive/Delete old expired users (e.g., expired > 1 year)
+	// retentionDate := now.AddDate(-1, 0, 0)
+	// err = a.gormDB.Where("expire_time < ?", retentionDate).Delete(&domain.RadiusUser{}).Error
 }

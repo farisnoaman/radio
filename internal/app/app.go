@@ -8,6 +8,10 @@ import (
 
 	"github.com/robfig/cron/v3"
 	"github.com/talkincode/toughradius/v9/config"
+	"github.com/talkincode/toughradius/v9/internal/app/backup"
+	"github.com/talkincode/toughradius/v9/internal/app/logging"
+	"github.com/talkincode/toughradius/v9/internal/app/maintenance"
+	"github.com/talkincode/toughradius/v9/internal/app/websocket"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/pkg/metrics"
 	"go.uber.org/zap"
@@ -26,6 +30,10 @@ type Application struct {
 	sched         *cron.Cron
 	configManager *ConfigManager
 	profileCache  *ProfileCache
+	backupManager backup.BackupManager
+	maintManager  *maintenance.MaintenanceManager
+	wsHub         *websocket.Hub
+	archivalMgr   *logging.ArchivalManager
 }
 
 // Ensure Application implements all interfaces
@@ -142,6 +150,22 @@ func (a *Application) Init(cfg *config.AppConfig) {
 	// Initialize profile cache for dynamic profile linking
 	a.profileCache = NewProfileCache(a.gormDB, DefaultProfileCacheTTL)
 
+	// Initialize profile cache for dynamic profile linking
+	a.profileCache = NewProfileCache(a.gormDB, DefaultProfileCacheTTL)
+
+	// Initialize backup manager
+	a.backupManager = backup.NewLocalBackupManager(cfg)
+
+	// Initialize maintenance manager
+	a.maintManager = maintenance.NewMaintenanceManager(a.gormDB)
+
+	// Initialize WebSocket Hub
+	a.wsHub = websocket.NewHub()
+	go a.wsHub.Run()
+
+	// Initialize Archival Manager
+	a.archivalMgr = logging.NewArchivalManager(a.gormDB, cfg)
+
 	a.initJob()
 }
 
@@ -217,6 +241,21 @@ func (a *Application) SaveSettings(settings map[string]interface{}) error {
 // ProfileCache returns the profile cache instance
 func (a *Application) ProfileCache() *ProfileCache {
 	return a.profileCache
+}
+
+// BackupMgr returns the backup manager instance
+func (a *Application) BackupMgr() backup.BackupManager {
+	return a.backupManager
+}
+
+// MaintMgr returns the maintenance manager instance
+func (a *Application) MaintMgr() *maintenance.MaintenanceManager {
+	return a.maintManager
+}
+
+// WsHub returns the websocket hub instance
+func (a *Application) WsHub() *websocket.Hub {
+	return a.wsHub
 }
 
 // checkDefaultPNode check default node

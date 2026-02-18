@@ -6,11 +6,17 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/patrickmn/go-cache"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 )
+
+
+
+var dashboardCache = cache.New(5*time.Minute, 10*time.Minute)
+
 
 // DashboardStats represents the dashboard statistics structure
 type DashboardStats struct {
@@ -66,7 +72,17 @@ func GetDashboardStats(c echo.Context) error {
 	now := time.Now()
 	todayStart := startOfDay(now)
 
+	// Check cache
+	cacheKey := "dashboard_stats"
+	if cached, found := dashboardCache.Get(cacheKey); found {
+		zap.L().Info("dashboard cache hit")
+		return ok(c, cached)
+	}
+	zap.L().Info("dashboard cache miss")
+
 	stats := &DashboardStats{}
+
+
 
 	// 1. Total users
 	if err := db.Model(&domain.RadiusUser{}).Count(&stats.TotalUsers).Error; err != nil {
@@ -148,7 +164,22 @@ func GetDashboardStats(c echo.Context) error {
 	}
 	stats.ProfileDistribution = profileDist
 
+	stats.ProfileDistribution = profileDist
+
+	stats.ProfileDistribution = profileDist
+
+	// Cache the result
+	// Get TTL from config, default to 60s if 0 (though default config sets it)
+	ttl := time.Duration(GetAppContext(c).Config().Web.CacheTTL) * time.Second
+	if ttl == 0 {
+		ttl = 60 * time.Second
+	}
+	dashboardCache.Set(cacheKey, stats, ttl)
+
 	return ok(c, stats)
+
+
+
 }
 
 // registerDashboardRoutes registers the dashboard routes

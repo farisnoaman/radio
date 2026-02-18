@@ -30,6 +30,8 @@ func setupTestDBForVouchers(t *testing.T) *gorm.DB {
 		&domain.VoucherBundleItem{},
 		&domain.RadiusUser{},
 		&domain.SysOpr{},
+		&domain.SysOprLog{},
+
 	)
 	assert.NoError(t, err)
 	return db
@@ -261,7 +263,17 @@ func TestExtendVoucher(t *testing.T) {
 			Status:  "unused",
 			Price:   10,
 		}
-		db.Create(&unusedVoucher)
+		if err := db.Create(&unusedVoucher).Error; err != nil {
+			t.Fatalf("Failed to create unused voucher: %v", err)
+		}
+		
+		// Verify existence
+		var checkVoucher domain.Voucher
+		if err := db.First(&checkVoucher, "code = ?", "UNUSED001").Error; err != nil {
+			t.Fatalf("Voucher UNUSED001 not found in DB immediately after creation: %v", err)
+		}
+
+
 
 		req := VoucherExtendRequest{Code: "UNUSED001", ValidityDays: 7}
 		jsonReq, _ := json.Marshal(req)

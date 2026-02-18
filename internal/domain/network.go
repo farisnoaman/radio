@@ -10,6 +10,8 @@ type NetNode struct {
 	Name      string    `json:"name" form:"name"`
 	Remark    string    `json:"remark" form:"remark"`
 	Tags      string    `json:"tags" form:"tags"`
+	Latitude  float64   `json:"latitude" form:"latitude"`
+	Longitude float64   `json:"longitude" form:"longitude"`
 	CreatedAt time.Time `json:"created_at"`
 	UpdatedAt time.Time `json:"updated_at"`
 }
