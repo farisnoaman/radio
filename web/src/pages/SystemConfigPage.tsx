@@ -351,7 +351,7 @@ export const SystemConfigPage: React.FC = () => {
     <Box sx={{ p: 3 }}>
       {/* 页面标题 */}
       <Box sx={{ mb: 3 }}>
-        <Typography variant="h4" gutterBottom>
+        <Typography variant="h4" sx={{ fontSize: { xs: '1.5rem', sm: '2.125rem' }, fontWeight: { xs: 600, sm: 400 } }} gutterBottom>
           {translate('pages.system_config.title')}
         </Typography>
         <Typography variant="body1" color="textSecondary">
@@ -360,13 +360,12 @@ export const SystemConfigPage: React.FC = () => {
       </Box>
 
       {/* 操作按钮 */}
-      <Box sx={{ mb: 3 }}>
+      <Box sx={{ mb: 3, display: 'flex', flexWrap: 'wrap', gap: 2 }}>
         <Button
           variant="contained"
           startIcon={<SaveIcon />}
           onClick={handleSave}
           disabled={saveMutation.isPending || isLoading}
-          sx={{ mr: 2 }}
         >
           {saveMutation.isPending ? translate('pages.system_config.saving') : translate('pages.system_config.save')}
         </Button>
@@ -375,7 +374,6 @@ export const SystemConfigPage: React.FC = () => {
           startIcon={<RefreshIcon />}
           onClick={() => setResetDialogOpen(true)}
           disabled={saveMutation.isPending || isLoading}
-          sx={{ mr: 2 }}
         >
           {translate('pages.system_config.reset')}
         </Button>
@@ -436,7 +434,7 @@ export const SystemConfigPage: React.FC = () => {
                 </AccordionSummary>
 
                 <AccordionDetails>
-                  <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: 3 }}>
+                  <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(auto-fit, minmax(320px, 1fr))' }, gap: 3 }}>
                     {groupSchemas.map((schema) => {
                       const schemaTitle = resolveSchemaTitle(schema);
                       const schemaDescription = resolveSchemaDescription(schema);

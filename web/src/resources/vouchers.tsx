@@ -23,8 +23,10 @@ import {
     useGetOne,
     FunctionField,
     BooleanInput,
+    RecordContextProvider,
+    useListContext
 } from 'react-admin';
-import { Box, Dialog, DialogTitle, DialogContent, DialogActions, Button as MuiButton, Typography } from '@mui/material';
+import { useMediaQuery, Theme, Card, CardContent, CardActions, Box, Dialog, DialogTitle, DialogContent, DialogActions, Button as MuiButton, Typography } from '@mui/material';
 import RedeemIcon from '@mui/icons-material/Redeem';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -199,25 +201,90 @@ const StatusField = () => {
     return <Chip label="Active" color="success" size="small" variant="outlined" />;
 };
 
-export const VoucherBatchList = (props: ListProps) => (
-    <List {...props} sort={{ field: 'id', order: 'DESC' }}>
-        <Datagrid>
-            <TextField source="id" />
-            <TextField source="name" />
-            <ReferenceField source="product_id" reference="products">
-                <TextField source="name" />
-            </ReferenceField>
-            <ReferenceField source="agent_id" reference="agents" emptyText="System">
-                <TextField source="realname" />
-            </ReferenceField>
-            <TextField source="count" />
-            <StatusField />
-            <DateField source="expire_time" showTime label="Expiry Time" />
-            <DateField source="created_at" showTime />
-            <BatchActions />
-        </Datagrid>
-    </List>
-);
+
+const VoucherBatchGrid = () => {
+    const { data, isLoading } = useListContext();
+    if (isLoading || !data) return null;
+    return (
+        <Box display="grid" gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)' }} gap={2} p={2} sx={{ bgcolor: theme => theme.palette.mode === 'dark' ? 'transparent' : 'rgba(0,0,0,0.02)' }}>
+            {data.map(record => (
+                <RecordContextProvider value={record} key={record.id}>
+                    <Card 
+                        elevation={0} 
+                        sx={{ 
+                            borderRadius: 3, 
+                            border: theme => `1px solid ${theme.palette.divider}`,
+                            transition: 'box-shadow 0.2s',
+                            '&:hover': { boxShadow: 4 }
+                        }}
+                    >
+                        <CardContent sx={{ pb: 1 }}>
+                            <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                                <Box>
+                                    <Typography variant="subtitle1" component="div" sx={{ fontWeight: 700, lineHeight: 1.2, mb: 0.5 }}>
+                                        <TextField source="name" />
+                                    </Typography>
+                                    <Typography variant="caption" color="text.secondary">
+                                        BATCH ID: {record.id}
+                                    </Typography>
+                                </Box>
+                                <StatusField />
+                            </Box>
+                            
+                            <Box sx={{ bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', p: 1.5, borderRadius: 2, mb: 2 }}>
+                                <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                    <span style={{ color: 'text.secondary' }}>Product:</span>
+                                    <strong style={{ textAlign: 'right' }}><ReferenceField source="product_id" reference="products"><TextField source="name" /></ReferenceField></strong>
+                                </Typography>
+                                <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                    <span style={{ color: 'text.secondary' }}>Count:</span>
+                                    <strong style={{ textAlign: 'right', fontSize: '1.1em' }}><TextField source="count" /></strong>
+                                </Typography>
+                                <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                    <span style={{ color: 'text.secondary' }}>Agent:</span>
+                                    <strong style={{ textAlign: 'right' }}><ReferenceField source="agent_id" reference="agents" emptyText="System"><TextField source="realname" /></ReferenceField></strong>
+                                </Typography>
+                                <Typography variant="caption" sx={{ display: 'flex', justifyContent: 'space-between', color: 'error.main' }}>
+                                    <span>Expires:</span>
+                                    <DateField source="expire_time" showTime />
+                                </Typography>
+                            </Box>
+                        </CardContent>
+                        <CardActions sx={{ justifyContent: 'flex-start', borderTop: theme => `1px solid ${theme.palette.divider}`, px: 2, py: 1.5, flexWrap: 'wrap', gap: 1 }}>
+                            <BatchActions />
+                        </CardActions>
+                    </Card>
+                </RecordContextProvider>
+            ))}
+        </Box>
+    );
+};
+export const VoucherBatchList = (props: ListProps) => {
+    const isSmall = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
+    return (
+        <List {...props} sort={{ field: 'id', order: 'DESC' }}>
+            {isSmall ? (
+                <VoucherBatchGrid />
+            ) : (
+                <Datagrid>
+                    <TextField source="id" />
+                    <TextField source="name" />
+                    <ReferenceField source="product_id" reference="products">
+                        <TextField source="name" />
+                    </ReferenceField>
+                    <ReferenceField source="agent_id" reference="agents" emptyText="System">
+                        <TextField source="realname" />
+                    </ReferenceField>
+                    <TextField source="count" />
+                    <StatusField />
+                    <DateField source="expire_time" showTime label="Expiry Time" />
+                    <DateField source="created_at" showTime />
+                    <BatchActions />
+                </Datagrid>
+            )}
+        </List>
+    );
+};
 
 import { useWatch, useFormContext } from 'react-hook-form';
 
@@ -449,22 +516,100 @@ const ExtendButton = () => {
     );
 };
 
-export const VoucherList = (props: ListProps) => (
-    <List {...props} sort={{ field: 'id', order: 'DESC' }}>
-        <Datagrid>
-            <TextField source="id" />
-            <TextField source="code" />
-            <TextField source="status" />
-            <ReferenceField source="batch_id" reference="voucher-batches">
-                <TextField source="name" />
-            </ReferenceField>
-            <TextField source="price" />
-            <FunctionField label="PIN" render={(record: any) => record.require_pin ? (record.pin_view ? record.pin : '****') : 'N/A'} />
-            <RedeemButton />
-            <ExtendButton />
-            <DateField source="expire_time" showTime />
-            <DateField source="created_at" showTime />
-        </Datagrid>
-    </List>
-);
+
+const VoucherGrid = () => {
+    const { data, isLoading } = useListContext();
+    if (isLoading || !data) return null;
+    return (
+        <Box display="grid" gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' }} gap={2} p={2} sx={{ bgcolor: theme => theme.palette.mode === 'dark' ? 'transparent' : 'rgba(0,0,0,0.02)' }}>
+            {data.map(record => (
+                <RecordContextProvider value={record} key={record.id}>
+                    <Card 
+                        elevation={0} 
+                        sx={{ 
+                            borderRadius: 3, 
+                            border: theme => `1px solid ${theme.palette.divider}`,
+                            transition: 'box-shadow 0.2s',
+                            '&:hover': { boxShadow: 4 },
+                            position: 'relative',
+                            overflow: 'hidden'
+                        }}
+                    >
+                        {/* Decorative side accent */}
+                        <Box sx={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, bgcolor: record.status === 'unused' ? 'success.main' : record.status === 'used' ? 'error.main' : 'warning.main' }} />
+                        
+                        <CardContent sx={{ pb: 1, pl: 3 }}>
+                            <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                                <Typography variant="h6" component="div" sx={{ fontFamily: 'monospace', fontWeight: 700, letterSpacing: 1 }}>
+                                    <TextField source="code" />
+                                </Typography>
+                                <Chip 
+                                    label={record.status.toUpperCase()} 
+                                    size="small" 
+                                    color={record.status === 'unused' ? 'success' : record.status === 'used' ? 'error' : 'default'}
+                                    variant={record.status === 'unused' ? 'filled' : 'outlined'}
+                                    sx={{ fontWeight: 'bold', fontSize: '0.7rem' }}
+                                />
+                            </Box>
+                            
+                            <Box sx={{ bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', p: 1.5, borderRadius: 2, mb: 2 }}>
+                                <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                    <span style={{ color: 'text.secondary' }}>Batch:</span>
+                                    <strong style={{ maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                                        <ReferenceField source="batch_id" reference="voucher-batches"><TextField source="name" /></ReferenceField>
+                                    </strong>
+                                </Typography>
+                                <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                    <span style={{ color: 'text.secondary' }}>Price:</span>
+                                    <strong style={{ textAlign: 'right', color: 'success.main' }}>
+                                        $<TextField source="price" />
+                                    </strong>
+                                </Typography>
+                                <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
+                                    <span style={{ color: 'text.secondary' }}>PIN:</span>
+                                    <strong style={{ fontFamily: 'monospace', letterSpacing: 2 }}>
+                                        <FunctionField render={(r:any) => r.require_pin ? (r.pin_view ? r.pin : '****') : 'N/A'} />
+                                    </strong>
+                                </Typography>
+                                <Typography variant="caption" sx={{ display: 'flex', justifyContent: 'space-between', color: 'text.secondary', mt: 1, pt: 1, borderTop: '1px dashed rgba(150,150,150,0.3)' }}>
+                                    <span>Exp:</span>
+                                    <DateField source="expire_time" showTime />
+                                </Typography>
+                            </Box>
+                        </CardContent>
+                        <CardActions sx={{ justifyContent: 'flex-end', borderTop: theme => `1px solid ${theme.palette.divider}`, px: 2, py: 1.5 }}>
+                            <RedeemButton />
+                            <ExtendButton />
+                        </CardActions>
+                    </Card>
+                </RecordContextProvider>
+            ))}
+        </Box>
+    );
+};
+export const VoucherList = (props: ListProps) => {
+    const isSmall = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
+    return (
+        <List {...props} sort={{ field: 'id', order: 'DESC' }}>
+            {isSmall ? (
+                <VoucherGrid />
+            ) : (
+                <Datagrid>
+                    <TextField source="id" />
+                    <TextField source="code" />
+                    <TextField source="status" />
+                    <ReferenceField source="batch_id" reference="voucher-batches">
+                        <TextField source="name" />
+                    </ReferenceField>
+                    <TextField source="price" />
+                    <FunctionField label="PIN" render={(record: any) => record.require_pin ? (record.pin_view ? record.pin : '****') : 'N/A'} />
+                    <RedeemButton />
+                    <ExtendButton />
+                    <DateField source="expire_time" showTime />
+                    <DateField source="created_at" showTime />
+                </Datagrid>
+            )}
+        </List>
+    );
+};
 

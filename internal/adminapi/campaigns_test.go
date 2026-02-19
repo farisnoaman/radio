@@ -12,15 +12,14 @@ func TestCampaignWorkflow(t *testing.T) {
 	// Mock DB logic would go here. 
 	// Since we are inside adminapi package, we can test internal logic if we extract it, 
 	// or integration test if we have a test DB.
-	// For now, simple struct validation.
+	// For now, simple struct validation using existing VoucherBatch type.
 
-	campaign := domain.VoucherCampaign{
+	batch := domain.VoucherBatch{
 		Name:      "Test Campaign",
 		Count:     100,
-		Status:    "pending",
 		CreatedAt: time.Now(),
 	}
 
-	assert.Equal(t, "pending", campaign.Status)
-	assert.Equal(t, 100, campaign.Count)
+	assert.Equal(t, "Test Campaign", batch.Name)
+	assert.Equal(t, 100, batch.Count)
 }

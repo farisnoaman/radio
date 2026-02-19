@@ -16,6 +16,7 @@ import {
   Toolbar,
   SaveButton,
   DeleteButton,
+  ShowButton,
   SimpleForm,
   ToolbarProps,
   TopToolbar,
@@ -28,7 +29,8 @@ import {
   useNotify,
   useListContext,
   RaRecord,
-  FunctionField
+  FunctionField,
+  RecordContextProvider
 } from 'react-admin';
 import {
   Box,
@@ -36,6 +38,7 @@ import {
   Typography,
   Card,
   CardContent,
+  CardActions,
   Stack,
   Avatar,
   IconButton,
@@ -534,6 +537,74 @@ const ProfileListActions = () => {
 
 // ============ 内部列表内容组件 ============
 
+
+const ProfileGrid = () => {
+  const { data, isLoading } = useListContext<RadiusProfile>();
+  const translate = useTranslate();
+  if (isLoading || !data) return null;
+  return (
+    <Box display="grid" gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)' }} gap={2} p={2} sx={{ bgcolor: theme => theme.palette.mode === 'dark' ? 'transparent' : 'rgba(0,0,0,0.02)' }}>
+      {data.map(record => (
+        <RecordContextProvider value={record} key={record.id}>
+          <Card 
+            elevation={0} 
+            sx={{ 
+                borderRadius: 3, 
+                border: theme => `1px solid ${theme.palette.divider}`,
+                transition: 'box-shadow 0.2s',
+                '&:hover': { boxShadow: 4 }
+            }}
+          >
+            <CardContent sx={{ pb: 1 }}>
+              <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
+                <Box display="flex" alignItems="center" gap={1.5}>
+                  <Avatar sx={{ bgcolor: record.status === 'enabled' ? 'primary.main' : 'grey.400', width: 40, height: 40, fontWeight: 'bold' }}>
+                    {record.name?.charAt(0).toUpperCase() || 'P'}
+                  </Avatar>
+                  <Box>
+                    <Typography variant="subtitle1" component="div" sx={{ fontWeight: 700, lineHeight: 1.2 }}>
+                      <TextField source="name" />
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                       {translate('resources.radius/profiles.fields.active_num', { _: '并发数' })}: <strong><TextField source="active_num" /></strong>
+                    </Typography>
+                  </Box>
+                </Box>
+                <StatusIndicator isEnabled={record.status === 'enabled'} />
+              </Box>
+              
+              <Box sx={{ bgcolor: theme => alpha(theme.palette.grey[500], 0.05), p: 1.5, borderRadius: 2, mb: 2 }}>
+                <Box display="flex" justifyContent="space-between" mb={1}>
+                  <Typography variant="body2" color="text.secondary">{translate('resources.radius/profiles.fields.data_quota', { _: '数据配额' })}:</Typography>
+                  <Typography variant="body2" sx={{ fontWeight: 'bold' }}>
+                    <QuotaField />
+                  </Typography>
+                </Box>
+                <Box display="flex" justifyContent="space-between" mb={1}>
+                   <Typography variant="body2" color="text.secondary">{translate('resources.radius/profiles.fields.addr_pool', { _: '地址池' })}:</Typography>
+                   <Typography variant="body2" sx={{ fontWeight: 'bold', color: 'primary.main' }}>
+                       <TextField source="addr_pool" emptyText="N/A" />
+                   </Typography>
+                </Box>
+                <Box display="flex" justifyContent="space-between">
+                  <Typography variant="body2" color="text.secondary">Rates (U/D):</Typography>
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <RateField source="up_rate" />
+                    <RateField source="down_rate" />
+                  </Box>
+                </Box>
+              </Box>
+            </CardContent>
+            <CardActions sx={{ justifyContent: 'flex-end', borderTop: theme => `1px solid ${theme.palette.divider}`, px: 2, py: 1.5, gap: 1 }}>
+              <ShowButton label="" size="small" />
+            </CardActions>
+          </Card>
+        </RecordContextProvider>
+      ))}
+    </Box>
+  );
+};
+
 const ProfileListContent = () => {
   const translate = useTranslate();
   const theme = useTheme();
@@ -662,6 +733,9 @@ const ProfileListContent = () => {
             },
           }}
         >
+          {isMobile ? (
+            <ProfileGrid />
+          ) : (
           <Datagrid rowClick="show" bulkActionButtons={false}>
             <FunctionField
               source="name"
@@ -701,6 +775,7 @@ const ProfileListContent = () => {
               showTime
             />
           </Datagrid>
+          )}
         </Box>
       </Card>
     </Box>

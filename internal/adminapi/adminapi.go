@@ -28,6 +28,7 @@ func Init(appCtx app.AppContext) {
 	registerTopologyRoutes()
 	registerTunnelRoutes()
 	registerAnalyticsRoutes()
+	registerCoARoutes()
 }
 
 
