@@ -1,6 +1,7 @@
 package backup
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -14,17 +15,29 @@ import (
 	"go.uber.org/zap"
 )
 
+// restoreMetadata tracks restore timestamps for backups
+type restoreMetadata struct {
+	RestoredAt map[string]string `json:"restored_at"` // backup_id -> timestamp
+}
+
 type LocalBackupManager struct {
-	cfg       *config.AppConfig
-	backupDir string
-	gdrive    *GoogleDriveProvider
+	cfg            *config.AppConfig
+	backupDir      string
+	gdrive         *GoogleDriveProvider
+	metadataFile   string
+	restoreMeta    restoreMetadata
 }
 
 func NewLocalBackupManager(cfg *config.AppConfig) *LocalBackupManager {
 	mgr := &LocalBackupManager{
-		cfg:       cfg,
-		backupDir: cfg.GetBackupDir(),
+		cfg:          cfg,
+		backupDir:    cfg.GetBackupDir(),
+		metadataFile: filepath.Join(cfg.GetBackupDir(), ".restore_metadata.json"),
+		restoreMeta:  restoreMetadata{RestoredAt: make(map[string]string)},
 	}
+
+	// Load existing restore metadata
+	mgr.loadRestoreMetadata()
 
 	if cfg.Backup.GoogleDrive.Enabled {
 		provider, err := NewGoogleDriveProvider(cfg.Backup.GoogleDrive.ServiceAccountJSON, cfg.Backup.GoogleDrive.FolderID)
@@ -36,6 +49,44 @@ func NewLocalBackupManager(cfg *config.AppConfig) *LocalBackupManager {
 	}
 
 	return mgr
+}
+
+// loadRestoreMetadata loads the restore timestamps from the metadata file
+func (m *LocalBackupManager) loadRestoreMetadata() {
+	data, err := os.ReadFile(m.metadataFile)
+	if err != nil {
+		zap.S().Debugf("No existing restore metadata file found at %s: %v", m.metadataFile, err)
+		return // File doesn't exist or can't be read, use empty metadata
+	}
+	err = json.Unmarshal(data, &m.restoreMeta)
+	if err != nil {
+		zap.S().Warnf("Failed to parse restore metadata: %v", err)
+	}
+	if m.restoreMeta.RestoredAt == nil {
+		m.restoreMeta.RestoredAt = make(map[string]string)
+	}
+	zap.S().Debugf("Loaded restore metadata with %d entries", len(m.restoreMeta.RestoredAt))
+}
+
+// saveRestoreMetadata saves the restore timestamps to the metadata file
+func (m *LocalBackupManager) saveRestoreMetadata() {
+	// Ensure backup directory exists
+	if err := os.MkdirAll(m.backupDir, 0755); err != nil {
+		zap.S().Errorf("Failed to create backup directory %s: %v", m.backupDir, err)
+		return
+	}
+
+	data, err := json.MarshalIndent(m.restoreMeta, "", "  ")
+	if err != nil {
+		zap.S().Errorf("Failed to marshal restore metadata: %v", err)
+		return
+	}
+	err = os.WriteFile(m.metadataFile, data, 0644)
+	if err != nil {
+		zap.S().Errorf("Failed to save restore metadata to %s: %v", m.metadataFile, err)
+	} else {
+		zap.S().Infof("Saved restore metadata to %s", m.metadataFile)
+	}
 }
 
 func (m *LocalBackupManager) CreateBackup() (string, error) {
@@ -132,6 +183,9 @@ func (m *LocalBackupManager) backupPostgres(filename string) error {
 }
 
 func (m *LocalBackupManager) ListBackups() ([]BackupInfo, error) {
+	// Reload metadata to get latest restore timestamps
+	m.loadRestoreMetadata()
+
 	entries, err := os.ReadDir(m.backupDir)
 	if err != nil {
 		return nil, err
@@ -173,12 +227,23 @@ func (m *LocalBackupManager) ListBackups() ([]BackupInfo, error) {
 			dbType = "postgres"
 		}
 
+		// Check if this backup has been restored
+		var restoredAt *time.Time
+		if restoredStr, ok := m.restoreMeta.RestoredAt[name]; ok {
+			t, err := time.Parse(time.RFC3339, restoredStr)
+			if err == nil {
+				restoredAt = &t
+				zap.S().Debugf("Backup %s has restored_at: %s", name, restoredStr)
+			}
+		}
+
 		backups = append(backups, BackupInfo{
-			ID:        name,
-			FileName:  name,
-			Size:      info.Size(),
-			CreatedAt: createdAt,
-			Type:      dbType,
+			ID:         name,
+			FileName:   name,
+			Size:       info.Size(),
+			CreatedAt:  createdAt,
+			RestoredAt: restoredAt,
+			Type:       dbType,
 		})
 	}
 
@@ -209,13 +274,30 @@ func (m *LocalBackupManager) RestoreBackup(id string) error {
 		return fmt.Errorf("backup not found")
 	}
 
+	zap.S().Infof("Starting restore of backup: %s from path: %s", id, path)
+
+	var restoreErr error
 	if m.cfg.Database.Type == "sqlite" {
-		return m.restoreSQLite(path)
+		restoreErr = m.restoreSQLite(path)
 	} else if m.cfg.Database.Type == "postgres" {
-		return m.restorePostgres(path)
+		restoreErr = m.restorePostgres(path)
+	} else {
+		return fmt.Errorf("unsupported database type")
 	}
-	
-	return fmt.Errorf("unsupported database type")
+
+	if restoreErr != nil {
+		zap.S().Errorf("Failed to restore backup %s: %v", id, restoreErr)
+		return restoreErr
+	}
+
+	// Record the restore timestamp
+	restoreTime := time.Now().Format(time.RFC3339)
+	m.restoreMeta.RestoredAt[id] = restoreTime
+	zap.S().Infof("Recording restore timestamp for %s: %s", id, restoreTime)
+	m.saveRestoreMetadata()
+
+	zap.S().Infof("Successfully restored backup: %s", id)
+	return nil
 }
 
 func (m *LocalBackupManager) restoreSQLite(backupPath string) error {

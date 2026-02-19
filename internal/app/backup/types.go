@@ -6,11 +6,12 @@ import (
 
 // BackupInfo represents metadata about a backup
 type BackupInfo struct {
-	ID        string    `json:"id"`
-	FileName  string    `json:"file_name"`
-	Size      int64     `json:"size"`
-	CreatedAt time.Time `json:"created_at"`
-	Type      string    `json:"type"` // "sqlite" or "postgres"
+	ID         string     `json:"id"`
+	FileName   string     `json:"file_name"`
+	Size       int64      `json:"size"`
+	CreatedAt  time.Time  `json:"created_at"`
+	RestoredAt *time.Time `json:"restored_at,omitempty"` // When this backup was last restored, nil if never restored
+	Type       string     `json:"type"`                  // "sqlite" or "postgres"
 }
 
 // BackupManager defines the interface for backup operations
