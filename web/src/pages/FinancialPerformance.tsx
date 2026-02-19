@@ -20,6 +20,7 @@ import {
 } from '@mui/material';
 import Grid from '@mui/material/GridLegacy';
 import { useTheme, alpha } from '@mui/material/styles';
+import useMediaQuery from '@mui/material/useMediaQuery';
 import DownloadIcon from '@mui/icons-material/Download';
 import AccountBalanceWalletOutlinedIcon from '@mui/icons-material/AccountBalanceWalletOutlined';
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
@@ -86,6 +87,7 @@ interface AdminBatchDetail {
 
 const FinancialPerformance = () => {
     const theme = useTheme();
+    const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
     const [tabValue, setTabValue] = useState(0);
     const [loading, setLoading] = useState(true);
     const [report, setReport] = useState<FinancialReport | null>(null);
@@ -194,13 +196,13 @@ const FinancialPerformance = () => {
     if (!report) return <Typography>Error loading report</Typography>;
 
     return (
-        <Box sx={{ p: 3 }}>
+        <Box sx={{ p: { xs: 1.5, sm: 2, md: 3 } }}>
             <Title title="Financial Performance" />
 
             {/* Header & Controls */}
-            <Stack direction={{ xs: 'column', md: 'row' }} justifyContent="space-between" alignItems="center" spacing={2} mb={3}>
-                <Typography variant="h5" fontWeight="bold">Financial Performance</Typography>
-                <Stack direction="row" spacing={2}>
+            <Stack direction="column" spacing={2} mb={3} mt={{ xs: 5, sm: 0 }}>
+                <Typography variant="h5" fontWeight="bold" sx={{ display: { xs: 'none', md: 'block' } }}>Financial Performance</Typography>
+                <Stack direction="row" spacing={2} alignItems="center">
                     <TextField
                         type="date"
                         label="Start Date"
@@ -208,6 +210,7 @@ const FinancialPerformance = () => {
                         InputLabelProps={{ shrink: true }}
                         value={startDate}
                         onChange={(e) => setStartDate(e.target.value)}
+                        fullWidth
                     />
                     <TextField
                         type="date"
@@ -216,18 +219,19 @@ const FinancialPerformance = () => {
                         InputLabelProps={{ shrink: true }}
                         value={endDate}
                         onChange={(e) => setEndDate(e.target.value)}
+                        fullWidth
                     />
-                    <Button variant="contained" startIcon={<DownloadIcon />} onClick={handleExport} sx={{ borderRadius: 2 }}>
-                        Export CSV
-                    </Button>
                 </Stack>
+                <Button variant="contained" startIcon={<DownloadIcon />} onClick={handleExport} sx={{ borderRadius: 2, whiteSpace: 'nowrap', py: { xs: 1, sm: 0.5 }, alignSelf: { xs: 'stretch', sm: 'flex-start' } }} fullWidth={isMobile}>
+                    Export CSV
+                </Button>
             </Stack>
 
             <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 3 }}>
-                <Tabs value={tabValue} onChange={handleTabChange}>
-                    <Tab label="Overview" />
-                    <Tab label="Agent Performance" />
-                    <Tab label="Admin Performance" />
+                <Tabs value={tabValue} onChange={handleTabChange} variant="fullWidth" sx={{ '& .MuiTab-root': { fontSize: { xs: '0.75rem', sm: '0.875rem' }, minWidth: 0, px: 1 } }}>
+                    <Tab label={isMobile ? "Overview" : "Overview"} />
+                    <Tab label={isMobile ? "Agents" : "Agent Performance"} />
+                    <Tab label={isMobile ? "Admin" : "Admin Performance"} />
                 </Tabs>
             </Box>
 
@@ -328,41 +332,74 @@ const FinancialPerformance = () => {
                     <Card sx={{ borderRadius: 3 }}>
                         <Typography variant="h6" sx={{ p: 2, fontWeight: 600 }}>Detailed Agent Performance</Typography>
                         <Divider />
-                        <Table>
-                            <TableHead>
-                                <TableRow sx={{ backgroundColor: alpha(theme.palette.primary.main, 0.05) }}>
-                                    <TableCell>Agent Name</TableCell>
-                                    <TableCell>Username</TableCell>
-                                    <TableCell align="right">Wallet Balance</TableCell>
-                                    <TableCell align="right">Total Vouchers</TableCell>
-                                    <TableCell align="right">Sold (Used)</TableCell>
-                                    <TableCell align="right">Unused</TableCell>
-                                </TableRow>
-                            </TableHead>
-                            <TableBody>
+                        {isMobile ? (
+                            <Box sx={{ p: 2 }}>
                                 {(report.agents || []).map((agent) => (
-                                    <TableRow key={agent.id} hover>
-                                        <TableCell sx={{ fontWeight: 'bold' }}>{agent.name}</TableCell>
-                                        <TableCell>{agent.username}</TableCell>
-                                        <TableCell align="right" sx={{ fontWeight: 'bold', color: theme.palette.primary.main }}>
-                                            ${agent.balance.toFixed(2)}
-                                        </TableCell>
-                                        <TableCell align="right">{agent.total_vouchers}</TableCell>
-                                        <TableCell align="right">
-                                            <Chip label={agent.used_vouchers} color="success" size="small" variant="outlined" sx={{ fontWeight: 600 }} />
-                                        </TableCell>
-                                        <TableCell align="right">
-                                            <Chip label={agent.unused_vouchers} color="warning" size="small" variant="outlined" sx={{ fontWeight: 600 }} />
-                                        </TableCell>
-                                    </TableRow>
+                                    <Card variant="outlined" key={agent.id} sx={{ mb: 2, borderRadius: 2 }}>
+                                        <CardContent sx={{ pb: 2 }}>
+                                            <Stack direction="row" justifyContent="space-between" mb={1}>
+                                                <Typography variant="subtitle1" fontWeight="bold">{agent.name}</Typography>
+                                                <Typography variant="subtitle1" fontWeight="bold" color="primary.main">${agent.balance.toFixed(2)}</Typography>
+                                            </Stack>
+                                            <Typography variant="body2" color="text.secondary" mb={2}>@{agent.username}</Typography>
+                                            <Grid container spacing={1}>
+                                                <Grid item xs={4}>
+                                                    <Typography variant="caption" color="text.secondary">Total</Typography>
+                                                    <Typography variant="body2" fontWeight="bold">{agent.total_vouchers}</Typography>
+                                                </Grid>
+                                                <Grid item xs={4}>
+                                                    <Typography variant="caption" color="text.secondary">Sold</Typography>
+                                                    <Box><Chip label={agent.used_vouchers} color="success" size="small" variant="outlined" sx={{ fontWeight: 600, height: 20 }} /></Box>
+                                                </Grid>
+                                                <Grid item xs={4}>
+                                                    <Typography variant="caption" color="text.secondary">Unused</Typography>
+                                                    <Box><Chip label={agent.unused_vouchers} color="warning" size="small" variant="outlined" sx={{ fontWeight: 600, height: 20 }} /></Box>
+                                                </Grid>
+                                            </Grid>
+                                        </CardContent>
+                                    </Card>
                                 ))}
                                 {(report.agents || []).length === 0 && (
-                                    <TableRow>
-                                        <TableCell colSpan={6} align="center" sx={{ py: 3, color: 'text.secondary' }}>No agents found</TableCell>
-                                    </TableRow>
+                                    <Typography color="text.secondary" textAlign="center" py={3}>No agents found</Typography>
                                 )}
-                            </TableBody>
-                        </Table>
+                            </Box>
+                        ) : (
+                            <Table>
+                                <TableHead>
+                                    <TableRow sx={{ backgroundColor: alpha(theme.palette.primary.main, 0.05) }}>
+                                        <TableCell>Agent Name</TableCell>
+                                        <TableCell>Username</TableCell>
+                                        <TableCell align="right">Wallet Balance</TableCell>
+                                        <TableCell align="right">Total Vouchers</TableCell>
+                                        <TableCell align="right">Sold (Used)</TableCell>
+                                        <TableCell align="right">Unused</TableCell>
+                                    </TableRow>
+                                </TableHead>
+                                <TableBody>
+                                    {(report.agents || []).map((agent) => (
+                                        <TableRow key={agent.id} hover>
+                                            <TableCell sx={{ fontWeight: 'bold' }}>{agent.name}</TableCell>
+                                            <TableCell>{agent.username}</TableCell>
+                                            <TableCell align="right" sx={{ fontWeight: 'bold', color: theme.palette.primary.main }}>
+                                                ${agent.balance.toFixed(2)}
+                                            </TableCell>
+                                            <TableCell align="right">{agent.total_vouchers}</TableCell>
+                                            <TableCell align="right">
+                                                <Chip label={agent.used_vouchers} color="success" size="small" variant="outlined" sx={{ fontWeight: 600 }} />
+                                            </TableCell>
+                                            <TableCell align="right">
+                                                <Chip label={agent.unused_vouchers} color="warning" size="small" variant="outlined" sx={{ fontWeight: 600 }} />
+                                            </TableCell>
+                                        </TableRow>
+                                    ))}
+                                    {(report.agents || []).length === 0 && (
+                                        <TableRow>
+                                            <TableCell colSpan={6} align="center" sx={{ py: 3, color: 'text.secondary' }}>No agents found</TableCell>
+                                        </TableRow>
+                                    )}
+                                </TableBody>
+                            </Table>
+                        )}
                     </Card>
                 </Stack>
             )}
@@ -412,47 +449,85 @@ const FinancialPerformance = () => {
                             Admin Batch Details
                         </Typography>
                         <Card sx={{ borderRadius: 3 }}>
-                            <Table>
-                                <TableHead>
-                                    <TableRow sx={{ backgroundColor: alpha(theme.palette.primary.main, 0.05) }}>
-                                        <TableCell>Batch Name</TableCell>
-                                        <TableCell>Product</TableCell>
-                                        <TableCell align="right">Count</TableCell>
-                                        <TableCell align="right">Sold</TableCell>
-                                        <TableCell align="right">Unused</TableCell>
-                                        <TableCell align="right">Total Value</TableCell>
-                                        <TableCell align="right">Generated At</TableCell>
-                                    </TableRow>
-                                </TableHead>
-                                <TableBody>
+                            {isMobile ? (
+                                <Box sx={{ p: 2 }}>
                                     {(report.admin.batches || []).map((batch) => (
-                                        <TableRow key={batch.id} hover>
-                                            <TableCell sx={{ fontWeight: 'bold' }}>{batch.name}</TableCell>
-                                            <TableCell>
-                                                <Chip label={batch.product_name} size="small" sx={{ borderRadius: 1 }} />
-                                            </TableCell>
-                                            <TableCell align="right">{batch.count}</TableCell>
-                                            <TableCell align="right">
-                                                <Typography variant="body2" color="success.main" fontWeight={600}>{batch.used_vouchers}</Typography>
-                                            </TableCell>
-                                            <TableCell align="right">
-                                                <Typography variant="body2" color="warning.main" fontWeight={600}>{batch.unused_vouchers}</Typography>
-                                            </TableCell>
-                                            <TableCell align="right" sx={{ fontWeight: 'bold' }}>
-                                                ${batch.total_cost.toFixed(2)}
-                                            </TableCell>
-                                            <TableCell align="right" sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
-                                                {new Date(batch.created_at).toLocaleString()}
-                                            </TableCell>
-                                        </TableRow>
+                                        <Card variant="outlined" key={batch.id} sx={{ mb: 2, borderRadius: 2 }}>
+                                            <CardContent sx={{ pb: 2 }}>
+                                                <Stack direction="row" justifyContent="space-between" mb={1}>
+                                                    <Typography variant="subtitle1" fontWeight="bold">{batch.name}</Typography>
+                                                    <Typography variant="subtitle1" fontWeight="bold" color="primary.main">${batch.total_cost.toFixed(2)}</Typography>
+                                                </Stack>
+                                                <Box mb={2}>
+                                                    <Chip label={batch.product_name} size="small" sx={{ borderRadius: 1 }} />
+                                                </Box>
+                                                <Grid container spacing={1}>
+                                                    <Grid item xs={4}>
+                                                        <Typography variant="caption" color="text.secondary">Total</Typography>
+                                                        <Typography variant="body2" fontWeight="bold">{batch.count}</Typography>
+                                                    </Grid>
+                                                    <Grid item xs={4}>
+                                                        <Typography variant="caption" color="text.secondary">Sold</Typography>
+                                                        <Typography variant="body2" color="success.main" fontWeight={600}>{batch.used_vouchers}</Typography>
+                                                    </Grid>
+                                                    <Grid item xs={4}>
+                                                        <Typography variant="caption" color="text.secondary">Unused</Typography>
+                                                        <Typography variant="body2" color="warning.main" fontWeight={600}>{batch.unused_vouchers}</Typography>
+                                                    </Grid>
+                                                </Grid>
+                                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 2, textAlign: 'right' }}>
+                                                    {new Date(batch.created_at).toLocaleString()}
+                                                </Typography>
+                                            </CardContent>
+                                        </Card>
                                     ))}
                                     {(report.admin.batches || []).length === 0 && (
-                                        <TableRow>
-                                            <TableCell colSpan={7} align="center" sx={{ py: 3, color: 'text.secondary' }}>No admin batches found</TableCell>
-                                        </TableRow>
+                                        <Typography color="text.secondary" textAlign="center" py={3}>No admin batches found</Typography>
                                     )}
-                                </TableBody>
-                            </Table>
+                                </Box>
+                            ) : (
+                                <Table>
+                                    <TableHead>
+                                        <TableRow sx={{ backgroundColor: alpha(theme.palette.primary.main, 0.05) }}>
+                                            <TableCell>Batch Name</TableCell>
+                                            <TableCell>Product</TableCell>
+                                            <TableCell align="right">Count</TableCell>
+                                            <TableCell align="right">Sold</TableCell>
+                                            <TableCell align="right">Unused</TableCell>
+                                            <TableCell align="right">Total Value</TableCell>
+                                            <TableCell align="right">Generated At</TableCell>
+                                        </TableRow>
+                                    </TableHead>
+                                    <TableBody>
+                                        {(report.admin.batches || []).map((batch) => (
+                                            <TableRow key={batch.id} hover>
+                                                <TableCell sx={{ fontWeight: 'bold' }}>{batch.name}</TableCell>
+                                                <TableCell>
+                                                    <Chip label={batch.product_name} size="small" sx={{ borderRadius: 1 }} />
+                                                </TableCell>
+                                                <TableCell align="right">{batch.count}</TableCell>
+                                                <TableCell align="right">
+                                                    <Typography variant="body2" color="success.main" fontWeight={600}>{batch.used_vouchers}</Typography>
+                                                </TableCell>
+                                                <TableCell align="right">
+                                                    <Typography variant="body2" color="warning.main" fontWeight={600}>{batch.unused_vouchers}</Typography>
+                                                </TableCell>
+                                                <TableCell align="right" sx={{ fontWeight: 'bold' }}>
+                                                    ${batch.total_cost.toFixed(2)}
+                                                </TableCell>
+                                                <TableCell align="right" sx={{ color: 'text.secondary', fontSize: '0.875rem' }}>
+                                                    {new Date(batch.created_at).toLocaleString()}
+                                                </TableCell>
+                                            </TableRow>
+                                        ))}
+                                        {(report.admin.batches || []).length === 0 && (
+                                            <TableRow>
+                                                <TableCell colSpan={7} align="center" sx={{ py: 3, color: 'text.secondary' }}>No admin batches found</TableCell>
+                                            </TableRow>
+                                        )}
+                                    </TableBody>
+                                </Table>
+                            )}
                         </Card>
                     </Box>
                 </Stack>
