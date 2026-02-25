@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard';
 import AccountSettings from './pages/AccountSettings';
 import { SystemConfigPage } from './pages/SystemConfigPage';
 import FinancialPerformance from './pages/FinancialPerformance';
+import NetworkDiscovery from './pages/NetworkDiscovery';
 import { LoginPage } from './pages/LoginPage';
 import { TunnelSettings } from './pages/Settings/TunnelSettings';
 import { BackupSettings } from './pages/Settings/BackupSettings';
@@ -215,6 +216,7 @@ const App = () => (
       <Route path="/settings/backup" element={<BackupSettings />} />
       <Route path="/system/maintenance" element={<MaintenanceSettings />} />
       <Route path="/financial/performance" element={<FinancialPerformance />} />
+      <Route path="/network/discovery" element={<NetworkDiscovery />} />
     </CustomRoutes>
   </Admin >
 );
