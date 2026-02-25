@@ -1,3 +1,5 @@
+import { CpeList } from './resources/cpes';
+import { Router as RouterIcon } from '@mui/icons-material';
 import { Admin, Resource, CustomRoutes } from 'react-admin';
 import { Route } from 'react-router-dom';
 import { Box, CircularProgress, Typography } from '@mui/material';
@@ -202,6 +204,8 @@ const App = () => (
       name="system/logs"
       list={SystemLogList}
     />
+
+    <Resource name="cpes" options={{ label: 'CPE Devices' }} list={CpeList} icon={RouterIcon} />
 
     {/* 自定义路由 */}
     <CustomRoutes>

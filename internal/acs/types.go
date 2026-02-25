@@ -1,4 +1,4 @@
-rm// Package acs implements the TR-069 CPE WAN Management Protocol (CWMP) Auto Configuration Server.
+// Package acs implements the TR-069 CPE WAN Management Protocol (CWMP) Auto Configuration Server.
 //
 // TR-069 (Technical Report 069) is a technical specification from the Broadband Forum that
 // defines the CPE WAN Management Protocol (CWMP). It enables remote management of customer

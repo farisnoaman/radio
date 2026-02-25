@@ -27,8 +27,8 @@ sleep 2
 # Check Go
 if ! command -v go &> /dev/null; then
     echo -e "${RED}Go is not installed or not in PATH.${NC}"
-    # Try to add default user go path
-    export PATH=$HOME/go/go/bin:$PATH
+    # Try to add project and default user go path
+    export PATH="$(pwd)/go/bin:$HOME/go/go/bin:$PATH"
     if ! command -v go &> /dev/null; then
          echo -e "${RED}Still could not find Go. Please install Go 1.24+.${NC}"
          exit 1

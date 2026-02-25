@@ -26,7 +26,8 @@ import {
   useListContext,
   SortButton,
   RaRecord,
-  FunctionField
+  FunctionField,
+  ShowButton
 } from 'react-admin';
 import {
   Box,
@@ -412,7 +413,7 @@ const TagsField = () => {
   }
 
   const tags = record.tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag);
-  
+
   if (tags.length === 0) {
     return <Typography variant="body2" color="text.secondary">-</Typography>;
   }
@@ -531,80 +532,142 @@ const NodeListContent = () => {
         </Box>
 
         {/* 响应式表格 */}
-        <Box
-          sx={{
-            overflowX: 'auto',
-            '& .RaDatagrid-root': {
-              minWidth: isMobile ? 600 : 'auto',
-            },
-            '& .RaDatagrid-thead': {
-              position: 'sticky',
-              top: 0,
-              zIndex: 1,
-              bgcolor: theme =>
-                theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-              '& th': {
-                fontWeight: 600,
-                fontSize: '0.8rem',
-                color: 'text.secondary',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                py: 1.5,
-                borderBottom: theme => `2px solid ${theme.palette.divider}`,
+        {isMobile ? (
+          <Box sx={{ p: 2 }}>
+            {data?.map((node) => (
+              <Card key={node.id} variant="outlined" sx={{ mb: 2, borderRadius: 3, position: 'relative', overflow: 'hidden' }}>
+                <CardContent sx={{ pb: 2 }}>
+                  <Stack direction="row" alignItems="center" spacing={2} mb={2}>
+                    <Avatar sx={{ width: 44, height: 44, bgcolor: 'primary.main', fontWeight: 'bold' }}>
+                      {node.name?.charAt(0).toUpperCase() || 'N'}
+                    </Avatar>
+                    <Box sx={{ flexGrow: 1 }}>
+                      <Typography variant="h6" sx={{ fontWeight: 600, lineHeight: 1.2 }}>
+                        {node.name || '-'}
+                      </Typography>
+                      <Typography variant="caption" color="text.secondary">
+                        ID: {node.id}
+                      </Typography>
+                    </Box>
+                  </Stack>
+
+                  <Box sx={{ bgcolor: alpha(theme.palette.primary.main, 0.04), borderRadius: 2, p: 2, mb: 2 }}>
+                    <Stack spacing={1.5}>
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="caption" color="text.secondary">
+                          {translate('resources.network/nodes.fields.tags', { _: 'Tags' })}
+                        </Typography>
+                        <Box sx={{ display: 'flex', gap: 0.5, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                          {node.tags ? node.tags.split(',').map((tag: string, i: number) => tag.trim() && (
+                            <Chip key={i} label={tag.trim()} size="small" variant="outlined" color="primary" sx={{ height: 20, fontSize: '0.7rem' }} />
+                          )) : <Typography variant="caption">-</Typography>}
+                        </Box>
+                      </Box>
+
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                        <Typography variant="caption" color="text.secondary">
+                          {translate('resources.network/nodes.fields.created_at', { _: 'Created At' })}
+                        </Typography>
+                        <Typography variant="caption" sx={{ fontWeight: 600 }}>
+                          {formatTimestamp(node.created_at)}
+                        </Typography>
+                      </Box>
+
+                      {node.remark && (
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                          <Typography variant="caption" color="text.secondary">
+                            {translate('resources.network/nodes.fields.remark', { _: 'Remark' })}
+                          </Typography>
+                          <Typography variant="caption" sx={{ fontWeight: 500, textAlign: 'right', maxWidth: '60%' }}>
+                            {node.remark}
+                          </Typography>
+                        </Box>
+                      )}
+                    </Stack>
+                  </Box>
+                  <Box sx={{ display: 'flex', justifyContent: 'flex-end', pt: 1, borderTop: `1px solid ${theme.palette.divider}` }}>
+                    <ShowButton record={node} label="" size="small" />
+                  </Box>
+                </CardContent>
+              </Card>
+            ))}
+          </Box>
+        ) : (
+          <Box
+            sx={{
+              overflowX: 'auto',
+              '& .RaDatagrid-root': {
+                minWidth: isMobile ? 600 : 'auto',
               },
-            },
-            '& .RaDatagrid-tbody': {
-              '& tr': {
-                transition: 'background-color 0.15s ease',
-                cursor: 'pointer',
-                '&:hover': {
-                  bgcolor: theme =>
-                    theme.palette.mode === 'dark'
-                      ? 'rgba(255,255,255,0.05)'
-                      : 'rgba(25, 118, 210, 0.04)',
+              '& .RaDatagrid-thead': {
+                position: 'sticky',
+                top: 0,
+                zIndex: 1,
+                bgcolor: theme =>
+                  theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                '& th': {
+                  fontWeight: 600,
+                  fontSize: '0.8rem',
+                  color: 'text.secondary',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  py: 1.5,
+                  borderBottom: theme => `2px solid ${theme.palette.divider}`,
                 },
-                '&:nth-of-type(odd)': {
-                  bgcolor: theme =>
-                    theme.palette.mode === 'dark'
-                      ? 'rgba(255,255,255,0.01)'
-                      : 'rgba(0,0,0,0.01)',
+              },
+              '& .RaDatagrid-tbody': {
+                '& tr': {
+                  transition: 'background-color 0.15s ease',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    bgcolor: theme =>
+                      theme.palette.mode === 'dark'
+                        ? 'rgba(255,255,255,0.05)'
+                        : 'rgba(25, 118, 210, 0.04)',
+                  },
+                  '&:nth-of-type(odd)': {
+                    bgcolor: theme =>
+                      theme.palette.mode === 'dark'
+                        ? 'rgba(255,255,255,0.01)'
+                        : 'rgba(0,0,0,0.01)',
+                  },
+                },
+                '& td': {
+                  py: 1.5,
+                  fontSize: '0.875rem',
+                  borderBottom: theme => `1px solid ${alpha(theme.palette.divider, 0.5)}`,
                 },
               },
-              '& td': {
-                py: 1.5,
-                fontSize: '0.875rem',
-                borderBottom: theme => `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-              },
-            },
-          }}
-        >
-          <Datagrid rowClick="show" bulkActionButtons={false}>
-            <FunctionField
-              source="name"
-              label={translate('resources.network/nodes.fields.name', { _: '节点名称' })}
-              render={() => <NodeNameField />}
-            />
-            <FunctionField
-              source="tags"
-              label={translate('resources.network/nodes.fields.tags', { _: '标签' })}
-              render={() => <TagsField />}
-            />
-            <TextField
-              source="remark"
-              label={translate('resources.network/nodes.fields.remark', { _: '备注' })}
-            />
-            <DateField
-              source="created_at"
-              label={translate('resources.network/nodes.fields.created_at', { _: '创建时间' })}
-              showTime
-            />
-            <DateField
-              source="updated_at"
-              label={translate('resources.network/nodes.fields.updated_at', { _: '更新时间' })}
-              showTime
-            />
-          </Datagrid>
-        </Box>
+            }}
+          >
+            <Datagrid rowClick="show" bulkActionButtons={false}>
+              <FunctionField
+                source="name"
+                label={translate('resources.network/nodes.fields.name', { _: '节点名称' })}
+                render={() => <NodeNameField />}
+              />
+              <FunctionField
+                source="tags"
+                label={translate('resources.network/nodes.fields.tags', { _: '标签' })}
+                render={() => <TagsField />}
+              />
+              <TextField
+                source="remark"
+                label={translate('resources.network/nodes.fields.remark', { _: '备注' })}
+              />
+              <DateField
+                source="created_at"
+                label={translate('resources.network/nodes.fields.created_at', { _: '创建时间' })}
+                showTime
+              />
+              <DateField
+                source="updated_at"
+                label={translate('resources.network/nodes.fields.updated_at', { _: '更新时间' })}
+                showTime
+              />
+            </Datagrid>
+          </Box>
+        )}
       </Card>
     </Box>
   );
@@ -629,7 +692,7 @@ export const NodeList = () => {
 
 export const NodeEdit = () => {
   const translate = useTranslate();
-  
+
   return (
     <Edit>
       <SimpleForm toolbar={<NodeFormToolbar />} sx={formLayoutSx}>
@@ -699,7 +762,7 @@ export const NodeEdit = () => {
 
 export const NodeCreate = () => {
   const translate = useTranslate();
-  
+
   return (
     <Create>
       <SimpleForm sx={formLayoutSx}>
@@ -982,7 +1045,7 @@ const printStyles = `
 const NodeDetails = () => {
   const record = useRecordContext<NetworkNode>();
   const translate = useTranslate();
-  
+
   if (!record) {
     return null;
   }
