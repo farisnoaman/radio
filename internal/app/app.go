@@ -14,6 +14,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/app/tunnel"
 
 	"github.com/talkincode/toughradius/v9/internal/app/websocket"
+	"github.com/talkincode/toughradius/v9/internal/acs"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 
 	"github.com/talkincode/toughradius/v9/pkg/metrics"
@@ -208,6 +209,9 @@ func (a *Application) MigrateDB(track bool) (err error) {
 			zap.S().Error(err)
 		}
 	}
+	if err := a.gormDB.Migrator().AutoMigrate(&acs.CPEDevice{}); err != nil {
+		zap.S().Error(err)
+	}
 	return nil
 }
 
@@ -219,6 +223,9 @@ func (a *Application) InitDb() {
 	_ = a.gormDB.Migrator().DropTable(domain.Tables...)
 	err := a.gormDB.Migrator().AutoMigrate(domain.Tables...)
 	if err != nil {
+		zap.S().Error(err)
+	}
+	if err := a.gormDB.Migrator().AutoMigrate(&acs.CPEDevice{}); err != nil {
 		zap.S().Error(err)
 	}
 }

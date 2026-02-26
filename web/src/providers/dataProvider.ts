@@ -26,6 +26,7 @@ const resourcePathMap: Record<string, string> = {
   'radius/profiles': 'radius-profiles',
   'system/config/schemas': 'system/config/schemas',
   'campaigns': 'campaigns',
+  'cpes': 'cpes',
 };
 
 const resolveResource = (resource: string) =>

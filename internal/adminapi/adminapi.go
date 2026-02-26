@@ -30,6 +30,7 @@ func Init(appCtx app.AppContext) {
 	registerTunnelRoutes()
 	registerAnalyticsRoutes()
 	registerCoARoutes()
+	registerCPERoutes()
 }
 
 
