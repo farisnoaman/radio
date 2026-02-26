@@ -131,11 +131,8 @@ func NewClient(config Config) *Client {
 // The context is used for cancellation and timeout control.
 // Callers should always call Close() after Connect(), even if Connect() returns an error.
 func (c *Client) Connect(ctx context.Context) error {
-	dialer := &net.Dialer{
-		Timeout: c.config.Timeout,
-	}
+	addr := c.config.Address
 
-	// Determine connection type
 	var conn net.Conn
 	var err error
 
@@ -143,16 +140,15 @@ func (c *Client) Connect(ctx context.Context) error {
 		tlsConfig := &tls.Config{
 			InsecureSkipVerify: false,
 		}
-		conn, err = tls.DialWithDialer(dialer, "tcp", c.config.Address, tlsConfig)
+		conn, err = tls.Dial("tcp4", addr, tlsConfig)
 	} else {
-		conn, err = dialer.DialContext(ctx, "tcp", c.config.Address)
+		conn, err = net.DialTimeout("tcp4", addr, c.config.Timeout)
 	}
 
 	if err != nil {
-		return fmt.Errorf("failed to connect to RouterOS at %s: %w", c.config.Address, err)
+		return fmt.Errorf("failed to connect to RouterOS at %s: %w", addr, err)
 	}
 
-	// Set read deadline for initial operations
 	conn.SetReadDeadline(time.Now().Add(c.config.Timeout))
 
 	c.conn = conn
@@ -181,6 +177,8 @@ func (c *Client) Login(ctx context.Context) error {
 
 	// Build and send login request
 	loginReq := c.buildLoginRequest()
+	fmt.Printf("[RouterOS] Login request to %s: % x\n", c.config.Address, loginReq)
+	
 	if _, err := c.conn.Write(loginReq); err != nil {
 		return fmt.Errorf("failed to send login request: %w", err)
 	}
@@ -190,6 +188,8 @@ func (c *Client) Login(ctx context.Context) error {
 	if err != nil {
 		return fmt.Errorf("failed to read login response: %w", err)
 	}
+
+	fmt.Printf("[RouterOS] Login response from %s: type=%v, data=% x\n", c.config.Address, resp.Type, resp.Data)
 
 	// Check for successful login
 	if resp.Type == ResponseDone {
@@ -264,27 +264,27 @@ func (c *Client) IsRouterOS(ctx context.Context) (bool, error) {
 	}
 	defer c.Close()
 
-	// Try to send a simple login request with empty credentials
-	// RouterOS will respond even to bad login with protocol responses
-	loginReq := []byte{0x68, 0x00, 0x00, 0x00} // Word length, empty
-	_, err := c.conn.Write(loginReq)
+	// Send a simple /system/identity/get command to test if it's RouterOS
+	cmd := c.BuildCommand("/system/identity/get")
+	
+	fmt.Printf("[RouterOS] Sending command to %s: % x\n", c.config.Address, cmd)
+
+	n, err := c.conn.Write(cmd)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("write command failed: %w", err)
 	}
 
-	// Set read deadline
-	c.conn.SetReadDeadline(time.Now().Add(2 * time.Second))
+	c.conn.SetReadDeadline(time.Now().Add(c.config.Timeout))
 
-	// Try to read response
-	buf := make([]byte, 1024)
-	n, err := c.conn.Read(buf)
+	buf := make([]byte, 2048)
+	n, err = c.conn.Read(buf)
 	if err != nil {
-		return false, err
+		return false, fmt.Errorf("read response failed: %w", err)
 	}
 
-	// Check if response looks like RouterOS API
+	fmt.Printf("[RouterOS] Received response from %s: % x (len=%d)\n", c.config.Address, buf[:n], n)
+
 	if n > 0 {
-		// RouterOS API responses start with specific codes
 		respType := buf[0]
 		if respType == respDone || respType == respRe || respType == respTrap || respType == respFatal {
 			return true, nil
@@ -301,22 +301,26 @@ func (c *Client) buildLoginRequest() []byte {
 	// Add username
 	data = appendWord(data, "name="+c.config.Username)
 
-	// Add password
+	// Add password (for plain text auth)
 	data = appendWord(data, "password="+c.config.Password)
 
-	// Wrap in /login tag
-	length := 6 + len(data) // 6 = "/login" + null
-	packet := make([]byte, 4+length)
+	// Build the /login command with the data
+	command := "/login"
+	commandLen := len(command) + 1 // +1 for null
 
-	// Write length (word format - length in first 4 bytes, rest is zero)
-	binary.BigEndian.PutUint32(packet[0:4], uint32(length))
+	// Total packet: 4 byte length + command + null + data
+	totalLen := commandLen + len(data)
+	packet := make([]byte, 4+totalLen)
 
-	// Copy command
-	copy(packet[4:], "/login")
-	packet[11] = 0 // null terminator
+	// Write length of first word (command)
+	binary.BigEndian.PutUint32(packet[0:4], uint32(commandLen))
 
-	// Copy data
-	copy(packet[12:], data)
+	// Write command
+	copy(packet[4:], command)
+	packet[4+len(command)] = 0
+
+	// Write data
+	copy(packet[4+commandLen:], data)
 
 	return packet
 }

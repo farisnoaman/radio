@@ -136,7 +136,19 @@ const customChineseMessages: TranslationMessages = {
       },
       empty_text: {
         expire_time: '永不过期',
-        no_remark: '无备注信息',
+        no_remark: '无备注',
+      },
+      total_users: '共 %{count} 个用户',
+      copied: '%{label} 已复制到剪贴板',
+      data_refreshed: '数据已刷新',
+      print_details: '打印详情',
+      refresh_data: '刷新数据',
+      copy_username: '复制用户名',
+      unknown_user: '未知用户',
+      unassigned: '未分配',
+      empty: {
+        title: '暂无用户',
+        description: '点击"新建"按钮添加第一个RADIUS用户',
       },
     },
     'radius/online': {
@@ -190,6 +202,29 @@ const customChineseMessages: TranslationMessages = {
         disconnected: '用户已强制下线',
         disconnect_error: '强制下线失败',
       },
+      empty: {
+        title: '暂无在线会话',
+        description: '当前没有用户在线',
+      },
+      copied: '%{label} 已复制到剪贴板',
+      data_refreshed: '数据已刷新',
+      print_details: '打印详情',
+      refresh_data: '刷新数据',
+      unknown_user: '未知用户',
+      ip_unassigned: '未分配 IP',
+      ip_address: 'IP 地址',
+      copy_ip: '复制 IP 地址',
+      session: '会话',
+      session_id: '会话ID',
+      copy_session: '复制会话 ID',
+      unassigned: '未分配',
+      not_obtained: '未获取',
+      unlimited: '无限制',
+      total_sessions: '共 %{count} 个在线会话',
+      status: {
+        online: '在线',
+      },
+      packets: '包',
     },
     'radius/accounting': {
       name: '计费记录 |||| 计费记录',
@@ -229,6 +264,14 @@ const customChineseMessages: TranslationMessages = {
         acct_stop_time_gte: '结束时间从',
         acct_stop_time_lte: '结束时间至',
         framed_ipv6addr: 'IPv6地址',
+        unknown_user: '未知用户',
+        ip_unassigned: '未分配 IP',
+        ip_address: 'IP 地址',
+        unassigned: '未分配',
+        not_obtained: '未获取',
+        not_configured: '未配置',
+        unlimited: '无限制',
+        not_recorded: '未记录',
       },
       sections: {
         overview: '会话概览',
@@ -241,6 +284,27 @@ const customChineseMessages: TranslationMessages = {
         traffic_desc: '会话期间的上传、下载流量统计。',
         session_details: '会话详情',
         session_details_desc: 'NAS端口和服务类型等详细信息。',
+      },
+      status: {
+        online: '在线',
+        ended: '已结束',
+        in_progress: '会话进行中',
+      },
+      copied: '%{label} 已复制到剪贴板',
+      data_refreshed: '数据已刷新',
+      print_details: '打印详情',
+      refresh_data: '刷新数据',
+      upload: '上传流量',
+      download: '下载流量',
+      total_traffic: '总流量',
+      terminate_cause: '终止原因',
+      session: '会话',
+      session_id: '会话ID',
+      copy_ip: '复制 IP 地址',
+      copy_session: '复制会话 ID',
+      empty: {
+        title: '暂无计费记录',
+        description: '尝试调整筛选条件或等待新的会话记录',
       },
     },
     'radius/profiles': {
@@ -310,6 +374,10 @@ const customChineseMessages: TranslationMessages = {
       units: {
         kbps: 'Kbps',
       },
+      empty: {
+        title: '暂无策略',
+        description: '点击"新建"按钮添加第一个计费策略',
+      },
     },
     'network/nas': {
       name: 'NAS设备 |||| NAS设备',
@@ -367,6 +435,10 @@ const customChineseMessages: TranslationMessages = {
         remark: '可选的备注信息，最多500个字符',
         no_remark: '无备注信息',
       },
+      empty: {
+        title: '暂无 NAS 设备',
+        description: '点击"新建"按钮添加第一个 NAS 设备',
+      },
     },
     'network/nodes': {
       name: '网络节点 |||| 网络节点',
@@ -389,6 +461,10 @@ const customChineseMessages: TranslationMessages = {
         name: '3-50个字符，用于标识节点',
         tags: '多个标签用逗号分隔，最多200个字符',
         remark: '可选的备注信息，最多500个字符',
+      },
+      empty: {
+        title: '暂无节点',
+        description: '点击"新建"按钮添加第一个网络节点',
       },
     },
     'system/operators': {
@@ -465,6 +541,10 @@ const customChineseMessages: TranslationMessages = {
         realname_required: '真实姓名不能为空',
         level_required: '请选择权限级别',
         status_required: '请选择状态',
+      },
+      empty: {
+        title: '暂无操作员',
+        description: '点击"新建"按钮添加第一个操作员',
       },
     },
   },
@@ -745,6 +825,14 @@ const customChineseMessages: TranslationMessages = {
     active_filters: '当前筛选',
     clear_all: '清除全部',
     no_filters: '无筛选条件',
+  },
+  system: {
+    config: {
+      save_success: '配置保存成功',
+      save_error: '配置保存失败',
+      reset_success: '已重置为默认值',
+      nothing_to_save: '暂无可保存的配置项',
+    },
   },
 };
 

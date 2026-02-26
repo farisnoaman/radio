@@ -15,7 +15,6 @@ import HistoryOutlinedIcon from '@mui/icons-material/HistoryOutlined';
 import VpnKeyOutlinedIcon from '@mui/icons-material/VpnKeyOutlined';
 import CloudUploadOutlinedIcon from '@mui/icons-material/CloudUploadOutlined';
 import ConstructionIcon from '@mui/icons-material/Construction';
-import WifiFindIcon from '@mui/icons-material/WifiFind';
 import { Box, useTheme } from '@mui/material';
 import { MenuItemLink, MenuProps, useGetIdentity, useTranslate } from 'react-admin';
 
@@ -23,7 +22,6 @@ const menuItems = [
   { to: '/', labelKey: 'menu.dashboard', icon: <DashboardOutlinedIcon /> }, // Everyone
   { to: '/network/nodes', labelKey: 'menu.network_nodes', icon: <AccountTreeOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/network/nas', labelKey: 'menu.nas_devices', icon: <RouterOutlinedIcon />, permissions: ['super', 'admin'] },
-  { to: '/network/discovery', labelKey: 'Network Discovery', icon: <WifiFindIcon />, permissions: ['super', 'admin'] },
   { to: '/cpes', labelKey: 'CPE Devices', icon: <RouterOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/radius/users', labelKey: 'menu.radius_users', icon: <PeopleAltOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/radius/profiles', labelKey: 'menu.radius_profiles', icon: <SettingsSuggestOutlinedIcon />, permissions: ['super', 'admin'] },

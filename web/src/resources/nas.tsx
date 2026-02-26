@@ -34,7 +34,8 @@ import {
   useRefresh,
   useNotify,
   RaRecord,
-  FunctionField
+  FunctionField,
+  Button
 } from 'react-admin';
 import {
   Box,
@@ -53,6 +54,7 @@ import {
   alpha
 } from '@mui/material';
 import { useMemo, useCallback, useState, useEffect } from 'react';
+import { ScanNetworkModal } from '../components/ScanNetworkModal';
 import {
   Router as NasIcon,
   NetworkCheck as NetworkIcon,
@@ -69,7 +71,8 @@ import {
   Cancel as DisabledIcon,
   Dns as ServerIcon,
   VpnKey as SecretIcon,
-  Business as VendorIcon
+  Business as VendorIcon,
+  WifiFind as ScanIcon
 } from '@mui/icons-material';
 import {
   ServerPagination,
@@ -550,7 +553,11 @@ const NASFormToolbar = (props: ToolbarProps) => (
 
 // ============ 列表操作栏组件 ============
 
-const NASListActions = () => {
+interface NASListActionsProps {
+  onScanClick: () => void;
+}
+
+const NASListActions = ({ onScanClick }: NASListActionsProps) => {
   const translate = useTranslate();
   return (
     <TopToolbar>
@@ -558,6 +565,14 @@ const NASListActions = () => {
         fields={['created_at', 'name', 'ipaddr']}
         label={translate('ra.action.sort', { _: '排序' })}
       />
+      <Button
+        variant="contained"
+        color="primary"
+        startIcon={<ScanIcon />}
+        onClick={onScanClick}
+      >
+        {translate('resources.network/nas.actions.scan', { _: 'Scan Network' })}
+      </Button>
       <CreateButton />
       <ExportButton />
     </TopToolbar>
@@ -735,16 +750,24 @@ const NASListContent = () => {
 
 // NAS 设备列表
 export const NASList = () => {
+  const [scanModalOpen, setScanModalOpen] = useState(false);
+
   return (
-    <List
-      actions={<NASListActions />}
-      sort={{ field: 'created_at', order: 'DESC' }}
-      perPage={LARGE_LIST_PER_PAGE}
-      pagination={<ServerPagination />}
-      empty={false}
+    <>
+      <List
+        actions={<NASListActions onScanClick={() => setScanModalOpen(true)} />}
+        sort={{ field: 'created_at', order: 'DESC' }}
+        perPage={LARGE_LIST_PER_PAGE}
+        pagination={<ServerPagination />}
+        empty={false}
     >
       <NASListContent />
     </List>
+    <ScanNetworkModal 
+      open={scanModalOpen} 
+      onClose={() => setScanModalOpen(false)} 
+    />
+    </>
   );
 };
 

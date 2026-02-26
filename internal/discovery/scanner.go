@@ -49,10 +49,12 @@ const (
 
 // Config holds configuration for the network scanner.
 type Config struct {
-	IPRange string        // CIDR range to scan (e.g., "192.168.1.0/24")
-	Ports   []int         // Ports to scan (default: 8728, 8729)
-	Timeout time.Duration // Timeout per host
-	Workers int           // Number of concurrent workers
+	IPRange  string        // CIDR range to scan (e.g., "192.168.1.0/24")
+	Ports    []int         // Ports to scan (default: 8728, 8729)
+	Timeout  time.Duration // Timeout per host
+	Workers  int           // Number of concurrent workers
+	Username string        // RouterOS username for authentication
+	Password string        // RouterOS password for authentication
 }
 
 // DeviceInfo holds information about a discovered RouterOS device.
@@ -86,10 +88,12 @@ type ScanResult struct {
 
 // Scanner is a network scanner for discovering RouterOS devices.
 type Scanner struct {
-	config  Config
-	ports   []int
-	timeout time.Duration
-	workers int
+	config   Config
+	ports    []int
+	timeout  time.Duration
+	workers  int
+	username string
+	password string
 }
 
 // NewScanner creates a new network scanner with the given configuration.
@@ -139,6 +143,9 @@ func (s *Scanner) initDefaults() {
 	} else {
 		s.workers = s.config.Workers
 	}
+
+	s.username = s.config.Username
+	s.password = s.config.Password
 }
 
 // Scan performs a network scan to discover RouterOS devices.
@@ -230,20 +237,14 @@ func (s *Scanner) scanHost(ctx context.Context, ip string) *DiscoveryResult {
 		default:
 		}
 
-		// Try to connect to the port
-		addr := net.JoinHostPort(ip, fmt.Sprintf("%d", port))
-		
-		dialer := &net.Dialer{
-			Timeout: s.timeout,
-		}
+		addr := ip + ":" + fmt.Sprintf("%d", port)
 
-		conn, err := dialer.DialContext(ctx, "tcp", addr)
+		conn, err := net.DialTimeout("tcp4", addr, s.timeout)
 		if err != nil {
 			continue
 		}
 		conn.Close()
 
-		// Port is open, try to detect RouterOS
 		result.Port = port
 		isROS, deviceInfo := s.detectRouterOS(ctx, ip, port)
 		result.IsRouterOS = isROS
@@ -254,37 +255,54 @@ func (s *Scanner) scanHost(ctx context.Context, ip string) *DiscoveryResult {
 		}
 	}
 
-	// Not a RouterOS device
 	return result
 }
 
 // detectRouterOS attempts to detect if a host is a RouterOS device
 // and retrieves device information if it is.
 func (s *Scanner) detectRouterOS(ctx context.Context, ip string, port int) (bool, *DeviceInfo) {
-	// Create RouterOS client
-	client := routeros.NewClient(routeros.Config{
-		Address:  ip,
-		Port:     fmt.Sprintf("%d", port),
-		Username: "", // Will try anonymous detection
-		Password: "",
-		Timeout:  s.timeout,
-	})
+	addr := ip + ":" + fmt.Sprintf("%d", port)
+	fmt.Printf("[Discovery] Testing %s\n", addr)
 
-	// Try to detect RouterOS
-	isROS, err := client.IsRouterOS(ctx)
-	if err != nil || !isROS {
-		return false, nil
+	// If credentials are provided, use authenticated detection
+	if s.username != "" {
+		fmt.Printf("[Discovery] Using credentials: username=%s\n", s.username)
+		return s.detectRouterOSWithAuth(ctx, ip, port, s.username, s.password)
 	}
 
-	// If we just want to detect, return basic info
-	return true, &DeviceInfo{
-		Model: "Mikrotik Device",
+	// Otherwise, try unauthenticated detection
+	for _, useTLS := range []bool{false, true} {
+		client := routeros.NewClient(routeros.Config{
+			Address:  ip,
+			Port:     fmt.Sprintf("%d", port),
+			Username: "",
+			Password: "",
+			UseTLS:   useTLS,
+			Timeout:  s.timeout,
+		})
+
+		isROS, err := client.IsRouterOS(ctx)
+		if err == nil && isROS {
+			fmt.Printf("[Discovery] Found RouterOS at %s\n", addr)
+			return true, &DeviceInfo{
+				Model: "Mikrotik Device",
+			}
+		}
+		if err != nil {
+			fmt.Printf("[Discovery] %s TLS=%v detection failed: %v\n", addr, useTLS, err)
+		} else {
+			fmt.Printf("[Discovery] %s TLS=%v not detected (no RouterOS response)\n", addr, useTLS)
+		}
 	}
+
+	return false, nil
 }
 
 // detectRouterOSWithAuth attempts to detect and get full info from RouterOS
 // using provided credentials.
 func (s *Scanner) detectRouterOSWithAuth(ctx context.Context, ip string, port int, username, password string) (bool, *DeviceInfo) {
+	fmt.Printf("[Discovery] Attempting authenticated detection for %s:%d\n", ip, port)
+	
 	client := routeros.NewClient(routeros.Config{
 		Address:  ip,
 		Port:     fmt.Sprintf("%d", port),
@@ -294,24 +312,31 @@ func (s *Scanner) detectRouterOSWithAuth(ctx context.Context, ip string, port in
 	})
 
 	if err := client.Connect(ctx); err != nil {
+		fmt.Printf("[Discovery] Connect failed: %v\n", err)
 		return false, nil
 	}
+	fmt.Printf("[Discovery] Connected successfully, attempting login...\n")
 	defer client.Close()
 
 	if err := client.Login(ctx); err != nil {
+		fmt.Printf("[Discovery] Login failed: %v (but device is RouterOS)\n", err)
 		// Login failed but it's RouterOS
 		return true, &DeviceInfo{
 			Model: "Mikrotik Device (auth required)",
 		}
 	}
+	
+	fmt.Printf("[Discovery] Login successful, getting system info...\n")
 
 	info, err := client.GetSystemInfo(ctx)
 	if err != nil {
+		fmt.Printf("[Discovery] GetSystemInfo failed: %v\n", err)
 		return true, &DeviceInfo{
 			Model: "Mikrotik Device",
 		}
 	}
 
+	fmt.Printf("[Discovery] Found RouterOS: %s, %s, %s\n", info.Identity, info.BoardName, info.Version)
 	return true, &DeviceInfo{
 		Identity:  info.Identity,
 		BoardName: info.BoardName,
@@ -335,11 +360,15 @@ func generateIPs(network *net.IPNet) []string {
 	mask, _ := network.Mask.Size()
 	numIPs := 1 << (32 - mask)
 
-	// Skip network address and broadcast address for /24 and smaller
-	start++
-	if numIPs > 2 {
+	fmt.Printf("[Discovery] CIDR mask: /%d, total IPs: %d\n", mask, numIPs)
+
+	// Skip network address and broadcast address for networks larger than /31
+	if numIPs > 2 && mask < 31 {
+		start++
 		numIPs -= 2
 	}
+
+	fmt.Printf("[Discovery] IPs to scan: %d\n", numIPs)
 
 	for i := 0; i < numIPs; i++ {
 		ip := uint32ToIP(start + uint32(i))

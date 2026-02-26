@@ -29,6 +29,7 @@ import {
   Wifi as WifiIcon,
 } from '@mui/icons-material';
 import { useNotify } from 'react-admin';
+import { apiRequest } from '../utils/apiClient';
 
 interface DiscoveredDevice {
   ip: string;
@@ -57,6 +58,8 @@ const NetworkDiscovery = () => {
   const notify = useNotify();
   
   const [ipRange, setIpRange] = useState('192.168.1.0/24');
+  const [username, setUsername] = useState('admin');
+  const [password, setPassword] = useState('');
   const [scanning, setScanning] = useState(false);
   const [, setProgress] = useState(0);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
@@ -73,34 +76,41 @@ const NetworkDiscovery = () => {
     setScanResult(null);
 
     try {
-      const response = await fetch('/api/v1/network/discovery/scan', {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 300000);
+
+      const result = await apiRequest<any>('/network/discovery/scan', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
+        signal: controller.signal,
         body: JSON.stringify({
           ip_range: ipRange,
           ports: [8728, 8729],
-          timeout: 2,
-          workers: 10,
+          timeout: 5,
+          workers: 20,
+          username: username || 'admin',
+          password: password,
         }),
       });
-
-      const data = await response.json();
       
-      if (response.ok && data.code === 0) {
-        setScanResult(data.data);
-        notify(`Found ${data.data.found_count} MikroTik devices`, { type: 'success' });
-      } else {
-        notify(data.message || 'Scan failed', { type: 'error' });
+      clearTimeout(timeoutId);
+      console.log('Scan result:', result);
+      
+      if (result) {
+        setScanResult(result);
+        notify(`Found ${result.found_count} MikroTik devices`, { type: 'success' });
       }
-    } catch (error) {
-      notify('Failed to start scan: ' + (error as Error).message, { type: 'error' });
+    } catch (error: any) {
+      console.error('Scan error:', error);
+      if (error.name === 'AbortError') {
+        notify('Scan timed out', { type: 'error' });
+      } else {
+        notify(error.message || error.toString() || 'Scan failed', { type: 'error' });
+      }
     } finally {
       setScanning(false);
       setProgress(100);
     }
-  }, [ipRange, notify]);
+  }, [ipRange, username, password, notify]);
 
   const handleAddDevice = useCallback(async (device: DiscoveredDevice) => {
     const secret = prompt('Enter RADIUS secret for this device:', 'mikrotik');
@@ -109,11 +119,8 @@ const NetworkDiscovery = () => {
     setAddingDevices(prev => new Set(prev).add(device.ip));
 
     try {
-      const response = await fetch('/api/v1/network/discovery', {
+      await apiRequest('/network/discovery', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
         body: JSON.stringify({
           ip: device.ip,
           secret: secret,
@@ -122,16 +129,9 @@ const NetworkDiscovery = () => {
           tags: 'discovered',
         }),
       });
-
-      const data = await response.json();
-
-      if (response.ok && data.code === 0) {
-        notify('Device added to NAS successfully', { type: 'success' });
-      } else {
-        notify(data.message || 'Failed to add device', { type: 'error' });
-      }
-    } catch (error) {
-      notify('Failed to add device: ' + (error as Error).message, { type: 'error' });
+      notify('Device added to NAS successfully', { type: 'success' });
+    } catch (error: any) {
+      notify(error.message || 'Failed to add device', { type: 'error' });
     } finally {
       setAddingDevices(prev => {
         const next = new Set(prev);
@@ -153,31 +153,19 @@ const NetworkDiscovery = () => {
     setAddingDevices(new Set(devices.map(d => d.ip)));
 
     try {
-      const response = await fetch('/api/v1/network/discovery/bulk', {
+      const result = await apiRequest<any>('/network/discovery/bulk', {
         method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(
-          devices.map(d => ({
-            ip: d.ip,
-            secret: secret,
-            name: d.identity || d.model || `Mikrotik-${d.ip}`,
-            model: d.model,
-            tags: 'discovered',
-          }))
-        ),
+        body: JSON.stringify(devices.map(d => ({
+          ip: d.ip,
+          secret: secret,
+          name: d.identity || d.model || `Mikrotik-${d.ip}`,
+          model: d.model,
+          tags: 'discovered',
+        }))),
       });
-
-      const data = await response.json();
-
-      if (response.ok && data.code === 0) {
-        notify(`Added ${data.data.added_count} devices to NAS`, { type: 'success' });
-      } else {
-        notify(data.message || 'Failed to add devices', { type: 'error' });
-      }
-    } catch (error) {
-      notify('Failed to add devices: ' + (error as Error).message, { type: 'error' });
+      notify(`Added ${result.added_count} devices to NAS`, { type: 'success' });
+    } catch (error: any) {
+      notify(error.message || 'Failed to add devices', { type: 'error' });
     } finally {
       setAddingDevices(new Set());
     }
@@ -215,9 +203,28 @@ const NetworkDiscovery = () => {
               onChange={e => setIpRange(e.target.value)}
               placeholder="192.168.1.0/24"
               size="small"
-              sx={{ flexGrow: 1, maxWidth: 400 }}
+              sx={{ flexGrow: 1, maxWidth: 300 }}
               disabled={scanning}
               helperText="Enter IP range in CIDR notation (e.g., 192.168.1.0/24)"
+            />
+            <TextField
+              label="Username"
+              value={username}
+              onChange={e => setUsername(e.target.value)}
+              placeholder="admin"
+              size="small"
+              sx={{ width: 150 }}
+              disabled={scanning}
+            />
+            <TextField
+              label="Password"
+              value={password}
+              onChange={e => setPassword(e.target.value)}
+              placeholder="Enter password"
+              type="password"
+              size="small"
+              sx={{ width: 150 }}
+              disabled={scanning}
             />
             <Button
               variant="contained"
@@ -227,6 +234,21 @@ const NetworkDiscovery = () => {
               sx={{ minWidth: 150 }}
             >
               {scanning ? 'Scanning...' : 'Start Scan'}
+            </Button>
+            <Button
+              variant="outlined"
+              onClick={async () => {
+                try {
+                  const testIp = prompt('Enter IP to test:', '10.0.0.1');
+                  if (!testIp) return;
+                  const result = await apiRequest<any>(`/network/discovery/test?ip=${testIp}&port=8728`);
+                  notify(result?.message || 'Connection OK', { type: 'success' });
+                } catch (error: any) {
+                  notify(error.message || 'Connection failed', { type: 'error' });
+                }
+              }}
+            >
+              Test IP
             </Button>
           </Stack>
 

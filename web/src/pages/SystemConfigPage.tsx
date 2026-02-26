@@ -300,12 +300,12 @@ export const SystemConfigPage: React.FC = () => {
       );
     },
     onSuccess: () => {
-      notify('配置保存成功', { type: 'success' });
+      notify(translate('system.config.save_success', { _: 'Configuration saved successfully' }), { type: 'success' });
       queryClient.invalidateQueries({ queryKey: SETTINGS_QUERY_KEY });
     },
     onError: (error: unknown) => {
       const message = error instanceof Error ? error.message : 'unknown error';
-      notify(`配置保存失败: ${message}`, { type: 'error' });
+      notify(translate('system.config.save_error', { _: 'Configuration save failed' }) + `: ${message}`, { type: 'error' });
     },
   });
 
@@ -325,7 +325,7 @@ export const SystemConfigPage: React.FC = () => {
     });
     setConfigs(nextConfigs);
     setResetDialogOpen(false);
-    notify('已重置为默认值', { type: 'info' });
+    notify(translate('system.config.reset_success', { _: 'Reset to default values' }), { type: 'info' });
   };
 
   const handleGroupToggle = (group: string) => {
@@ -341,7 +341,7 @@ export const SystemConfigPage: React.FC = () => {
 
   const handleSave = () => {
     if (!schemaQuery.data?.length) {
-      notify('暂无可保存的配置项', { type: 'warning' });
+      notify(translate('system.config.nothing_to_save', { _: 'No configuration items to save' }), { type: 'warning' });
       return;
     }
     saveMutation.mutate({ ...configs });

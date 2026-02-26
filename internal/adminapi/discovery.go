@@ -2,6 +2,8 @@ package adminapi
 
 import (
 	"context"
+	"fmt"
+	"net"
 	"strconv"
 	"strings"
 	"time"
@@ -14,10 +16,12 @@ import (
 
 // discoveryScanPayload represents the network scan request structure
 type discoveryScanPayload struct {
-	IPRange string   `json:"ip_range" validate:"required"`
-	Ports   []int    `json:"ports" validate:"omitempty"`
-	Timeout *int     `json:"timeout" validate:"omitempty,gte=1"`
-	Workers *int     `json:"workers" validate:"omitempty,gte=1,max=100"`
+	IPRange  string   `json:"ip_range" validate:"required"`
+	Ports    []int    `json:"ports" validate:"omitempty"`
+	Timeout  *int     `json:"timeout" validate:"omitempty,gte=1"`
+	Workers  *int     `json:"workers" validate:"omitempty,gte=1,max=100"`
+	Username string   `json:"username" validate:"omitempty"`
+	Password string   `json:"password" validate:"omitempty"`
 }
 
 // discoveryAddPayload represents adding a discovered device to NAS
@@ -50,6 +54,9 @@ type DiscoveryResultResponse struct {
 // @Success 200 {object} SuccessResponse
 // @Router /api/v1/network/discovery/scan [post]
 func ScanNetwork(c echo.Context) error {
+	fmt.Printf("[Discovery] ========================================\n")
+	fmt.Printf("[Discovery] STARTING NEW SCAN\n")
+	fmt.Printf("[Discovery] ========================================\n")
 	var payload discoveryScanPayload
 	if err := c.Bind(&payload); err != nil {
 		return fail(c, 400, "INVALID_REQUEST", "Unable to parse request parameters", err.Error())
@@ -64,10 +71,14 @@ func ScanNetwork(c echo.Context) error {
 		return fail(c, 400, "INVALID_CIDR", "IPRange must be in CIDR format (e.g., 192.168.1.0/24)", nil)
 	}
 
+	fmt.Printf("[Discovery] Scanning CIDR: %s, Ports: %v\n", payload.IPRange, payload.Ports)
+
 	// Build scanner config
 	config := discovery.Config{
-		IPRange: payload.IPRange,
-		Ports:   payload.Ports,
+		IPRange:  payload.IPRange,
+		Ports:    payload.Ports,
+		Username: payload.Username,
+		Password: payload.Password,
 	}
 
 	if payload.Timeout != nil {
@@ -80,8 +91,11 @@ func ScanNetwork(c echo.Context) error {
 
 	scanner, err := discovery.NewScanner(config)
 	if err != nil {
+		fmt.Printf("[Discovery] Scanner creation failed: %v\n", err)
 		return fail(c, 400, "SCANNER_ERROR", "Failed to create scanner", err.Error())
 	}
+	
+	fmt.Printf("[Discovery] Scanner created, starting scan...\n")
 
 	// Run scan with timeout
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Minute)
@@ -277,9 +291,28 @@ func AddDiscoveredDevices(c echo.Context) error {
 	})
 }
 
+func TestConnection(c echo.Context) error {
+	ip := c.QueryParam("ip")
+	port := c.QueryParam("port")
+	
+	addr := ip + ":" + port
+	fmt.Printf("[Discovery] TestConnection trying: %s\n", addr)
+	
+	conn, err := net.DialTimeout("tcp4", addr, 5*time.Second)
+	if err != nil {
+		return fail(c, 500, "CONNECTION_FAILED", "Failed to connect: "+err.Error(), nil)
+	}
+	conn.Close()
+	
+	return ok(c, map[string]interface{}{
+		"message": "Connected successfully to " + addr,
+	})
+}
+
 // registerDiscoveryRoutes registers network discovery routes
 func registerDiscoveryRoutes() {
 	webserver.ApiPOST("/network/discovery/scan", ScanNetwork)
+	webserver.ApiGET("/network/discovery/test", TestConnection)
 	webserver.ApiGET("/network/discovery/:id", GetDiscoveryResult)
 	webserver.ApiPOST("/network/discovery", AddDiscoveredDevice)
 	webserver.ApiPOST("/network/discovery/bulk", AddDiscoveredDevices)

@@ -138,6 +138,18 @@ const customEnglishMessages: TranslationMessages = {
         expire_time: 'Never expire',
         no_remark: 'No remark',
       },
+      total_users: 'Total %{count} users',
+      copied: '%{label} copied to clipboard',
+      data_refreshed: 'Data refreshed',
+      print_details: 'Print Details',
+      refresh_data: 'Refresh Data',
+      copy_username: 'Copy Username',
+      unknown_user: 'Unknown user',
+      unassigned: 'Unassigned',
+      empty: {
+        title: 'No Users Yet',
+        description: 'Click "Create" button to add your first RADIUS user',
+      },
     },
     'radius/online': {
       name: 'Online Session |||| Online Sessions',
@@ -190,6 +202,29 @@ const customEnglishMessages: TranslationMessages = {
         disconnected: 'User has been disconnected',
         disconnect_error: 'Failed to disconnect user',
       },
+      empty: {
+        title: 'No Online Sessions',
+        description: 'Currently no users are online',
+      },
+      copied: '%{label} copied to clipboard',
+      data_refreshed: 'Data refreshed',
+      print_details: 'Print Details',
+      refresh_data: 'Refresh Data',
+      unknown_user: 'Unknown user',
+      ip_unassigned: 'No IP assigned',
+      ip_address: 'IP Address',
+      copy_ip: 'Copy IP Address',
+      session: 'Session',
+      session_id: 'Session ID',
+      copy_session: 'Copy Session ID',
+      unassigned: 'Unassigned',
+      not_obtained: 'Not obtained',
+      unlimited: 'Unlimited',
+      total_sessions: 'Total %{count} online sessions',
+      status: {
+        online: 'Online',
+      },
+      packets: 'packets',
     },
     'radius/accounting': {
       name: 'Accounting Record |||| Accounting Records',
@@ -229,6 +264,14 @@ const customEnglishMessages: TranslationMessages = {
         acct_stop_time_gte: 'Stop Time From',
         acct_stop_time_lte: 'Stop Time To',
         framed_ipv6addr: 'IPv6 Address',
+        unknown_user: 'Unknown user',
+        ip_unassigned: 'No IP assigned',
+        ip_address: 'IP Address',
+        unassigned: 'Unassigned',
+        not_obtained: 'Not obtained',
+        not_configured: 'Not configured',
+        unlimited: 'Unlimited',
+        not_recorded: 'Not recorded',
       },
       sections: {
         overview: 'Session Overview',
@@ -241,6 +284,27 @@ const customEnglishMessages: TranslationMessages = {
         traffic_desc: 'Upload and download traffic statistics during the session.',
         session_details: 'Session Details',
         session_details_desc: 'NAS port and service type details.',
+      },
+      status: {
+        online: 'Online',
+        ended: 'Ended',
+        in_progress: 'Session in progress',
+      },
+      copied: '%{label} copied to clipboard',
+      data_refreshed: 'Data refreshed',
+      print_details: 'Print Details',
+      refresh_data: 'Refresh Data',
+      upload: 'Upload',
+      download: 'Download',
+      total_traffic: 'Total Traffic',
+      terminate_cause: 'Terminate Cause',
+      session: 'Session',
+      session_id: 'Session ID',
+      copy_ip: 'Copy IP Address',
+      copy_session: 'Copy Session ID',
+      empty: {
+        title: 'No Accounting Records',
+        description: 'Try adjusting filters or wait for new session records',
       },
     },
     'radius/profiles': {
@@ -310,6 +374,10 @@ const customEnglishMessages: TranslationMessages = {
       units: {
         kbps: 'Kbps',
       },
+      empty: {
+        title: 'No Policies Yet',
+        description: 'Click "Create" button to add your first billing policy',
+      },
     },
     'network/nas': {
       name: 'NAS Device |||| NAS Devices',
@@ -367,6 +435,10 @@ const customEnglishMessages: TranslationMessages = {
         remark: 'Optional remark, max 500 characters',
         no_remark: 'No remark',
       },
+      empty: {
+        title: 'No NAS Devices',
+        description: 'Click "Create" button to add your first NAS device',
+      },
     },
     'network/nodes': {
       name: 'Network Node |||| Network Nodes',
@@ -389,6 +461,10 @@ const customEnglishMessages: TranslationMessages = {
         name: '3-50 characters to identify the node',
         tags: 'Multiple tags separated by commas, max 200 characters',
         remark: 'Optional remark, max 500 characters',
+      },
+      empty: {
+        title: 'No Nodes Yet',
+        description: 'Click "Create" button to add your first network node',
       },
     },
     'system/operators': {
@@ -465,6 +541,10 @@ const customEnglishMessages: TranslationMessages = {
         realname_required: 'Real name is required',
         level_required: 'Please select permission level',
         status_required: 'Please select status',
+      },
+      empty: {
+        title: 'No Operators Yet',
+        description: 'Click "Create" button to add your first operator',
       },
     },
   },
@@ -745,6 +825,14 @@ const customEnglishMessages: TranslationMessages = {
     active_filters: 'Active Filters',
     clear_all: 'Clear All',
     no_filters: 'No filters applied',
+  },
+  system: {
+    config: {
+      save_success: 'Configuration saved successfully',
+      save_error: 'Configuration save failed',
+      reset_success: 'Reset to default values',
+      nothing_to_save: 'No configuration items to save',
+    },
   },
 };
 
