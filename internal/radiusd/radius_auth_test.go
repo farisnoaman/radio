@@ -10,6 +10,11 @@ import (
 	"github.com/robfig/cron/v3"
 	"github.com/talkincode/toughradius/v9/config"
 	"github.com/talkincode/toughradius/v9/internal/app"
+	"github.com/talkincode/toughradius/v9/internal/app/logging"
+	"github.com/talkincode/toughradius/v9/internal/app/maintenance"
+	"github.com/talkincode/toughradius/v9/internal/app/backup"
+	"github.com/talkincode/toughradius/v9/internal/app/websocket"
+	"github.com/talkincode/toughradius/v9/internal/app/tunnel"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth"
 	vendorparsers "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers"
@@ -28,11 +33,16 @@ func (m *mockAppContext) GetSettingsInt64Value(category, key string) int64   { r
 func (m *mockAppContext) GetSettingsBoolValue(category, key string) bool     { return false }
 func (m *mockAppContext) SaveSettings(settings map[string]interface{}) error { return nil }
 func (m *mockAppContext) Scheduler() *cron.Cron                              { return nil }
-func (m *mockAppContext) ConfigMgr() *app.ConfigManager                      { return nil }
-func (m *mockAppContext) ProfileCache() *app.ProfileCache                    { return nil }
-func (m *mockAppContext) MigrateDB(track bool) error                         { return nil }
-func (m *mockAppContext) InitDb()                                            {}
-func (m *mockAppContext) DropAll()                                           {}
+func (m *mockAppContext) ConfigMgr() *app.ConfigManager                     { return nil }
+func (m *mockAppContext) ProfileCache() *app.ProfileCache                   { return nil }
+func (m *mockAppContext) MigrateDB(track bool) error                        { return nil }
+func (m *mockAppContext) InitDb()                                           {}
+func (m *mockAppContext) DropAll()                                          {}
+func (m *mockAppContext) ArchivalMgr() *logging.ArchivalManager             { return nil }
+func (m *mockAppContext) MaintMgr() *maintenance.MaintenanceManager         { return nil }
+func (m *mockAppContext) BackupMgr() backup.BackupManager                   { return nil }
+func (m *mockAppContext) WsHub() *websocket.Hub                              { return nil }
+func (m *mockAppContext) TunnelMgr() tunnel.TunnelManager                   { return nil }
 
 type testEnhancer struct {
 	name  string

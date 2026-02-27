@@ -18,7 +18,7 @@ chmod +x start_dev.sh
 ```
 
 This script will:
-1.  Check for Go and Node.js.
+1.  Check for Go and Node.js. // go installed here: /home/faris/go/go/bin/go 
 2.  Install frontend dependencies.
 3.  Initialize the database.
 4.  Start the backend server (on port 1816) and frontend dev server (on port 3000) concurrently.

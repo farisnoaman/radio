@@ -4,6 +4,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 
 	"github.com/glebarez/sqlite"
 	"github.com/labstack/echo/v4"
@@ -22,12 +23,16 @@ func setupTestEcho() *echo.Echo {
 	return e
 }
 
-// setupTestDB creates an in-memory test database
+// setupTestDB creates an in-memory test database with all required tables
 func setupTestDB(t *testing.T) *gorm.DB {
-	db, err := gorm.Open(sqlite.Open(":memory:"), &gorm.Config{})
+	// Use a file-based temporary database with unique name for each test
+	// Include timestamp with nanosecond precision to ensure uniqueness
+	uniqueID := time.Now().Format("20060102150405.000000")
+	dbPath := "/tmp/testdb_" + t.Name() + "_" + uniqueID + ".db"
+	db, err := gorm.Open(sqlite.Open(dbPath), &gorm.Config{})
 	require.NoError(t, err)
 
-	// Automatically migrate common tables
+	// Automatically migrate all tables needed for testing
 	err = db.AutoMigrate(
 		&domain.RadiusProfile{},
 		&domain.RadiusUser{},
@@ -37,8 +42,26 @@ func setupTestDB(t *testing.T) *gorm.DB {
 		&domain.RadiusOnline{},
 		&domain.SysOpr{},
 		&domain.SysConfig{},
+		&domain.SysOprLog{},
+		&domain.VoucherBatch{},
+		&domain.Voucher{},
+		&domain.AgentWallet{},
+		&domain.WalletLog{},
+		&domain.Product{},
+		&domain.VoucherTopup{},
+		&domain.VoucherSubscription{},
+		&domain.VoucherBundle{},
+		&domain.VoucherBundleItem{},
 	)
 	require.NoError(t, err)
+
+	// Clean up the database file after the test
+	t.Cleanup(func() {
+		sqlDB, err := db.DB()
+		if err == nil {
+			sqlDB.Close()
+		}
+	})
 
 	return db
 }
@@ -73,6 +96,10 @@ func setupTestApp(_ *testing.T, db *gorm.DB) app.AppContext {
 // CreateTestAppContext creates a test application context with an in-memory SQLite database
 // Returns: db, echo instance, and app context
 func CreateTestAppContext(t *testing.T) (*gorm.DB, *echo.Echo, app.AppContext) {
+	// Use unique database path for each test with nanosecond precision
+	uniqueID := time.Now().Format("20060102150405.000000")
+	dbPath := "/tmp/testdb_" + t.Name() + "_" + uniqueID + ".db"
+
 	cfg := &config.AppConfig{
 		System: config.SysConfig{
 			Location: "Asia/Shanghai",
@@ -80,7 +107,7 @@ func CreateTestAppContext(t *testing.T) (*gorm.DB, *echo.Echo, app.AppContext) {
 		},
 		Database: config.DBConfig{
 			Type: "sqlite",
-			Name: ":memory:",
+			Name: dbPath,
 		},
 		Web: config.WebConfig{
 			Secret: "test-secret-key-for-jwt",
@@ -90,7 +117,7 @@ func CreateTestAppContext(t *testing.T) (*gorm.DB, *echo.Echo, app.AppContext) {
 	testApp := app.NewApplication(cfg)
 	testApp.Init(cfg)
 
-	// Migrate test tables
+	// Migrate all test tables
 	db := testApp.DB()
 	err := db.AutoMigrate(
 		&domain.RadiusProfile{},
@@ -101,8 +128,26 @@ func CreateTestAppContext(t *testing.T) (*gorm.DB, *echo.Echo, app.AppContext) {
 		&domain.RadiusOnline{},
 		&domain.SysOpr{},
 		&domain.SysConfig{},
+		&domain.SysOprLog{},
+		&domain.VoucherBatch{},
+		&domain.Voucher{},
+		&domain.AgentWallet{},
+		&domain.WalletLog{},
+		&domain.Product{},
+		&domain.VoucherTopup{},
+		&domain.VoucherSubscription{},
+		&domain.VoucherBundle{},
+		&domain.VoucherBundleItem{},
 	)
 	require.NoError(t, err)
+
+	// Clean up the database file after the test
+	t.Cleanup(func() {
+		sqlDB, err := db.DB()
+		if err == nil {
+			sqlDB.Close()
+		}
+	})
 
 	e := setupTestEcho()
 

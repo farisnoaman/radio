@@ -125,7 +125,7 @@ func TestRadiusIntegration(t *testing.T) {
 	// Initialize Radius Service
 	radiusService := NewRadiusService(appCtx)
 	defer radiusService.Release()
-	plugins.InitPlugins(appCtx, radiusService.SessionRepo, radiusService.AccountingRepo, radiusService.VoucherRepo, radiusService.UserRepo)
+	plugins.InitPlugins(appCtx, appCtx.DB(), radiusService.SessionRepo, radiusService.AccountingRepo, radiusService.VoucherRepo, radiusService.UserRepo)
 	authService := NewAuthService(radiusService)
 	acctService := NewAcctService(radiusService)
 

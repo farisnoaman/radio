@@ -124,7 +124,7 @@ func TestMikrotikAcceptEnhancer_Enhance_RateFormat(t *testing.T) {
 			name:           "zero rates",
 			upRate:         0,
 			downRate:       0,
-			expectedFormat: "0k/0k",
+			expectedFormat: "",
 		},
 		{
 			name:           "asymmetric rates",

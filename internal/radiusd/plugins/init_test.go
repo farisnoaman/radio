@@ -12,7 +12,7 @@ func TestInitPlugins_WithNilDependencies(t *testing.T) {
 	defer registry.ResetForTest()
 
 	assert.NotPanics(t, func() {
-		InitPlugins(nil, nil, nil, nil, nil)
+		InitPlugins(nil, nil, nil, nil, nil, nil)
 	})
 
 	validators := registry.GetPasswordValidators()
@@ -35,7 +35,7 @@ func TestInitPlugins_PasswordValidators(t *testing.T) {
 	registry.ResetForTest()
 	defer registry.ResetForTest()
 
-	InitPlugins(nil, nil, nil, nil, nil)
+	InitPlugins(nil, nil, nil, nil, nil, nil)
 
 	// Actual names returned by Name() method: "pap", "chap", "mschap"
 	expectedValidators := []string{"pap", "chap", "mschap"}
@@ -55,7 +55,7 @@ func TestInitPlugins_PolicyCheckers(t *testing.T) {
 	registry.ResetForTest()
 	defer registry.ResetForTest()
 
-	InitPlugins(nil, nil, nil, nil, nil)
+	InitPlugins(nil, nil, nil, nil, nil, nil)
 
 	checkers := registry.GetPolicyCheckers()
 	assert.GreaterOrEqual(t, len(checkers), 4)
@@ -76,7 +76,7 @@ func TestInitPlugins_ResponseEnhancers(t *testing.T) {
 	registry.ResetForTest()
 	defer registry.ResetForTest()
 
-	InitPlugins(nil, nil, nil, nil, nil)
+	InitPlugins(nil, nil, nil, nil, nil, nil)
 
 	enhancers := registry.GetResponseEnhancers()
 	assert.GreaterOrEqual(t, len(enhancers), 5)
@@ -86,7 +86,7 @@ func TestInitPlugins_EAPHandlers(t *testing.T) {
 	registry.ResetForTest()
 	defer registry.ResetForTest()
 
-	InitPlugins(nil, nil, nil, nil, nil)
+	InitPlugins(nil, nil, nil, nil, nil, nil)
 
 	eapHandlers := registry.GetAllEAPHandlers()
 
@@ -99,7 +99,7 @@ func TestInitPlugins_NoAccountingHandlersWithNilRepos(t *testing.T) {
 	registry.ResetForTest()
 	defer registry.ResetForTest()
 
-	InitPlugins(nil, nil, nil)
+	InitPlugins(nil, nil, nil, nil, nil, nil)
 
 	handlers := registry.GetAccountingHandlers()
 	assert.Empty(t, handlers)
