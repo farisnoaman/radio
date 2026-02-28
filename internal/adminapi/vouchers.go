@@ -248,20 +248,22 @@ func CreateVoucherBatch(c echo.Context) error {
 	batch := domain.VoucherBatch{
 		Name:           req.Name,
 		ProductID:      productID,
-		AgentID:        agentID, // Link to Agent
+		AgentID:        agentID,
 		Count:          req.Count,
 		Prefix:         req.Prefix,
 		Remark:         req.Remark,
 		GeneratePIN:    req.GeneratePIN,
 		PINLength:      req.PINLength,
-		ExpirationType: req.ExpirationType, // "fixed" or "first_use"
-		ValidityDays:   req.ValidityDays,   // Days for first_use type
+		ExpirationType: req.ExpirationType,
+		ValidityDays:   req.ValidityDays,
 		CreatedAt:      time.Now(),
 	}
 
+	// PrintExpireTime controls when vouchers can no longer be printed/activated
+	// This is separate from the actual validity period which comes from Product
 	if req.ExpireTime != "" {
 		if t, err := time.Parse(time.RFC3339, req.ExpireTime); err == nil {
-			batch.ExpireTime = &t
+			batch.PrintExpireTime = &t
 		}
 	}
 
@@ -274,15 +276,15 @@ func CreateVoucherBatch(c echo.Context) error {
 	vouchers := make([]domain.Voucher, 0, req.Count)
 
 	var expireTime time.Time
-	// For "fixed" expiration, use the batch expire time
+	// For "fixed" expiration, calculate ExpireTime from Product.ValiditySeconds
 	// For "first_use" expiration, ExpireTime will be set when voucher is first used
-	if batch.ExpirationType != "first_use" && batch.ExpireTime != nil {
-		expireTime = *batch.ExpireTime
+	if batch.ExpirationType != "first_use" && product.ValiditySeconds > 0 {
+		expireTime = time.Now().Add(time.Duration(product.ValiditySeconds) * time.Second)
 	}
 
 	// For first_use type, calculate expiry from validity days (will be applied on first use)
 	if batch.ExpirationType == "first_use" && batch.ValidityDays > 0 {
-		_ = int64(batch.ValidityDays * 24 * 60 * 60) // validitySeconds - used in expiry calculation on first use
+		_ = int64(batch.ValidityDays * 24 * 60 * 60)
 	}
 
 	// Determine PIN length (default to 4 if not set)
@@ -294,23 +296,24 @@ func CreateVoucherBatch(c echo.Context) error {
 	for i := 0; i < req.Count; i++ {
 		code := req.Prefix + common.GenerateVoucherCode(req.Length, req.Type)
 
-
 		voucher := domain.Voucher{
 			BatchID:     batch.ID,
 			Code:        code,
 			Status:      "unused",
 			Price:       product.Price,
-			AgentID:     agentID, // Link to Agent
-			ExpireTime:  expireTime, // Empty for first_use type initially
+			AgentID:     agentID,
+			ExpireTime:  expireTime,
 			RequirePIN:  req.GeneratePIN,
 			CreatedAt:   time.Now(),
 			UpdatedAt:   time.Now(),
+
+			// Inherit allocations from Product
+			DataQuota: product.DataQuota,
+			TimeQuota: product.ValiditySeconds,
 		}
 
-		// For first_use type, store validity info via batch linkage (validitySeconds > 0 means first_use)
-		// The actual expiry will be calculated when voucher is first used
+		// For first_use type, leave ExpireTime empty - will be set on first login
 		if batch.ExpirationType == "first_use" {
-			// Leave ExpireTime empty - it will be set on first login
 			voucher.ExpireTime = time.Time{}
 		}
 
@@ -318,7 +321,6 @@ func CreateVoucherBatch(c echo.Context) error {
 		if req.GeneratePIN {
 			voucher.PIN = common.GeneratePIN(pinLength)
 		}
-
 
 		vouchers = append(vouchers, voucher)
 	}
@@ -439,6 +441,12 @@ func RedeemVoucher(c echo.Context) error {
 		return fail(c, http.StatusInternalServerError, "BATCH_ERROR", "Voucher batch not found", err.Error())
 	}
 
+	// Check if batch has expired for printing/activation
+	if batch.PrintExpireTime != nil && batch.PrintExpireTime.Before(time.Now()) {
+		tx.Rollback()
+		return fail(c, http.StatusConflict, "BATCH_EXPIRED", "Voucher batch has expired for printing/activation", nil)
+	}
+
 	if err := tx.First(&product, batch.ProductID).Error; err != nil {
 		tx.Rollback()
 		return fail(c, http.StatusInternalServerError, "PRODUCT_ERROR", "Associated product not found", err.Error())
@@ -475,9 +483,13 @@ func RedeemVoucher(c echo.Context) error {
 
 	// 519: user := domain.RadiusUser{ ... }
 	// We need to decide which rates to use.
+	// Use allocations from Voucher (inherited from Product at creation time)
 	userUpRate := product.UpRate
 	userDownRate := product.DownRate
-	userDataQuota := product.DataQuota
+
+	// Use DataQuota from Voucher (inherited from Product at batch creation)
+	// This ensures quota is tied to the specific voucher, not the product
+	userDataQuota := voucher.DataQuota
 
 	if userUpRate == 0 {
 		userUpRate = profile.UpRate
@@ -509,10 +521,12 @@ func RedeemVoucher(c echo.Context) error {
 	}
 
 	// 4. Update Voucher Status
-	voucher.Status = "used"
+	// Status "active" means the voucher has been redeemed and is in use
+	// This allows tracking of data/time usage against the voucher
+	voucher.Status = "active"
 	voucher.RadiusUsername = user.Username
 	voucher.ActivatedAt = now
-	voucher.FirstUsedAt = now // Record first use time
+	voucher.FirstUsedAt = now // Record first use time for first_use expiration
 
 	if err := tx.Save(&voucher).Error; err != nil {
 		tx.Rollback()
@@ -637,7 +651,7 @@ func BulkActivateVouchers(c echo.Context) error {
 		zap.String("expiration_type", batch.ExpirationType),
 		zap.Int64("product_id", batch.ProductID),
 		zap.Int64("product_validity_seconds", product.ValiditySeconds),
-		zap.Time("batch_expire_time", func() time.Time { if batch.ExpireTime != nil { return *batch.ExpireTime }; return time.Time{} }()),
+		zap.Time("batch_print_expire_time", func() time.Time { if batch.PrintExpireTime != nil { return *batch.PrintExpireTime }; return time.Time{} }()),
 	)
 	updates := map[string]interface{}{
 		"status":       "active",
@@ -646,8 +660,8 @@ func BulkActivateVouchers(c echo.Context) error {
 
 	// Calculate expiration for fixed type
 	if batch.ExpirationType != "first_use" {
-		if batch.ExpireTime != nil && !batch.ExpireTime.IsZero() {
-			updates["expire_time"] = *batch.ExpireTime
+		if batch.PrintExpireTime != nil && !batch.PrintExpireTime.IsZero() {
+			updates["expire_time"] = *batch.PrintExpireTime
 		} else if product.ValiditySeconds > 0 {
 			updates["expire_time"] = now.Add(time.Duration(product.ValiditySeconds) * time.Second)
 		} else {

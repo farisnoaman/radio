@@ -206,6 +206,7 @@ type AppConfig struct {
 	Logger   LogConfig     `yaml:"logger" json:"logger"`
 	Backup   BackupConfig  `yaml:"backup" json:"backup"`
 	Tunnel   TunnelConfig  `yaml:"tunnel" json:"tunnel"`
+	Voucher  VoucherConfig `yaml:"voucher" json:"voucher"`
 }
 
 // TunnelConfig holds the configuration for tunnel services
@@ -217,6 +218,15 @@ type TunnelConfig struct {
 	LocalPort     int    `yaml:"local_port" json:"local_port"`
 	RemotePort    int    `yaml:"remote_port" json:"remote_port"`
 	AllowInsecure bool   `yaml:"allow_insecure" json:"allow_insecure"`
+}
+
+// VoucherConfig holds voucher cleanup and retention settings.
+// These settings control how expired vouchers are handled including
+// grace periods before deletion and retention periods for reporting.
+type VoucherConfig struct {
+	CleanupEnabled      bool `yaml:"cleanup_enabled" json:"cleanup_enabled"`             // Enable/disable automatic voucher cleanup
+	CleanupGraceMinutes int  `yaml:"cleanup_grace_minutes" json:"cleanup_grace_minutes"` // Minutes to wait after quota exhaustion before marking expired
+	CleanupRetentionDays int  `yaml:"cleanup_retention_days" json:"cleanup_retention_days"` // Days to keep expired vouchers before soft-delete
 }
 
 
@@ -521,6 +531,11 @@ var DefaultAppConfig = &AppConfig{
 		Type:       "cloudflare",
 		LocalPort:  1816,
 		RemotePort: 8080,
+	},
+	Voucher: VoucherConfig{
+		CleanupEnabled:      true,
+		CleanupGraceMinutes: 60,
+		CleanupRetentionDays: 7,
 	},
 }
 

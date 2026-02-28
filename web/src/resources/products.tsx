@@ -627,55 +627,57 @@ export const ProductShow = (props: ShowProps) => (
 );
 
 const ValidityInput = () => {
-  const { setValue, getValues } = useFormContext();
-  // Default to 'days' unless value is small (e.g. < 1 hour)
-  const currentSeconds = getValues('validity_seconds') || 0;
-  const initialUnit = currentSeconds > 0 && currentSeconds % 86400 === 0 ? 'days' :
-    currentSeconds > 0 && currentSeconds % 3600 === 0 ? 'hours' : 'minutes';
+  const record = useRecordContext();
+  const { setValue } = useFormContext();
+  
+  // Get initial value from record (for Edit) or default (for Create)
+  const initialSeconds = record?.validity_seconds || 0;
+  
+  // Calculate unit and value from seconds
+  const getUnitAndValue = (seconds: number) => {
+    if (seconds > 0 && seconds % 86400 === 0) {
+      return { unit: 'days', value: seconds / 86400 };
+    }
+    if (seconds > 0 && seconds % 3600 === 0) {
+      return { unit: 'hours', value: seconds / 3600 };
+    }
+    if (seconds > 0 && seconds % 60 === 0) {
+      return { unit: 'minutes', value: seconds / 60 };
+    }
+    return { unit: 'days', value: seconds > 0 ? seconds : 30 };
+  };
 
-  // Calculate initial value based on unit
-  const initialValue = initialUnit === 'days' ? currentSeconds / 86400 :
-    initialUnit === 'hours' ? currentSeconds / 3600 :
-      currentSeconds / 60;
+  const { unit, value } = getUnitAndValue(initialSeconds);
 
-  const [unit, setUnit] = React.useState(initialUnit);
-  const [val, setVal] = React.useState(initialValue > 0 ? initialValue : 30); // Default 30
-
-  // Effect to update the actual source field when unit or val changes
+  // Update validity_seconds when unit or value changes
   React.useEffect(() => {
     let multiplier = 60;
     if (unit === 'hours') multiplier = 3600;
     if (unit === 'days') multiplier = 86400;
-
-    setValue('validity_seconds', val * multiplier);
-  }, [unit, val, setValue]);
+    setValue('validity_seconds', value * multiplier);
+  }, [unit, value, setValue]);
 
   return (
     <FieldGrid columns={{ xs: 1, sm: 2 }}>
       <FieldGridItem>
         <NumberInput
-          source="validity_value_virtual" // Virtual field
+          source="validity_value_virtual"
           label="Validity Duration"
-          value={val}
-          onChange={(e) => setVal(Number(e.target.value))}
-          defaultValue={30}
+          defaultValue={value}
           fullWidth
         />
       </FieldGridItem>
       <FieldGridItem>
         <SelectInput
-          source="validity_unit_virtual" // Virtual field
+          source="validity_unit_virtual"
           label="Unit"
           choices={[
             { id: 'minutes', name: 'Minutes' },
             { id: 'hours', name: 'Hours' },
             { id: 'days', name: 'Days' },
           ]}
-          value={unit}
-          onChange={(e) => setUnit(e.target.value)}
-          defaultValue="days"
+          defaultValue={unit}
           fullWidth
-          disableValue="validity_seconds"
         />
       </FieldGridItem>
       <NumberInput source="validity_seconds" style={{ display: 'none' }} />
@@ -684,18 +686,27 @@ const ValidityInput = () => {
 };
 
 const DataQuotaInput = () => {
-  const { setValue, getValues } = useFormContext();
-  const currentMB = getValues('data_quota') || 0;
-  const initialUnit = currentMB > 0 && currentMB % 1024 === 0 ? 'GB' : 'MB';
-  const initialValue = initialUnit === 'GB' ? currentMB / 1024 : currentMB;
+  const record = useRecordContext();
+  const { setValue } = useFormContext();
+  
+  // Get initial value from record (for Edit) or default (for Create)
+  const initialMB = record?.data_quota || 0;
 
-  const [unit, setUnit] = React.useState(initialUnit);
-  const [val, setVal] = React.useState(initialValue);
+  // Calculate unit and value from MB
+  const getUnitAndValue = (mb: number) => {
+    if (mb > 0 && mb % 1024 === 0) {
+      return { unit: 'GB', value: mb / 1024 };
+    }
+    return { unit: 'MB', value: mb > 0 ? mb : 0 };
+  };
 
+  const { unit, value } = getUnitAndValue(initialMB);
+
+  // Update data_quota when unit or value changes
   React.useEffect(() => {
     const multiplier = unit === 'GB' ? 1024 : 1;
-    setValue('data_quota', val * multiplier);
-  }, [unit, val, setValue]);
+    setValue('data_quota', value * multiplier);
+  }, [unit, value, setValue]);
 
   return (
     <FieldGrid columns={{ xs: 1, sm: 2 }}>
@@ -703,8 +714,7 @@ const DataQuotaInput = () => {
         <NumberInput
           source="data_quota_virtual"
           label="Data Quota"
-          value={val}
-          onChange={(e) => setVal(Number(e.target.value))}
+          defaultValue={value}
           fullWidth
         />
       </FieldGridItem>
@@ -716,8 +726,7 @@ const DataQuotaInput = () => {
             { id: 'MB', name: 'MB' },
             { id: 'GB', name: 'GB' },
           ]}
-          value={unit}
-          onChange={(e) => setUnit(e.target.value)}
+          defaultValue={unit}
           fullWidth
         />
       </FieldGridItem>

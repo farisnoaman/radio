@@ -1,5 +1,11 @@
 #!/bin/bash
-echo -e "${GREEN}Ensuring No background process from former sessions of ToughRadius Development Environment is running behind...${NC}"
+# Colors
+GREEN='\033[0;32m'
+RED='\033[0;31m'
+NC='\033[0m'
+BLUE='\033[0;34m'
+
+echo -e "${BLUE}Ensuring No background process from former sessions of ToughRadius Development Environment is running behind...${NC}"
 
 pkill -9 -f "go run main.go" || true && pkill -9 -f "toughradius.dev.yml" || true && pkill -9 -f "vite" || true && ps aux | grep -E "go run main.go|toughradius.dev.yml|vite" | grep -v grep
 ps aux | grep -E "go run main.go|toughradius.dev.yml|vite" | grep -v grep || echo "No processes found"
@@ -9,10 +15,7 @@ CONFIG_FILE="toughradius.dev.yml"
 BACKEND_PORT=1816
 FRONTEND_PORT=3000
 
-# Colors
-GREEN='\033[0;32m'
-RED='\033[0;31m'
-NC='\033[0m'
+
 
 echo -e "${GREEN}Starting ToughRadius Development Environment...${NC}"
 
@@ -78,9 +81,16 @@ if [ ! -d "dist" ]; then
 fi
 cd ..
 
-# Database Initialization
-echo -e "${GREEN}Initializing Database...${NC}"
-go run main.go -initdb -c $CONFIG_FILE
+# Database Initialization (only if requested)
+# Run with: ./start_dev.sh --initdb to initialize/reset database
+if [ "$1" = "--initdb" ]; then
+    echo -e "${GREEN}Initializing/Resetting Database (--initdb flag detected)...${NC}"
+    go run main.go -initdb -c $CONFIG_FILE
+    echo -e "${GREEN}Database initialized.${NC}"
+else
+    echo -e "${GREEN}Skipping database initialization (data will persist).${NC}"
+    echo -e "${GREEN}To reset database, run: ./start_dev.sh --initdb${NC}"
+fi
 
 # Start Servers
 echo -e "${GREEN}Starting Backend and Frontend...${NC}"

@@ -63,6 +63,14 @@ func (a *Application) initJob() {
 		zap.S().Errorf("init job error %s", err.Error())
 	}
 
+	// Voucher Cleanup Task - marks quota-exhausted vouchers as expired and soft-deletes after grace period
+	_, err = a.sched.AddFunc("@daily", func() {
+		go a.SchedVoucherCleanupTask()
+	})
+	if err != nil {
+		zap.S().Errorf("init voucher cleanup job error %s", err.Error())
+	}
+
 	a.sched.Start()
 }
 
@@ -341,4 +349,125 @@ func (a *Application) SchedExpireStrategyTask() {
 	// 2. (Optional) Archive/Delete old expired users (e.g., expired > 1 year)
 	// retentionDate := now.AddDate(-1, 0, 0)
 	// err = a.gormDB.Where("expire_time < ?", retentionDate).Delete(&domain.RadiusUser{}).Error
+}
+
+// SchedVoucherCleanupTask handles cleanup of vouchers that have exhausted their
+// data or time quota. It runs daily to:
+//
+// 1. Mark vouchers as "expired" when quota is exhausted (DataUsed >= DataQuota OR TimeUsed >= TimeQuota)
+// 2. Soft-delete expired vouchers after the configured grace period
+//
+// This ensures vouchers are properly cleaned up while allowing administrators
+// to view expired voucher history for reporting purposes before deletion.
+//
+// The grace period and retention settings are controlled by:
+//   - appConfig.Voucher.CleanupEnabled: Enable/disable cleanup
+//   - appConfig.Voucher.CleanupGraceMinutes: Minutes to wait after quota exhaustion before marking expired
+//   - appConfig.Voucher.CleanupRetentionDays: Days to keep expired vouchers before soft-delete
+//
+// Settings can be overridden via the system settings API:
+//   - voucher.cleanup_enabled: Enable/disable cleanup (bool)
+//   - voucher.cleanup_grace_minutes: Grace period in minutes (int)
+//   - voucher.cleanup_retention_days: Retention days (int)
+func (a *Application) SchedVoucherCleanupTask() {
+	defer func() {
+		if err := recover(); err != nil {
+			zap.S().Error(err)
+		}
+	}()
+
+	now := time.Now()
+
+	// Load settings from ConfigManager if available, otherwise use static config
+	var cleanupEnabled bool
+	var cleanupGraceMinutes int
+	var cleanupRetentionDays int
+
+	if a.ConfigMgr() != nil {
+		cleanupEnabled = a.ConfigMgr().GetBool("voucher", "CleanupEnabled")
+		cleanupGraceMinutes = a.ConfigMgr().GetInt("voucher", "CleanupGraceMinutes")
+		cleanupRetentionDays = a.ConfigMgr().GetInt("voucher", "CleanupRetentionDays")
+	} else {
+		cleanupEnabled = a.appConfig.Voucher.CleanupEnabled
+		cleanupGraceMinutes = a.appConfig.Voucher.CleanupGraceMinutes
+		cleanupRetentionDays = a.appConfig.Voucher.CleanupRetentionDays
+	}
+
+	// Skip cleanup if disabled
+	if !cleanupEnabled {
+		return
+	}
+
+	// Ensure minimum values
+	if cleanupGraceMinutes < 0 {
+		cleanupGraceMinutes = 0
+	}
+	if cleanupRetentionDays < 0 {
+		cleanupRetentionDays = 0
+	}
+
+	graceDuration := time.Duration(cleanupGraceMinutes) * time.Minute
+	retentionDuration := time.Duration(cleanupRetentionDays) * 24 * time.Hour
+
+	// Step 1: Mark active vouchers with exhausted quota as expired
+	// Quota is exhausted when: DataUsed >= DataQuota OR TimeUsed >= TimeQuota
+	// Only applies when quota is set (> 0)
+	quotaExpiredResult := a.gormDB.Model(&domain.Voucher{}).
+		Where("status = ? AND is_deleted = ? AND "+
+			"((data_quota > 0 AND data_used >= data_quota) OR "+
+			"(time_quota > 0 AND time_used >= time_quota))", "active", false).
+		Updates(map[string]interface{}{
+			"status":            "expired",
+			"quota_expired_at": now,
+		})
+
+	if quotaExpiredResult.Error != nil {
+		zap.S().Errorf("Failed to mark quota-exhausted vouchers as expired: %v", quotaExpiredResult.Error)
+	} else if quotaExpiredResult.RowsAffected > 0 {
+		zap.S().Infof("Marked %d vouchers as expired due to quota exhaustion", quotaExpiredResult.RowsAffected)
+	}
+
+	// Step 2: Mark time-expired vouchers as expired
+	// This handles vouchers where ExpireTime has passed but weren't marked expired
+	timeExpiredResult := a.gormDB.Model(&domain.Voucher{}).
+		Where("status = ? AND is_deleted = ? AND expire_time > ?", "active", false, now).
+		Updates(map[string]interface{}{
+			"status":            "expired",
+			"quota_expired_at": now,
+		})
+
+	if timeExpiredResult.Error != nil {
+		zap.S().Errorf("Failed to mark time-expired vouchers as expired: %v", timeExpiredResult.Error)
+	} else if timeExpiredResult.RowsAffected > 0 {
+		zap.S().Infof("Marked %d vouchers as expired due to time expiration", timeExpiredResult.RowsAffected)
+	}
+
+	// Step 3: Soft-delete expired vouchers after grace period
+	// Vouchers are kept for reporting purposes during the grace period
+	graceCutoff := now.Add(-graceDuration)
+	softDeleteResult := a.gormDB.Model(&domain.Voucher{}).
+		Where("status = ? AND is_deleted = ? AND quota_expired_at < ?", "expired", false, graceCutoff).
+		Update("is_deleted", true)
+
+	if softDeleteResult.Error != nil {
+		zap.S().Errorf("Failed to soft-delete expired vouchers: %v", softDeleteResult.Error)
+	} else if softDeleteResult.RowsAffected > 0 {
+		zap.S().Infof("Soft-deleted %d expired vouchers after grace period", softDeleteResult.RowsAffected)
+	}
+
+	// Step 4: Optionally hard-delete very old expired vouchers (retention period)
+	// This is optional and can be enabled by setting CleanupRetentionDays > 0
+	if cleanupRetentionDays > 0 {
+		retentionCutoff := now.Add(-retentionDuration)
+		hardDeleteResult := a.gormDB.Where("status = ? AND is_deleted = ? AND updated_at < ?",
+			"expired", true, retentionCutoff).Delete(&domain.Voucher{})
+
+		if hardDeleteResult.Error != nil {
+			zap.S().Errorf("Failed to hard-delete old expired vouchers: %v", hardDeleteResult.Error)
+		} else if hardDeleteResult.RowsAffected > 0 {
+			zap.S().Infof("Hard-deleted %d old expired vouchers after retention period", hardDeleteResult.RowsAffected)
+		}
+	}
+
+	zap.S().Info("Voucher cleanup task completed")
 }

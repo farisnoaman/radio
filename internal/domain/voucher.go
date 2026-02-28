@@ -4,51 +4,88 @@ import (
 	"time"
 )
 
-// VoucherBatch A batch of generated vouchers
+// VoucherBatch represents a batch of generated vouchers that can be sold
+// to customers. Each batch is linked to a Product which defines the actual
+// allocations (data quota, time validity) that vouchers will inherit.
+//
+// The batch controls printing/validity deadlines - vouchers cannot be printed
+// or activated after PrintExpireTime. The actual allocations come from the
+// Product at voucher creation time.
+//
+// Database table: voucher_batch
+//
+// Lifecycle:
+//   - Created via Admin API POST /api/v1/voucher-batches
+//   - Generates multiple Voucher records on creation
+//   - Can be activated/deactivated in bulk
+//   - Supports soft delete with restore capability
 type VoucherBatch struct {
 	ID           int64      `json:"id,string" form:"id"`
 	Name         string     `json:"name" form:"name"`
 	ProductID    int64      `gorm:"index" json:"product_id,string" form:"product_id"`
-	AgentID      int64      `gorm:"index" json:"agent_id,string" form:"agent_id"` // Nullable if admin generated, but we use int64. 0 means system/admin.
+	AgentID      int64      `gorm:"index" json:"agent_id,string" form:"agent_id"`
 	Count        int        `json:"count" form:"count"`
 	Prefix       string     `json:"prefix" form:"prefix"`
 	Remark      string     `json:"remark" form:"remark"`
-	ExpireTime  *time.Time `json:"expire_time"`
-	GeneratePIN bool        `json:"generate_pin" form:"generate_pin"` // Whether to generate PIN for vouchers
-	PINLength    int        `json:"pin_length" form:"pin_length"`    // Length of PIN (default 4)
-	// First-Use Expiration: voucher expires X days after first login instead of from creation
+	PrintExpireTime  *time.Time `json:"print_expire_time" gorm:"column:expire_time"`  // Deadline for printing/activating vouchers (maps to existing expire_time column)
+	GeneratePIN bool        `json:"generate_pin" form:"generate_pin"`
+	PINLength    int        `json:"pin_length" form:"pin_length"`
 	ExpirationType string    `json:"expiration_type" form:"expiration_type"` // "fixed" or "first_use"
-	ValidityDays   int       `json:"validity_days" form:"validity_days"`     // Days of validity (for first_use type)
+	ValidityDays   int       `json:"validity_days" form:"validity_days"`
 	IsDeleted      bool      `json:"is_deleted" gorm:"default:false"`
 	CreatedAt    time.Time  `gorm:"index" json:"created_at"`
-
 }
 
 func (VoucherBatch) TableName() string {
 	return "voucher_batch"
 }
 
-// Voucher Individual prepaid code
+// Voucher represents an individual prepaid access code that customers can
+// redeem to get internet access. Each voucher is linked to a Product which
+// defines the allocations (data quota, time validity) that this voucher provides.
+//
+// Vouchers track both their allocated quota and actual usage. Expiration can
+// occur via either: (1) time-based ExpireTime reached, or (2) quota-based
+// when DataUsed >= DataQuota or TimeUsed >= TimeQuota.
+//
+// Database table: voucher
+//
+// Lifecycle:
+//   - Created when batch is generated (inherits allocations from Product)
+//   - Status transitions: unused → active → used/expired
+//   - Quota usage tracked via RADIUS accounting
+//   - Soft-deleted after grace period when expired
 type Voucher struct {
 	ID              int64     `json:"id,string" form:"id"`
 	BatchID         int64     `gorm:"index" json:"batch_id,string" form:"batch_id"`
-	Code            string    `json:"code" gorm:"uniqueIndex" form:"code"` // The username/password
-	RadiusUsername  string    `gorm:"index" json:"radius_username" form:"radius_username"` // Populated after activation
+	Code            string    `json:"code" gorm:"uniqueIndex" form:"code"`
+	RadiusUsername  string    `gorm:"index" json:"radius_username" form:"radius_username"`
 	Status          string    `gorm:"index" json:"status" form:"status"` // unused, active, used, expired
 	AgentID         int64     `gorm:"index" json:"agent_id,string" form:"agent_id"`
 	Price           float64   `json:"price" form:"price"`
 	ActivatedAt     time.Time `json:"activated_at"`
 	ExpireTime      time.Time `gorm:"index" json:"expire_time"`
 
-	ExtendedCount   int       `json:"extended_count"`     // Times extended
-	LastExtendedAt  time.Time `json:"last_extended_at"`  // Last extension timestamp
-	FirstUsedAt     time.Time `json:"first_used_at"`     // First login timestamp for first_use expiration
+	// Allocations from Product (set at voucher creation)
+	DataQuota int64 `json:"data_quota" form:"data_quota"` // MB (0 = unlimited)
+	TimeQuota int64 `json:"time_quota" form:"time_quota"` // seconds (0 = unlimited)
+
+	// Actual usage tracking
+	DataUsed int64 `json:"data_used" form:"data_used"` // MB used
+	TimeUsed int64 `json:"time_used" form:"time_used"` // seconds used
+
+	// Grace period tracking for quota-based expiration
+	QuotaExpiredAt *time.Time `json:"quota_expired_at"`
+
+	ExtendedCount   int       `json:"extended_count"`
+	LastExtendedAt  time.Time `json:"last_extended_at"`
+	FirstUsedAt     time.Time `json:"first_used_at"`
 	PIN             string    `json:"-"`                  // Hashed PIN (never exposed via JSON)
-	RequirePIN      bool      `json:"require_pin"`        // Whether PIN is required for redemption
+	RequirePIN      bool      `json:"require_pin" form:"require_pin"`
 	IsDeleted       bool      `json:"is_deleted" gorm:"default:false"`
 	CreatedAt       time.Time `json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
-}
+}}
 
 func (Voucher) TableName() string {
 	return "voucher"
