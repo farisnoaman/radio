@@ -448,7 +448,7 @@ const formLayoutSx = {
   width: '100%',
   maxWidth: 'none',
   mx: 0,
-  px: { xs: 2, sm: 3, md: 4 },
+  px: { xs: 1, sm: 2, md: 2 },
   '& .RaSimpleForm-main': {
     width: '100%',
     maxWidth: 'none',

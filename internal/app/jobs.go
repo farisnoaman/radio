@@ -385,8 +385,8 @@ func (a *Application) SchedVoucherCleanupTask() {
 
 	if a.ConfigMgr() != nil {
 		cleanupEnabled = a.ConfigMgr().GetBool("voucher", "CleanupEnabled")
-		cleanupGraceMinutes = a.ConfigMgr().GetInt("voucher", "CleanupGraceMinutes")
-		cleanupRetentionDays = a.ConfigMgr().GetInt("voucher", "CleanupRetentionDays")
+		cleanupGraceMinutes = int(a.ConfigMgr().GetInt("voucher", "CleanupGraceMinutes"))
+		cleanupRetentionDays = int(a.ConfigMgr().GetInt("voucher", "CleanupRetentionDays"))
 	} else {
 		cleanupEnabled = a.appConfig.Voucher.CleanupEnabled
 		cleanupGraceMinutes = a.appConfig.Voucher.CleanupGraceMinutes

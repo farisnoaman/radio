@@ -110,6 +110,37 @@
       "title_i18n": "config.radius.reject_delay_window_seconds.title",
       "description": "Observation window (seconds) for reject counter reset",
       "description_i18n": "config.radius.reject_delay_window_seconds.description"
+    },
+    {
+      "key": "voucher.CleanupEnabled",
+      "type": "bool",
+      "default": "true",
+      "title": "Enable Voucher Cleanup",
+      "title_i18n": "config.voucher.cleanup_enabled.title",
+      "description": "Enable automatic cleanup of expired vouchers",
+      "description_i18n": "config.voucher.cleanup_enabled.description"
+    },
+    {
+      "key": "voucher.CleanupGraceMinutes",
+      "type": "int",
+      "default": "60",
+      "min": 0,
+      "max": 10080,
+      "title": "Cleanup Grace Period",
+      "title_i18n": "config.voucher.cleanup_grace_minutes.title",
+      "description": "Minutes to wait after quota exhaustion before marking voucher as expired",
+      "description_i18n": "config.voucher.cleanup_grace_minutes.description"
+    },
+    {
+      "key": "voucher.CleanupRetentionDays",
+      "type": "int",
+      "default": "7",
+      "min": 0,
+      "max": 365,
+      "title": "Voucher Retention Days",
+      "title_i18n": "config.voucher.cleanup_retention_days.title",
+      "description": "Days to keep expired vouchers before soft-deleting them",
+      "description_i18n": "config.voucher.cleanup_retention_days.description"
     }
   ]
 }

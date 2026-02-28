@@ -15,15 +15,15 @@ export const FormSection = ({ title, description, children }: FormSectionProps) 
   <Paper
     elevation={0}
     sx={{
-      p: 3,
-      mb: 3,
+      p: 2,
+      mb: 2,
       borderRadius: 2,
       border: theme => `1px solid ${theme.palette.divider}`,
       backgroundColor: theme => theme.palette.background.paper,
       width: '100%'
     }}
   >
-    <Typography variant="subtitle1" sx={{ fontWeight: 600 }}>
+    <Typography variant="subtitle1" sx={{ fontWeight: 600, fontSize: '1rem' }}>
       {title}
     </Typography>
     {description && (
@@ -31,7 +31,7 @@ export const FormSection = ({ title, description, children }: FormSectionProps) 
         {description}
       </Typography>
     )}
-    <Box sx={{ mt: 2, width: '100%' }}>
+    <Box sx={{ mt: 1, width: '100%' }}>
       {children}
     </Box>
   </Paper>

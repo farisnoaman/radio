@@ -33,6 +33,7 @@ import {
   Settings as SettingsIcon,
   Security as SecurityIcon,
   Router as RouterIcon,
+  AutoFixHigh as CleanupIcon,
 } from '@mui/icons-material';
 import { useDataProvider, useNotify, useTranslate } from 'react-admin';
 import { useApiQuery } from '../hooks/useApiQuery';
@@ -130,6 +131,12 @@ export const SystemConfigPage: React.FC = () => {
       description: translate('pages.system_config.groups.security.description'),
       icon: <SecurityIcon />,
       color: '#d32f2f',
+    },
+    voucher: {
+      title: translate('pages.system_config.groups.voucher.title', { _: 'Voucher Cleanup' }),
+      description: translate('pages.system_config.groups.voucher.description', { _: 'Configure automatic cleanup of expired vouchers.' }),
+      icon: <CleanupIcon />,
+      color: '#2196f3',
     },
   }), [translate]);
 

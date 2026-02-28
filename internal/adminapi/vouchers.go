@@ -1015,6 +1015,41 @@ func ExportVoucherBatch(c echo.Context) error {
 	return nil
 }
 
+// PrintVoucherBatch returns all vouchers for a batch without pagination limits
+// Used specifically for printing large batches
+// @Summary print voucher batch
+// @Tags Voucher
+// @Param id path int true "Batch ID"
+// @Success 200 {array} map[string]interface{}
+// @Router /api/v1/voucher-batches/{id}/print [get]
+func PrintVoucherBatch(c echo.Context) error {
+	id := c.Param("id")
+
+	var batch domain.VoucherBatch
+	if err := GetDB(c).First(&batch, id).Error; err != nil {
+		return fail(c, http.StatusNotFound, "BATCH_NOT_FOUND", "Batch not found", err.Error())
+	}
+
+	var vouchers []domain.Voucher
+	if err := GetDB(c).Where("batch_id = ? AND is_deleted = ?", id, false).Order("id ASC").Find(&vouchers).Error; err != nil {
+		return fail(c, http.StatusInternalServerError, "PRINT_FAILED", "Failed to fetch vouchers", err.Error())
+	}
+
+	result := make([]map[string]interface{}, len(vouchers))
+	for i, v := range vouchers {
+		result[i] = map[string]interface{}{
+			"id":          v.ID,
+			"code":        v.Code,
+			"status":      v.Status,
+			"price":       v.Price,
+			"expire_time": v.ExpireTime,
+			"activated_at": v.ActivatedAt,
+		}
+	}
+
+	return c.JSON(http.StatusOK, result)
+}
+
 // CreateVoucherTopup adds data/time quota to an active voucher
 // @Summary create voucher topup
 // @Tags Voucher
@@ -1442,6 +1477,7 @@ func registerVoucherRoutes() {
 	webserver.ApiPOST("/voucher-batches/:id/restore", RestoreVoucherBatch)
 	webserver.ApiPOST("/voucher-batches/:id/refund", RefundUnusedVouchers)
 	webserver.ApiGET("/voucher-batches/:id/export", ExportVoucherBatch)
+	webserver.ApiGET("/voucher-batches/:id/print", PrintVoucherBatch)
 	webserver.ApiPOST("/voucher-batches/:id/transfer", TransferVouchers)
 	webserver.ApiPOST("/vouchers/redeem", RedeemVoucher, webserver.RateLimitMiddleware(rate.Limit(5.0/60.0), 5))
 	webserver.ApiPOST("/vouchers/extend", ExtendVoucher)

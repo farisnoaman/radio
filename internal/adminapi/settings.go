@@ -271,6 +271,10 @@ func applySettingsFilters(db *gorm.DB, c echo.Context) *gorm.DB {
 		db = db.Where("name ILIKE ?", "%"+name+"%")
 	}
 
+	if category := strings.TrimSpace(c.QueryParam("category")); category != "" {
+		db = db.Where("category = ?", category)
+	}
+
 	return db
 }
 

@@ -47,8 +47,6 @@ import {
 } from '@mui/icons-material';
 import {
   FormSection,
-  FieldGrid,
-  FieldGridItem,
   formLayoutSx,
   DetailItem,
   DetailSectionCard,
@@ -658,16 +656,16 @@ const ValidityInput = () => {
   }, [unit, value, setValue]);
 
   return (
-    <FieldGrid columns={{ xs: 1, sm: 2 }}>
-      <FieldGridItem>
+    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%' }}>
+      <Box>
         <NumberInput
           source="validity_value_virtual"
           label="Validity Duration"
           defaultValue={value}
           fullWidth
         />
-      </FieldGridItem>
-      <FieldGridItem>
+      </Box>
+      <Box>
         <SelectInput
           source="validity_unit_virtual"
           label="Unit"
@@ -679,9 +677,9 @@ const ValidityInput = () => {
           defaultValue={unit}
           fullWidth
         />
-      </FieldGridItem>
+      </Box>
       <NumberInput source="validity_seconds" style={{ display: 'none' }} />
-    </FieldGrid>
+    </Box>
   );
 };
 
@@ -709,16 +707,16 @@ const DataQuotaInput = () => {
   }, [unit, value, setValue]);
 
   return (
-    <FieldGrid columns={{ xs: 1, sm: 2 }}>
-      <FieldGridItem>
+    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%' }}>
+      <Box>
         <NumberInput
           source="data_quota_virtual"
           label="Data Quota"
           defaultValue={value}
           fullWidth
         />
-      </FieldGridItem>
-      <FieldGridItem>
+      </Box>
+      <Box>
         <SelectInput
           source="data_quota_unit_virtual"
           label="Unit"
@@ -729,9 +727,9 @@ const DataQuotaInput = () => {
           defaultValue={unit}
           fullWidth
         />
-      </FieldGridItem>
+      </Box>
       <NumberInput source="data_quota" style={{ display: 'none' }} />
-    </FieldGrid>
+    </Box>
   );
 };
 
@@ -740,77 +738,82 @@ export const ProductCreate = (props: CreateProps) => {
   return (
     <Create {...props}>
       <SimpleForm sx={formLayoutSx}>
-        <FormSection
-          title={translate('resources.products.section.basic', { _: 'Basic Information' })}
-        >
-          <FieldGrid columns={{ xs: 1, sm: 2 }}>
-            <FieldGridItem>
-              <TextInput source="name" validate={[required()]} fullWidth />
-            </FieldGridItem>
-            <FieldGridItem>
-              <ReferenceInput source="radius_profile_id" reference="radius-profiles">
-                <SelectInput optionText="name" validate={[required()]} fullWidth />
-              </ReferenceInput>
-            </FieldGridItem>
-            <FieldGridItem>
-              <TextInput source="color" type="color" fullWidth label="Product Color" defaultValue="#1976d2" />
-            </FieldGridItem>
-            <FieldGridItem>
-              <SelectInput source="status" choices={[
-                { id: 'enabled', name: 'Enabled' },
-                { id: 'disabled', name: 'Disabled' },
-              ]} defaultValue="enabled" fullWidth />
-            </FieldGridItem>
-          </FieldGrid>
-        </FormSection>
+        {/* Row 1: Basic Info */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, width: '100%' }}>
+          <FormSection
+            title={translate('resources.products.section.basic', { _: 'Basic Information' })}
+          >
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%' }}>
+              <Box>
+                <TextInput source="name" validate={[required()]} fullWidth />
+              </Box>
+              <Box>
+                <ReferenceInput source="radius_profile_id" reference="radius-profiles">
+                  <SelectInput optionText="name" validate={[required()]} fullWidth />
+                </ReferenceInput>
+              </Box>
+              <Box>
+                <TextInput source="color" type="color" fullWidth label="Product Color" defaultValue="#1976d2" />
+              </Box>
+              <Box>
+                <SelectInput source="status" choices={[
+                  { id: 'enabled', name: 'Enabled' },
+                  { id: 'disabled', name: 'Disabled' },
+                ]} defaultValue="enabled" fullWidth />
+              </Box>
+            </Box>
+          </FormSection>
 
-        <FormSection
-          title={translate('resources.products.section.pricing', { _: 'Pricing' })}
-        >
-          <FieldGrid columns={{ xs: 1, sm: 2 }}>
-            <FieldGridItem>
-              <NumberInput source="price" validate={[required()]} fullWidth />
-            </FieldGridItem>
-            <FieldGridItem>
-              <NumberInput source="cost_price" validate={[required()]} fullWidth />
-            </FieldGridItem>
-          </FieldGrid>
-        </FormSection>
+          <FormSection
+            title={translate('resources.products.section.pricing', { _: 'Pricing' })}
+          >
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%' }}>
+              <Box>
+                <NumberInput source="price" validate={[required()]} fullWidth />
+              </Box>
+              <Box>
+                <NumberInput source="cost_price" validate={[required()]} fullWidth />
+              </Box>
+            </Box>
+          </FormSection>
+        </Box>
 
-        <FormSection
-          title={translate('resources.products.section.bandwidth', { _: 'Bandwidth Limit' })}
-        >
-          <FieldGrid columns={{ xs: 1, sm: 2 }}>
-            <FieldGridItem>
-              <NumberInput source="up_rate" label="Upload Rate (Kbps)" defaultValue={0} fullWidth helperText="0 = Unlimited" />
-            </FieldGridItem>
-            <FieldGridItem>
-              <NumberInput source="down_rate" label="Download Rate (Kbps)" defaultValue={0} fullWidth helperText="0 = Unlimited" />
-            </FieldGridItem>
-          </FieldGrid>
-        </FormSection>
+        {/* Row 2: Bandwidth + Data Quota */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, width: '100%' }}>
+          <FormSection
+            title={translate('resources.products.section.bandwidth', { _: 'Bandwidth Limit' })}
+          >
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%' }}>
+              <Box>
+                <NumberInput source="up_rate" label="Upload Rate (Kbps)" defaultValue={0} fullWidth helperText="0 = Unlimited" />
+              </Box>
+              <Box>
+                <NumberInput source="down_rate" label="Download Rate (Kbps)" defaultValue={0} fullWidth helperText="0 = Unlimited" />
+              </Box>
+            </Box>
+          </FormSection>
 
-        <FormSection
-          title={translate('resources.products.section.data_quota', { _: 'Data Quota' })}
-        >
-          <DataQuotaInput />
-        </FormSection>
+          <FormSection
+            title={translate('resources.products.section.data_quota', { _: 'Data Quota' })}
+          >
+            <DataQuotaInput />
+          </FormSection>
+        </Box>
 
-        <FormSection
-          title={translate('resources.products.section.validity', { _: 'Validity Limit' })}
-        >
-          <ValidityInput />
-        </FormSection>
+        {/* Row 3: Validity + Remark */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, width: '100%' }}>
+          <FormSection
+            title={translate('resources.products.section.validity', { _: 'Validity Limit' })}
+          >
+            <ValidityInput />
+          </FormSection>
 
-        <FormSection
-          title={translate('resources.products.section.remark', { _: 'Remark' })}
-        >
-          <FieldGrid columns={{ xs: 1 }}>
-            <FieldGridItem>
-              <TextInput source="remark" multiline fullWidth minRows={3} />
-            </FieldGridItem>
-          </FieldGrid>
-        </FormSection>
+          <FormSection
+            title={translate('resources.products.section.remark', { _: 'Remark' })}
+          >
+            <TextInput source="remark" multiline fullWidth minRows={2} />
+          </FormSection>
+        </Box>
       </SimpleForm>
     </Create>
   );
@@ -821,80 +824,85 @@ export const ProductEdit = (props: EditProps) => {
   return (
     <Edit {...props} title={<ProductTitle />}>
       <SimpleForm sx={formLayoutSx}>
-        <FormSection
-          title={translate('resources.products.section.basic', { _: 'Basic Information' })}
-        >
-          <FieldGrid columns={{ xs: 1, sm: 2 }}>
-            <FieldGridItem>
-              <TextInput source="id" disabled fullWidth />
-            </FieldGridItem>
-            <FieldGridItem>
-              <TextInput source="name" validate={[required()]} fullWidth />
-            </FieldGridItem>
-            <FieldGridItem>
-              <ReferenceInput source="radius_profile_id" reference="radius-profiles">
-                <SelectInput optionText="name" validate={[required()]} fullWidth />
-              </ReferenceInput>
-            </FieldGridItem>
-            <FieldGridItem>
-              <TextInput source="color" type="color" fullWidth label="Product Color" />
-            </FieldGridItem>
-            <FieldGridItem>
-              <SelectInput source="status" choices={[
-                { id: 'enabled', name: 'Enabled' },
-                { id: 'disabled', name: 'Disabled' },
-              ]} fullWidth />
-            </FieldGridItem>
-          </FieldGrid>
-        </FormSection>
+        {/* Row 1: Basic Info + Pricing */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, width: '100%' }}>
+          <FormSection
+            title={translate('resources.products.section.basic', { _: 'Basic Information' })}
+          >
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%' }}>
+              <Box>
+                <TextInput source="id" disabled fullWidth />
+              </Box>
+              <Box>
+                <TextInput source="name" validate={[required()]} fullWidth />
+              </Box>
+              <Box>
+                <ReferenceInput source="radius_profile_id" reference="radius-profiles">
+                  <SelectInput optionText="name" validate={[required()]} fullWidth />
+                </ReferenceInput>
+              </Box>
+              <Box>
+                <TextInput source="color" type="color" fullWidth label="Product Color" />
+              </Box>
+              <Box sx={{ gridColumn: '1 / -1' }}>
+                <SelectInput source="status" choices={[
+                  { id: 'enabled', name: 'Enabled' },
+                  { id: 'disabled', name: 'Disabled' },
+                ]} fullWidth />
+              </Box>
+            </Box>
+          </FormSection>
 
-        <FormSection
-          title={translate('resources.products.section.pricing', { _: 'Pricing' })}
-        >
-          <FieldGrid columns={{ xs: 1, sm: 2 }}>
-            <FieldGridItem>
-              <NumberInput source="price" validate={[required()]} fullWidth />
-            </FieldGridItem>
-            <FieldGridItem>
-              <NumberInput source="cost_price" validate={[required()]} fullWidth />
-            </FieldGridItem>
-          </FieldGrid>
-        </FormSection>
+          <FormSection
+            title={translate('resources.products.section.pricing', { _: 'Pricing' })}
+          >
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%' }}>
+              <Box>
+                <NumberInput source="price" validate={[required()]} fullWidth />
+              </Box>
+              <Box>
+                <NumberInput source="cost_price" validate={[required()]} fullWidth />
+              </Box>
+            </Box>
+          </FormSection>
+        </Box>
 
-        <FormSection
-          title={translate('resources.products.section.bandwidth', { _: 'Bandwidth Limit' })}
-        >
-          <FieldGrid columns={{ xs: 1, sm: 2 }}>
-            <FieldGridItem>
-              <NumberInput source="up_rate" label="Upload Rate (Kbps)" fullWidth helperText="0 = Unlimited" />
-            </FieldGridItem>
-            <FieldGridItem>
-              <NumberInput source="down_rate" label="Download Rate (Kbps)" fullWidth helperText="0 = Unlimited" />
-            </FieldGridItem>
-          </FieldGrid>
-        </FormSection>
+        {/* Row 2: Bandwidth + Data Quota */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, width: '100%' }}>
+          <FormSection
+            title={translate('resources.products.section.bandwidth', { _: 'Bandwidth Limit' })}
+          >
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%' }}>
+              <Box>
+                <NumberInput source="up_rate" label="Upload Rate (Kbps)" fullWidth helperText="0 = Unlimited" />
+              </Box>
+              <Box>
+                <NumberInput source="down_rate" label="Download Rate (Kbps)" fullWidth helperText="0 = Unlimited" />
+              </Box>
+            </Box>
+          </FormSection>
 
-        <FormSection
-          title={translate('resources.products.section.data_quota', { _: 'Data Quota' })}
-        >
-          <DataQuotaInput />
-        </FormSection>
+          <FormSection
+            title={translate('resources.products.section.data_quota', { _: 'Data Quota' })}
+          >
+            <DataQuotaInput />
+          </FormSection>
+        </Box>
 
-        <FormSection
-          title={translate('resources.products.section.validity', { _: 'Validity Limit' })}
-        >
-          <ValidityInput />
-        </FormSection>
+        {/* Row 3: Validity + Remark */}
+        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, width: '100%' }}>
+          <FormSection
+            title={translate('resources.products.section.validity', { _: 'Validity Limit' })}
+          >
+            <ValidityInput />
+          </FormSection>
 
-        <FormSection
-          title={translate('resources.products.section.remark', { _: 'Remark' })}
-        >
-          <FieldGrid columns={{ xs: 1 }}>
-            <FieldGridItem>
-              <TextInput source="remark" multiline fullWidth minRows={3} />
-            </FieldGridItem>
-          </FieldGrid>
-        </FormSection>
+          <FormSection
+            title={translate('resources.products.section.remark', { _: 'Remark' })}
+          >
+            <TextInput source="remark" multiline fullWidth minRows={2} />
+          </FormSection>
+        </Box>
       </SimpleForm>
     </Edit>
   );
