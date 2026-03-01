@@ -52,6 +52,7 @@ func setupTestDB(t *testing.T) *gorm.DB {
 		&domain.VoucherSubscription{},
 		&domain.VoucherBundle{},
 		&domain.VoucherBundleItem{},
+		&domain.Invoice{},
 	)
 	require.NoError(t, err)
 

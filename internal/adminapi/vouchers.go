@@ -573,10 +573,10 @@ func ExtendVoucher(c echo.Context) error {
 
 
 
-	// 2. Verify voucher status is "used"
-	if voucher.Status != "used" {
+	// 2. Verify voucher status is "active"
+	if voucher.Status != "active" {
 		tx.Rollback()
-		return fail(c, http.StatusConflict, "INVALID_STATUS", "Voucher must be in 'used' status to extend", nil)
+		return fail(c, http.StatusConflict, "INVALID_STATUS", "Voucher must be in 'active' status to extend", nil)
 	}
 
 	// 3. Find associated RadiusUser

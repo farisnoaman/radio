@@ -630,7 +630,7 @@ if (total === 0) {
                 <div style={{ display: 'none' }}>
                     <div ref={printRef} className={template}>
                         <div className="voucher-container">
-                            {vouchers.map((voucher, index) => (
+                            {vouchers.map((voucher) => (
                                 <React.Fragment key={voucher.id}>
                                     {template === 'template1' && (
                                         <div className="voucher-card">

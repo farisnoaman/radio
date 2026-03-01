@@ -62,6 +62,25 @@ type RadiusUser struct {
 	ExpireTime      time.Time `gorm:"index" json:"expire_time"`                         // Expiration time
 	Status          string    `gorm:"index" json:"status" form:"status"`                // Status: enabled | disabled
 	Remark          string    `json:"remark" form:"remark"`                             // Remark
+
+	// Postpaid billing fields.
+	// BillingType determines whether the user is billed via prepaid vouchers or postpaid monthly invoices.
+	// Default is "prepaid" so existing users are unaffected by the migration.
+	BillingType        string    `json:"billing_type" gorm:"size:20;default:'prepaid';index" form:"billing_type"`
+	// SubscriptionStatus tracks the postpaid subscription lifecycle.
+	// Only relevant when BillingType is "postpaid".
+	// Values: "active", "suspended", "canceled". Default empty means N/A for prepaid users.
+	SubscriptionStatus string    `json:"subscription_status" gorm:"size:20" form:"subscription_status"`
+	// NextBillingDate is the date when the next invoice should be generated.
+	// The billing engine cron job checks this field daily.
+	NextBillingDate    time.Time `json:"next_billing_date" gorm:"index" form:"next_billing_date"`
+	// MonthlyFee is the recurring charge amount for the postpaid subscription.
+	// Inherited from the assigned RadiusProfile/Product at subscription time.
+	MonthlyFee         float64   `json:"monthly_fee" form:"monthly_fee"`
+	// PricePerGb is the cost per Gigabyte of data consumed.
+	// Used for consumption-based billing.
+	PricePerGb         float64   `json:"price_per_gb" form:"price_per_gb"`
+
 	OnlineCount     int       `json:"online_count" gorm:"-:migration;<-:false"`
 	LastOnline      time.Time `json:"last_online"`
 	CreatedAt       time.Time `gorm:"index" json:"created_at"`

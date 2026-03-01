@@ -167,6 +167,14 @@ func (s *RadiusService) GetValidUser(usernameOrMac string, macauth bool) (user *
 	if user.ExpireTime.Before(time.Now()) {
 		return nil, radiuserrors.NewUserExpiredError()
 	}
+
+	// Postpaid subscription enforcement: reject users whose subscription is suspended
+	// due to unpaid invoices. This check is only relevant for postpaid billing users
+	// and does not affect prepaid (voucher) users at all.
+	if user.BillingType == "postpaid" && user.SubscriptionStatus == "suspended" {
+		return nil, radiuserrors.NewUserDisabledError()
+	}
+
 	s.userCache.Set(cacheKey, user)
 	return user, nil
 }

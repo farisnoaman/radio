@@ -92,6 +92,11 @@ const customChineseMessages: TranslationMessages = {
         expire_time: '过期时间',
         ip_addr: 'IPv4地址',
         ipv6_addr: 'IPv6地址',
+        billing_type: '计费类型',
+        subscription_status: '订阅状态',
+        next_billing_date: '下个账单日',
+        monthly_fee: '月费',
+        price_per_gb: '每GB单价',
         domain: '域名',
         remark: '备注',
         balance: '余额',
@@ -99,6 +104,14 @@ const customChineseMessages: TranslationMessages = {
         updated_at: '更新时间',
         description: '描述',
       },
+      actions: {
+        generate_bill: '生成账单',
+      },
+      notifications: {
+        bill_generated: '账单生成成功',
+        bill_failed: '账单生成失败',
+      },
+      billing_actions: '计费操作',
       status: {
         enabled: '启用',
         disabled: '禁用',
@@ -131,6 +144,10 @@ const customChineseMessages: TranslationMessages = {
         expire_time: '用户服务到期时间，留空表示永不过期',
         ip_addr: '静态IPv4地址，如 192.168.1.100',
         ipv6_addr: '静态IPv6地址，如 2001:db8::1',
+        billing_type: '在预付费（默认凭据）或后付费（月度账单）之间选择',
+        subscription_status: '后付费订阅的当前状态',
+        next_billing_date: '下一次生成账单的日期',
+        monthly_fee: '此用户的定期月度费用金额',
         domain: '域名，用于厂商特定功能（如华为域），如 enterprise.example.com',
         remark: '可选的备注信息，最多1000个字符',
       },
@@ -149,6 +166,20 @@ const customChineseMessages: TranslationMessages = {
       empty: {
         title: '暂无用户',
         description: '点击"新建"按钮添加第一个RADIUS用户',
+      },
+    },
+    'radius/invoices': {
+      name: '账单管理 |||| 账单管理',
+      fields: {
+        id: 'ID',
+        username: '用户名',
+        invoice_no: '账单编号',
+        amount: '金额',
+        usage_gb: '流量用量(GB)',
+        status: '状态',
+        billing_period_start: '计费开始日期',
+        billing_period_end: '计费结束日期',
+        created_at: '生成时间',
       },
     },
     'radius/online': {

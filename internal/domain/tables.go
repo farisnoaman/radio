@@ -25,5 +25,7 @@ var Tables = []interface{}{
 	&VoucherBundleItem{},
 	// Lifecycle
 	&SessionLog{},
+	// Billing
+	&Invoice{},
 }
 

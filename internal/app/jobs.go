@@ -9,6 +9,7 @@ import (
 	"github.com/shirou/gopsutil/v4/cpu"
 	"github.com/shirou/gopsutil/v4/mem"
 	"github.com/shirou/gopsutil/v4/process"
+	"github.com/talkincode/toughradius/v9/internal/app/billing"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/pkg/metrics"
 	"go.uber.org/zap"
@@ -69,6 +70,15 @@ func (a *Application) initJob() {
 	})
 	if err != nil {
 		zap.S().Errorf("init voucher cleanup job error %s", err.Error())
+	}
+
+	// Postpaid Billing Task - generates monthly invoices and suspends users with overdue invoices.
+	// Runs daily at midnight to check NextBillingDate on all postpaid users.
+	_, err = a.sched.AddFunc("@daily", func() {
+		go a.SchedPostpaidBillingTask()
+	})
+	if err != nil {
+		zap.S().Errorf("init postpaid billing job error %s", err.Error())
 	}
 
 	a.sched.Start()
@@ -470,4 +480,31 @@ func (a *Application) SchedVoucherCleanupTask() {
 	}
 
 	zap.S().Info("Voucher cleanup task completed")
+}
+
+// SchedPostpaidBillingTask generates invoices for postpaid subscribers whose billing cycle
+// has elapsed and suspends users with overdue (unpaid past due-date) invoices.
+//
+// Configuration (via system settings):
+//   - billing.DueDateDays: Days after invoice issue before it becomes overdue (default 7).
+//   - billing.DueDateDays: Number of days after issue before an invoice is considered overdue (default 7).
+//
+// This task is idempotent: running it twice on the same day will not produce duplicate
+// invoices because the first run advances the user's NextBillingDate.
+func (a *Application) SchedPostpaidBillingTask() {
+	defer func() {
+		if err := recover(); err != nil {
+			zap.S().Error(err)
+		}
+	}()
+
+	dueDateDays := 7
+	if a.ConfigMgr() != nil {
+		if v := a.ConfigMgr().GetInt("billing", "DueDateDays"); v > 0 {
+			dueDateDays = int(v)
+		}
+	}
+
+	engine := billing.NewBillingEngine(a.gormDB, dueDateDays)
+	engine.ProcessDailyBillingCycle()
 }

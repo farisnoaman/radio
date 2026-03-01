@@ -27,6 +27,7 @@ const menuItems = [
   { to: '/radius/profiles', labelKey: 'menu.radius_profiles', icon: <SettingsSuggestOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/radius/online', labelKey: 'menu.online_sessions', icon: <SensorsOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/radius/accounting', labelKey: 'menu.accounting', icon: <ReceiptLongOutlinedIcon />, permissions: ['super', 'admin'] },
+  { to: '/radius/invoices', labelKey: 'resources.radius/invoices.name', icon: <ReceiptLongOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/system/config', labelKey: 'menu.system_config', icon: <SettingsOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/system/operators', labelKey: 'menu.operators', icon: <AdminPanelSettingsOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/system/logs', labelKey: 'Activity Logs', icon: <HistoryOutlinedIcon />, permissions: ['super', 'admin'] },

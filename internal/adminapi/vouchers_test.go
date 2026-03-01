@@ -436,7 +436,7 @@ func TestVoucherLifecycle(t *testing.T) {
 			// Verify Voucher Status Updated
 			var updatedVoucher domain.Voucher
 			db.First(&updatedVoucher, "code = ?", "TESTCODE123")
-			assert.Equal(t, "used", updatedVoucher.Status)
+			assert.Equal(t, "active", updatedVoucher.Status)
 		}
 	})
 
@@ -468,12 +468,12 @@ func TestExtendVoucher(t *testing.T) {
 	batch := domain.VoucherBatch{Name: "ExtendTest", ProductID: product.ID, Count: 1}
 	db.Create(&batch)
 
-	// Create a used voucher
+	// Create an active (redeemed) voucher
 	expireTime := time.Now().Add(24 * time.Hour)
 	voucher := domain.Voucher{
 		BatchID:    batch.ID,
 		Code:       "EXTENDTEST001",
-		Status:     "used",
+		Status:     "active",
 		Price:      10,
 		ExpireTime: expireTime,
 	}

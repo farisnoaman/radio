@@ -1,3 +1,4 @@
+import { httpClient } from '../utils/apiClient';
 import {
   List,
   Datagrid,
@@ -34,6 +35,7 @@ import {
   RaRecord,
   FunctionField,
   EditButton,
+  Button,
 } from 'react-admin';
 import UserAnonymizeDialog from '../components/UserAnonymizeDialog';
 import NoAccountsIcon from '@mui/icons-material/NoAccounts';
@@ -74,7 +76,8 @@ import {
   Clear as ClearIcon,
   Email as EmailIcon,
   Phone as PhoneIcon,
-  CalendarToday as CalendarIcon
+  CalendarToday as CalendarIcon,
+  ReceiptLong as ReceiptLongIcon
 } from '@mui/icons-material';
 import { ServerPagination, ActiveFilters } from '../components';
 
@@ -94,6 +97,11 @@ interface RadiusUser extends RaRecord {
   expire_time?: string;
   ip_addr?: string;
   ipv6_addr?: string;
+  billing_type?: 'prepaid' | 'postpaid';
+  subscription_status?: 'active' | 'suspended' | 'canceled';
+  next_billing_date?: string;
+  monthly_fee?: number;
+  price_per_gb?: number;
   remark?: string;
   created_at?: string;
   updated_at?: string;
@@ -193,6 +201,39 @@ const DetailItem = ({ label, value, highlight = false }: DetailItemProps) => (
     </Typography>
   </Box>
 );
+
+const GenerateBillButton = ({ username }: { username: string }) => {
+  const translate = useTranslate();
+  const notify = useNotify();
+  const refresh = useRefresh();
+  const [loading, setLoading] = useState(false);
+
+  const handleClick = async () => {
+    setLoading(true);
+    try {
+      await httpClient(`/radius/users/${username}/bill`, { method: 'POST' });
+      notify('resources.radius/users.notifications.bill_generated', { type: 'success' });
+      refresh();
+    } catch (error) {
+      notify('resources.radius/users.notifications.bill_failed', { type: 'error' });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <Button
+      label={translate('resources.radius/users.actions.generate_bill', { _: 'Generate Bill' })}
+      onClick={handleClick}
+      disabled={loading}
+      variant="contained"
+      color="secondary"
+      sx={{ mt: 1 }}
+    >
+      <ReceiptLongIcon />
+    </Button>
+  );
+};
 
 interface DetailSectionCardProps {
   title: string;
@@ -1063,6 +1104,10 @@ const RadiusUserListContent = () => {
               label={translate('resources.radius/users.fields.expire_time', { _: '过期时间' })}
               render={() => <ExpireTimeField />}
             />
+            <TextField
+              source="billing_type"
+              label={translate('resources.radius/users.fields.billing_type', { _: '计费类型' })}
+            />
             <DateField
               source="created_at"
               label={translate('resources.radius/users.fields.created_at', { _: '创建时间' })}
@@ -1223,12 +1268,66 @@ export const RadiusUserEdit = () => {
                 />
               </ReferenceInput>
             </FieldGridItem>
-            <FieldGridItem span={{ xs: 1, sm: 2 }}>
+            <FieldGridItem>
               <TextInput
                 source="expire_time"
                 label={translate('resources.radius/users.fields.expire_time')}
                 type="datetime-local"
                 helperText={translate('resources.radius/users.helpers.expire_time')}
+                fullWidth
+                size="small"
+                InputLabelProps={{ shrink: true }}
+              />
+            </FieldGridItem>
+            <FieldGridItem>
+              <SelectInput
+                source="billing_type"
+                label={translate('resources.radius/users.fields.billing_type')}
+                choices={[
+                  { id: 'prepaid', name: 'Prepaid' },
+                  { id: 'postpaid', name: 'Postpaid' },
+                ]}
+                defaultValue="prepaid"
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
+            <FieldGridItem>
+              <SelectInput
+                source="subscription_status"
+                label={translate('resources.radius/users.fields.subscription_status')}
+                choices={[
+                  { id: 'active', name: 'Active' },
+                  { id: 'suspended', name: 'Suspended' },
+                  { id: 'canceled', name: 'Canceled' },
+                ]}
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
+            <FieldGridItem>
+              <TextInput
+                source="monthly_fee"
+                label={translate('resources.radius/users.fields.monthly_fee')}
+                type="number"
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
+            <FieldGridItem>
+              <TextInput
+                source="price_per_gb"
+                label={translate('resources.radius/users.fields.price_per_gb')}
+                type="number"
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
+            <FieldGridItem>
+              <TextInput
+                source="next_billing_date"
+                label={translate('resources.radius/users.fields.next_billing_date')}
+                type="date"
                 fullWidth
                 size="small"
                 InputLabelProps={{ shrink: true }}
@@ -1403,7 +1502,7 @@ export const RadiusUserCreate = () => {
                 />
               </ReferenceInput>
             </FieldGridItem>
-            <FieldGridItem span={{ xs: 1, sm: 2 }}>
+            <FieldGridItem>
               <TextInput
                 source="expire_time"
                 label={translate('resources.radius/users.fields.expire_time')}
@@ -1412,6 +1511,37 @@ export const RadiusUserCreate = () => {
                 fullWidth
                 size="small"
                 InputLabelProps={{ shrink: true }}
+              />
+            </FieldGridItem>
+            <FieldGridItem>
+              <SelectInput
+                source="billing_type"
+                label={translate('resources.radius/users.fields.billing_type')}
+                choices={[
+                  { id: 'prepaid', name: 'Prepaid' },
+                  { id: 'postpaid', name: 'Postpaid' },
+                ]}
+                defaultValue="prepaid"
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
+            <FieldGridItem>
+              <TextInput
+                source="monthly_fee"
+                label={translate('resources.radius/users.fields.monthly_fee')}
+                type="number"
+                fullWidth
+                size="small"
+              />
+            </FieldGridItem>
+            <FieldGridItem>
+              <TextInput
+                source="price_per_gb"
+                label={translate('resources.radius/users.fields.price_per_gb')}
+                type="number"
+                fullWidth
+                size="small"
               />
             </FieldGridItem>
           </FieldGrid>
@@ -1853,6 +1983,7 @@ const UserDetails = () => {
                 gridTemplateColumns: {
                   xs: 'repeat(1, 1fr)',
                   sm: 'repeat(2, 1fr)',
+                  md: 'repeat(3, 1fr)',
                 },
               }}
             >
@@ -1886,8 +2017,43 @@ const UserDetails = () => {
                 }
                 highlight
               />
+              <DetailItem
+                label={translate('resources.radius/users.fields.billing_type', { _: 'Billing Type' })}
+                value={record.billing_type}
+              />
+              {record.billing_type === 'postpaid' && (
+                <>
+                  <DetailItem
+                    label={translate('resources.radius/users.fields.subscription_status', { _: 'Sub Status' })}
+                    value={record.subscription_status}
+                  />
+                  <DetailItem
+                    label={translate('resources.radius/users.fields.monthly_fee', { _: 'Monthly Fee' })}
+                    value={record.monthly_fee}
+                  />
+                  <DetailItem
+                    label={translate('resources.radius/users.fields.price_per_gb', { _: 'Price per GB' })}
+                    value={record.price_per_gb}
+                  />
+                  <DetailItem
+                    label={translate('resources.radius/users.fields.next_billing_date', { _: 'Next Billing' })}
+                    value={record.next_billing_date ? new Date(record.next_billing_date).toLocaleDateString() : '-'}
+                  />
+                </>
+              )}
             </Box>
           </DetailSectionCard>
+
+          {record.billing_type === 'postpaid' && record.username && (
+            <Card variant="outlined" sx={{ borderRadius: 2, bgcolor: theme => alpha(theme.palette.primary.main, 0.05) }}>
+              <CardContent>
+                <Typography variant="subtitle2" gutterBottom>
+                  {translate('resources.radius/users.billing_actions', { _: 'Billing Actions' })}
+                </Typography>
+                <GenerateBillButton username={record.username} />
+              </CardContent>
+            </Card>
+          )}
 
           {/* 网络配置 */}
           <DetailSectionCard

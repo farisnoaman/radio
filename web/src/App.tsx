@@ -44,6 +44,7 @@ import {
   RadiusUserCreate,
   RadiusUserShow,
 } from './resources/radiusUsers';
+import { InvoiceList, InvoiceShow } from './resources/invoices';
 import { OnlineSessionList, OnlineSessionShow } from './resources/onlineSessions';
 import { AccountingList, AccountingShow } from './resources/accounting';
 import {
@@ -128,6 +129,14 @@ const App = () => (
       name="radius/accounting"
       list={AccountingList}
       show={AccountingShow}
+    />
+
+    {/* Invoices */}
+    <Resource
+      name="radius/invoices"
+      list={InvoiceList}
+      show={InvoiceShow}
+      options={{ label: 'Invoices' }}
     />
 
     {/* RADIUS 配置 */}
