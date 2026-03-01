@@ -11,6 +11,8 @@ import {
     FormControl,
     InputLabel,
     Box,
+    Checkbox,
+    FormControlLabel,
 } from '@mui/material';
 import PrintIcon from '@mui/icons-material/Print';
 import { useNotify } from 'react-admin';
@@ -36,6 +38,7 @@ const VoucherPrintDialog: React.FC<VoucherPrintDialogProps> = ({
 }) => {
     const [template, setTemplate] = useState('template1');
     const [loginLink, setLoginLink] = useState('');
+    const [printQR, setPrintQR] = useState(true);
     const [hotspotName, setHotspotName] = useState('WiFi Hotspot');
     const [loading, setLoading] = useState(false);
     const notify = useNotify();
@@ -93,13 +96,13 @@ const VoucherPrintDialog: React.FC<VoucherPrintDialogProps> = ({
     <div class="kiri1">
         <div class="user1">${voucher.code}</div>
         <div class="validity1">${formatValidity(productValidity)}</div>
-        <div class="price1">${voucher.price > 0 ? 'Rp. ' + voucher.price : ''}</div>
+        <div class="price-box">${voucher.price > 0 ? 'YER ' + voucher.price : ''}</div>
         <div class="dns1">${hotspotName}</div>
         ${loginLink ? `<div style="margin-left:8px; font-size:8px; margin-top:2px; white-space:nowrap; overflow:hidden; width:85px; color:#555">${loginLink.replace(/^https?:\/\//, '')}</div>` : ''}
     </div>
     <div class="kanan">
         <div style="font-size:7px; font-family:monospace; color:#555; text-align:center; margin-bottom:2px; margin-top:-10px;">SN: ${batchId}-${voucher.id}</div>
-        <img src="${qrSrc}" width="80" height="80" alt="QR" />
+        ${printQR ? `<img src="${qrSrc}" width="80" height="80" alt="QR" />` : ''}
     </div>
     <div class="clear"></div>
 </div>`;
@@ -116,6 +119,8 @@ html, body {
     font-size: 12px;
     margin: 0;
     padding: 0;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
 }
 @media print {
     @page {
@@ -163,10 +168,16 @@ html, body {
     margin-left: 8px;
     font-size: 14px;
 }
-.price1 {
+.price-box {
     margin-top: 2px;
     margin-left: 8px;
     font-size: 13px;
+    background-color: ${productColor};
+    color: #fff;
+    display: inline-block;
+    padding: 1px 5px;
+    border-radius: 3px;
+    font-weight: bold;
 }
 .dns1 {
     margin-top: 4px;
@@ -259,12 +270,22 @@ if (total === 0) {
                 right: 2px;
                 padding: 2px 4px;
                 border: 1px solid #000;
-                background: #fff;
+                background: rgba(255,255,255,0.8);
+            }
+
+            .price-box {
+                background-color: ${productColor};
+                color: #fff;
+                font-weight: bold;
+                padding: 1px 4px;
+                border-radius: 3px;
+                display: inline-block;
+            font-size: 11px;
             }
 
             /* Template 1: QR / Detailed (Image 1) */
             .template1 .voucher-card {
-                width: 220px;
+                width: ${printQR ? '220px' : '150px'};
                 height: 120px;
                 border: 2px solid ${productColor};
                 display: flex;
@@ -388,7 +409,7 @@ if (total === 0) {
 
             /* Template 4: MixRADIUS Style */
             .template4 .voucher-card {
-                width: 280px;
+                width: ${printQR ? '280px' : '200px'};
                 height: 130px;
                 padding: 0;
                 position: relative;
@@ -591,6 +612,18 @@ if (total === 0) {
                             helperText="e.g., http://wifi.login or IP address"
                         />
                     </Box>
+                    <Box mt={1}>
+                        <FormControlLabel
+                            control={
+                                <Checkbox
+                                    checked={printQR}
+                                    onChange={(e) => setPrintQR(e.target.checked)}
+                                    color="primary"
+                                />
+                            }
+                            label="Print with QR Code (Applies to templates with QR support)"
+                        />
+                    </Box>
                 </Box>
 
                 {/* Hidden Print Content */}
@@ -603,7 +636,7 @@ if (total === 0) {
                                         <div className="voucher-card">
                                             <div className="header">
                                                 <span>{hotspotName}</span>
-                                                <span>{voucher.price > 0 ? voucher.price : ''}</span>
+                                                <span className="price-box">{voucher.price > 0 ? 'YER ' + voucher.price : ''}</span>
                                             </div>
                                             <div className="body">
                                                 <div className="info-col">
@@ -613,9 +646,11 @@ if (total === 0) {
                                                         Active: {formatValidity(productValidity)}
                                                     </div>
                                                 </div>
-                                                <div className="qr-col">
-                                                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(loginLink ? loginLink + '?username=' + voucher.code + '&password=' + voucher.code : voucher.code)}`} alt="QR" />
-                                                </div>
+                                                {printQR && (
+                                                    <div className="qr-col">
+                                                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(loginLink ? loginLink + '?username=' + voucher.code + '&password=' + voucher.code : voucher.code)}`} alt="QR" />
+                                                    </div>
+                                                )}
                                             </div>
                                             <div className="footer">
                                                 {loginLink || 'Login to Hotspot'}
@@ -635,7 +670,8 @@ if (total === 0) {
                                                 {loginLink && <div style={{ fontSize: '8px', color: '#666', marginTop: '2px' }}>{loginLink}</div>}
                                             </div>
                                             <div className="footer">
-                                                {formatValidity(productValidity)} {voucher.price > 0 ? `| ${voucher.price}` : ''}
+                                                {formatValidity(productValidity)} {voucher.price > 0 ? ` | ` : ''}
+                                                {voucher.price > 0 && <span className="price-box">YER {voucher.price}</span>}
                                             </div>
                                             <div className="serial">SN: {batchId}-{voucher.id}</div>
                                         </div>
@@ -643,15 +679,20 @@ if (total === 0) {
 
                                     {template === 'template3' && (
                                         <div className="voucher-card">
-                                            <div style={{ fontSize: '13px', fontWeight: 'bold' }}>{productName}</div>
+                                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                                                <div style={{ fontSize: '13px', fontWeight: 'bold' }}>{productName}</div>
+                                                <div style={{ fontSize: '9px', fontWeight: 'bold', color: '#000', fontFamily: 'monospace', padding: '1px 3px', border: '1px solid #000', borderRadius: '2px' }}>SN: {batchId}-{voucher.id}</div>
+                                            </div>
                                             <div style={{ fontSize: '11px', color: '#666' }}>Voucher Code</div>
                                             <div className="code">{voucher.code}</div>
-                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px' }}>
-                                                <span>Price: {voucher.price}</span>
+                                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '11px', marginTop: '5px' }}>
+                                                <span className="price-box">YER {voucher.price}</span>
                                                 <span>Valid: {formatValidity(productValidity)}</span>
                                             </div>
-                                            {loginLink && <div style={{ fontSize: '9px', marginTop: '5px', color: '#999' }}>{loginLink}</div>}
-                                            <div className="serial">SN: {batchId}-{voucher.id}</div>
+                                            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '4px', marginTop: '5px' }}>
+                                                <div style={{ fontSize: '9px', color: '#000', padding: '2px 4px', border: '1px solid #000', borderRadius: '3px' }}>{hotspotName}</div>
+                                                {loginLink && <div style={{ fontSize: '9px', color: '#000', padding: '2px 4px', border: '1px solid #000', borderRadius: '3px' }}>{loginLink}</div>}
+                                            </div>
                                         </div>
                                     )}
 
@@ -667,14 +708,16 @@ if (total === 0) {
                                                     <div className="validity1">
                                                         {formatValidity(productValidity)}
                                                     </div>
-                                                    <div className="price1">{voucher.price > 0 ? voucher.price : ''}</div>
+                                                    <div className="price-box" style={{ marginTop: '5px' }}>{voucher.price > 0 ? 'YER ' + voucher.price : ''}</div>
                                                     <div className="dns1">{hotspotName}</div>
                                                 </div>
-                                                <div className="kanan" style={{ position: 'absolute', right: '5px', top: '25px' }}>
-                                                    <div className="qrcode">
-                                                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(loginLink ? loginLink + '?username=' + voucher.code + '&password=' + voucher.code : voucher.code)}`} alt="QR" />
+                                                {printQR && (
+                                                    <div className="kanan" style={{ position: 'absolute', right: '5px', top: '25px' }}>
+                                                        <div className="qrcode">
+                                                            <img src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(loginLink ? loginLink + '?username=' + voucher.code + '&password=' + voucher.code : voucher.code)}`} alt="QR" />
+                                                        </div>
                                                     </div>
-                                                </div>
+                                                )}
                                             </div>
                                             <div className="serial" style={{ color: '#fff', border: '1px solid rgba(255,255,255,0.5)', background: 'transparent' }}>SN: {batchId}-{voucher.id}</div>
                                         </div>
@@ -685,14 +728,16 @@ if (total === 0) {
                                             <div className="kiri1">
                                                 <div className="user1">{voucher.code}</div>
                                                 <div className="validity1">{formatValidity(productValidity)}</div>
-                                                <div className="price1">{voucher.price > 0 ? 'Rp. ' + voucher.price : ''}</div>
+                                                <div className="price-box" style={{ marginTop: '5px', marginLeft: '8px' }}>{voucher.price > 0 ? 'YER ' + voucher.price : ''}</div>
                                                 <div className="dns1" style={{ whiteSpace: 'nowrap', overflow: 'hidden' }}>{loginLink ? loginLink.replace(/^https?:\/\//, '') : hotspotName}</div>
                                             </div>
-                                            <div className="kanan">
-                                                <div className="qrcode">
-                                                    <img src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(loginLink ? loginLink + '?username=' + voucher.code + '&password=' + voucher.code : voucher.code)}`} alt="QR" />
+                                            {printQR && (
+                                                <div className="kanan">
+                                                    <div className="qrcode">
+                                                        <img src={`https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(loginLink ? loginLink + '?username=' + voucher.code + '&password=' + voucher.code : voucher.code)}`} alt="QR" />
+                                                    </div>
                                                 </div>
-                                            </div>
+                                            )}
                                             <div className="clear"></div>
                                             <div className="serial">SN: {batchId}-{voucher.id}</div>
                                         </div>
@@ -703,12 +748,14 @@ if (total === 0) {
                                             <div className="kiri1">
                                                 <div className="user1">{voucher.code}</div>
                                                 <div className="validity1">{formatValidity(productValidity)}</div>
-                                                <div className="price1">{voucher.price > 0 ? 'Rp. ' + voucher.price : ''}</div>
+                                                <div className="price-box" style={{ marginTop: '5px', marginLeft: '8px' }}>{voucher.price > 0 ? 'YER ' + voucher.price : ''}</div>
                                                 <div className="dns1" style={{ whiteSpace: 'nowrap', overflow: 'hidden' }}>{loginLink ? loginLink.replace(/^https?:\/\//, '') : hotspotName}</div>
                                             </div>
-                                            <div className="kanan">
-                                                <div className="qrcode" id={'qr' + voucher.code}></div>
-                                            </div>
+                                            {printQR && (
+                                                <div className="kanan">
+                                                    <div className="qrcode" id={'qr' + voucher.code}></div>
+                                                </div>
+                                            )}
                                             <div className="clear"></div>
                                             <div className="serial">SN: {batchId}-{voucher.id}</div>
                                         </div>
