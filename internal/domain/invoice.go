@@ -66,15 +66,19 @@ type Invoice struct {
 	ID                int64     `json:"id,string" form:"id" gorm:"primaryKey"`
 	Username          string    `json:"username" gorm:"index;not null;size:255"` // Links to RadiusUser.Username
 	ProfileID         int64     `json:"profile_id,string"`                       // The profile charged for this cycle
-	Amount            float64   `json:"amount"`                                  // Charge amount for this billing period
-	Currency          string    `json:"currency" gorm:"size:10;default:'USD'"`   // Currency code (USD, IQD, etc.)
+	Amount            float64   `json:"amount"`                                  // Total charge amount
+	BaseAmount        float64   `json:"base_amount"`                             // Monthly base fee
+	UsageGb           float64   `json:"usage_gb"`                                // Data usage in GB
+	PricePerGb        float64   `json:"price_per_gb"`                            // Rate per GB
+	SessionCount      int64     `json:"session_count"`                           // Number of accounting sessions
+	Currency          string    `json:"currency" gorm:"size:10;default:'USD'"`   // Currency code
 	IssueDate         time.Time `json:"issue_date" gorm:"index"`                 // Date the invoice was generated
-	DueDate           time.Time `json:"due_date" gorm:"index"`                   // Payment deadline; overdue triggers suspension
-	PaidAt            time.Time `json:"paid_at"`                                 // Timestamp when payment was recorded (zero if unpaid)
-	Status            string    `json:"status" gorm:"index;size:20;default:'unpaid'"` // unpaid, paid, overdue
-	BillingPeriodStart time.Time `json:"billing_period_start"`                   // Start of the billing cycle this invoice covers
-	BillingPeriodEnd   time.Time `json:"billing_period_end"`                     // End of the billing cycle this invoice covers
-	Remark            string    `json:"remark" gorm:"size:500"`                  // Optional admin note (e.g., payment method)
+	DueDate           time.Time `json:"due_date" gorm:"index"`                   // Payment deadline
+	PaidAt            time.Time `json:"paid_at"`                                 // Timestamp when paid
+	Status            string    `json:"status" gorm:"index;size:20;default:'unpaid'"`
+	BillingPeriodStart time.Time `json:"billing_period_start"`
+	BillingPeriodEnd   time.Time `json:"billing_period_end"`
+	Remark            string    `json:"remark" gorm:"size:500"`
 	CreatedAt         time.Time `json:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at"`
 }

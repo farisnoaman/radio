@@ -141,6 +141,24 @@
       "title_i18n": "config.voucher.cleanup_retention_days.title",
       "description": "Days to keep expired vouchers before soft-deleting them",
       "description_i18n": "config.voucher.cleanup_retention_days.description"
+    },
+    {
+      "key": "billing.DefaultPricePerGb",
+      "type": "string",
+      "default": "0.10",
+      "title": "Default Price Per GB",
+      "title_i18n": "config.billing.default_price_per_gb.title",
+      "description": "Default price per GB for postpaid (monthly) subscription users. This value is used when creating new postpaid users.",
+      "description_i18n": "config.billing.default_price_per_gb.description"
+    },
+    {
+      "key": "billing.DefaultMonthlyFee",
+      "type": "string",
+      "default": "0",
+      "title": "Default Monthly Fee",
+      "title_i18n": "config.billing.default_monthly_fee.title",
+      "description": "Default monthly fee for postpaid (monthly) subscription users. This value is used as default when creating new postpaid users.",
+      "description_i18n": "config.billing.default_monthly_fee.description"
     }
   ]
 }

@@ -99,7 +99,7 @@ func PayInvoice(c echo.Context) error {
 	}
 
 	// Billing Engine config - using defaults as there is no specific config lookup needed just for marking paid
-	engine := billing.NewBillingEngine(GetDB(c), 7, 30)
+	engine := billing.NewBillingEngine(GetDB(c), 7)
 	
 	if err := engine.PayInvoice(id); err != nil {
 		if strings.Contains(err.Error(), "not found") {

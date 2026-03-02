@@ -136,20 +136,23 @@ func (e *BillingEngine) GenerateEarlyInvoice(username string) error {
 	return e.generateInvoiceForUser(user, time.Now())
 }
 
-// calculateUsageGB computes total data usage in GB for a user in a time range.
-func (e *BillingEngine) calculateUsageGB(username string, start, end time.Time) (float64, error) {
-	var totalBytes int64
-	// Sum input and output bytes for sessions that occurred within the period
+// calculateUsageStats computes total data usage in GB and session count for a user in a time range.
+func (e *BillingEngine) calculateUsageStats(username string, start, end time.Time) (float64, int64, error) {
+	var stats struct {
+		TotalBytes   int64
+		SessionCount int64
+	}
+	// Sum input and output bytes and count sessions
 	err := e.db.Model(&domain.RadiusAccounting{}).
 		Where("username = ? AND acct_start_time >= ? AND acct_start_time < ?", username, start, end).
-		Select("SUM(acct_input_total + acct_output_total)").
-		Scan(&totalBytes).Error
+		Select("SUM(acct_input_total + acct_output_total) as total_bytes, COUNT(*) as session_count").
+		Scan(&stats).Error
 
 	if err != nil {
-		return 0, err
+		return 0, 0, err
 	}
 
-	return float64(totalBytes) / (1024 * 1024 * 1024), nil
+	return float64(stats.TotalBytes) / (1024 * 1024 * 1024), stats.SessionCount, nil
 }
 
 
@@ -170,17 +173,15 @@ func (e *BillingEngine) generateInvoiceForUser(user domain.RadiusUser, now time.
 		periodEnd = now
 	}
 
-	// Calculate amount: Base Fee + (Usage GB * Price per GB)
+	// Calculate stats: Monthly Fee + (Usage GB * Price per GB)
+	usageGB, sessionCount, err := e.calculateUsageStats(user.Username, periodStart, periodEnd)
+	if err != nil {
+		zap.S().Errorf("failed to calculate usage stats for user %s: %v", user.Username, err)
+	}
+
 	amount := user.MonthlyFee
-	usageGB := 0.0
 	if user.PricePerGb > 0 {
-		var err error
-		usageGB, err = e.calculateUsageGB(user.Username, periodStart, periodEnd)
-		if err != nil {
-			zap.S().Errorf("failed to calculate usage for user %s: %v", user.Username, err)
-		} else {
-			amount += usageGB * user.PricePerGb
-		}
+		amount += usageGB * user.PricePerGb
 	}
 
 	invoice := domain.Invoice{
@@ -188,12 +189,17 @@ func (e *BillingEngine) generateInvoiceForUser(user domain.RadiusUser, now time.
 		Username:           user.Username,
 		ProfileID:          user.ProfileId,
 		Amount:             amount,
+		BaseAmount:         user.MonthlyFee,
+		UsageGb:            usageGB,
+		PricePerGb:         user.PricePerGb,
+		SessionCount:       sessionCount,
+		Currency:           "USD", // Default currency
 		IssueDate:          now,
 		DueDate:            now.AddDate(0, 0, e.dueDateDays),
 		Status:             domain.InvoiceUnpaid,
 		BillingPeriodStart: periodStart,
 		BillingPeriodEnd:   periodEnd,
-		Remark:             fmt.Sprintf("Consumption: %.2f GB", usageGB),
+		Remark:             fmt.Sprintf("Consumption: %.2f GB, sessions: %d", usageGB, sessionCount),
 		CreatedAt:          now,
 		UpdatedAt:          now,
 	}

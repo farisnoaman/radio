@@ -40,40 +40,46 @@ func escapeUserLikePattern(s string) string {
 
 // UserRequest Used to handle user data sent from frontend
 type UserRequest struct {
-	NodeID     interface{} `json:"node_id"`                                     // Can be int64 or string
-	ProfileID  interface{} `json:"profile_id" validate:"required"`              // Can be int64 or string
-	Realname   string      `json:"realname" validate:"omitempty,max=100"`       // Real name
-	Email      string      `json:"email" validate:"omitempty,email,max=100"`    // Email
-	Mobile     string      `json:"mobile" validate:"omitempty,max=20"`          // Mobile number (optional, max 20 characters)
-	Address    string      `json:"address" validate:"omitempty,max=255"`        // addresses
-	Username   string      `json:"username" validate:"required,min=3,max=50"`   // Username
-	Password   string      `json:"password" validate:"omitempty,min=6,max=128"` // Password
-	AddrPool   string      `json:"addr_pool" validate:"omitempty,max=50"`       // Address pool
-	Vlanid1    int         `json:"vlanid1" validate:"gte=0,lte=4096"`           // VLAN ID 1
-	Vlanid2    int         `json:"vlanid2" validate:"gte=0,lte=4096"`           // VLAN ID 2
-	IpAddr     string      `json:"ip_addr" validate:"omitempty,ipv4"`           // IPv4addresses
-	Ipv6Addr   string      `json:"ipv6_addr" validate:"omitempty"`              // IPv6addresses
-	MacAddr    string      `json:"mac_addr" validate:"omitempty,mac"`           // MACaddresses
-	BindVlan   interface{} `json:"bind_vlan"`                                   // Can be int or boolean
-	BindMac    interface{} `json:"bind_mac"`                                    // Can be int or boolean
-	ExpireTime string      `json:"expire_time" validate:"omitempty"`            // Expiration time
-	Status     interface{} `json:"status"`                                      // Can be string or boolean
-	Remark     string      `json:"remark" validate:"omitempty,max=500"`         // Remark
+	NodeID       interface{} `json:"node_id"`                                     // Can be int64 or string
+	ProfileID    interface{} `json:"profile_id" validate:"required"`              // Can be int64 or string
+	Realname     string      `json:"realname" validate:"omitempty,max=100"`       // Real name
+	Email        string      `json:"email" validate:"omitempty,email,max=100"`    // Email
+	Mobile       string      `json:"mobile" validate:"omitempty,max=20"`          // Mobile number (optional, max 20 characters)
+	Address      string      `json:"address" validate:"omitempty,max=255"`         // addresses
+	Username     string      `json:"username" validate:"required,min=3,max=50"`   // Username
+	Password     string      `json:"password" validate:"omitempty,min=6,max=128"` // Password
+	AddrPool     string      `json:"addr_pool" validate:"omitempty,max=50"`       // Address pool
+	Vlanid1      int         `json:"vlanid1" validate:"gte=0,lte=4096"`          // VLAN ID 1
+	Vlanid2      int         `json:"vlanid2" validate:"gte=0,lte=4096"`          // VLAN ID 2
+	IpAddr       string      `json:"ip_addr" validate:"omitempty,ipv4"`           // IPv4addresses
+	Ipv6Addr     string      `json:"ipv6_addr" validate:"omitempty"`             // IPv6addresses
+	MacAddr      string      `json:"mac_addr" validate:"omitempty,mac"`           // MACaddresses
+	BindVlan     interface{} `json:"bind_vlan"`                                   // Can be int or boolean
+	BindMac      interface{} `json:"bind_mac"`                                    // Can be int or boolean
+	ExpireTime   string      `json:"expire_time" validate:"omitempty"`           // Expiration time
+	Status       interface{} `json:"status"`                                      // Can be string or boolean
+	Remark       string      `json:"remark" validate:"omitempty,max=500"`        // Remark
+	BillingType  string      `json:"billing_type" validate:"omitempty"`          // Billing type: prepaid | postpaid (default: prepaid)
+	MonthlyFee   float64     `json:"monthly_fee"`                                 // Monthly fee for postpaid users
+	PricePerGb   float64     `json:"price_per_gb"`                               // Price per GB for postpaid users
 }
 
 // toRadiusUser Convert UserRequest Convert to RadiusUser
 func (ur *UserRequest) toRadiusUser() *domain.RadiusUser {
 	user := &domain.RadiusUser{
-		Realname: ur.Realname,
-		Mobile:   ur.Mobile,
-		Username: strings.TrimSpace(ur.Username),
-		Password: ur.Password,
-		AddrPool: ur.AddrPool,
-		Vlanid1:  ur.Vlanid1,
-		Vlanid2:  ur.Vlanid2,
-		IpAddr:   ur.IpAddr,
-		MacAddr:  ur.MacAddr,
-		Remark:   ur.Remark,
+		Realname:     ur.Realname,
+		Mobile:       ur.Mobile,
+		Username:     strings.TrimSpace(ur.Username),
+		Password:     ur.Password,
+		AddrPool:     ur.AddrPool,
+		Vlanid1:      ur.Vlanid1,
+		Vlanid2:      ur.Vlanid2,
+		IpAddr:       ur.IpAddr,
+		MacAddr:      ur.MacAddr,
+		Remark:       ur.Remark,
+		BillingType:  ur.BillingType,
+		MonthlyFee:   ur.MonthlyFee,
+		PricePerGb:   ur.PricePerGb,
 	}
 
 	// Handle profile_id
@@ -373,6 +379,35 @@ func createRadiusUser(c echo.Context) error {
 	if user.Status == "" {
 		user.Status = common.ENABLED
 	}
+
+	// Set default billing values for postpaid (monthly) users
+	if user.BillingType == domain.BillingTypePostpaid {
+		// Set default subscription status for new postpaid users
+		if user.SubscriptionStatus == "" {
+			user.SubscriptionStatus = domain.SubscriptionActive
+		}
+		// Set default next billing date (30 days from now)
+		if user.NextBillingDate.IsZero() {
+			user.NextBillingDate = time.Now().AddDate(0, 1, 0)
+		}
+		// Get default price per GB from system config (only for postpaid)
+		if user.PricePerGb == 0 {
+			if pricePerGbStr := GetConfig(c).Get("billing", "DefaultPricePerGb"); pricePerGbStr != "" {
+				if pricePerGb, err := strconv.ParseFloat(pricePerGbStr, 64); err == nil {
+					user.PricePerGb = pricePerGb
+				}
+			}
+		}
+		// Get default monthly fee from system config (only for postpaid)
+		if user.MonthlyFee == 0 {
+			if monthlyFeeStr := GetConfig(c).Get("billing", "DefaultMonthlyFee"); monthlyFeeStr != "" {
+				if monthlyFee, err := strconv.ParseFloat(monthlyFeeStr, 64); err == nil {
+					user.MonthlyFee = monthlyFee
+				}
+			}
+		}
+	}
+
 	user.CreatedAt = time.Now()
 	user.UpdatedAt = time.Now()
 
