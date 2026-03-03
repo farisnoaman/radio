@@ -33,6 +33,7 @@ type VoucherBatch struct {
 	ExpirationType string    `json:"expiration_type" form:"expiration_type"` // "fixed" or "first_use"
 	ValidityDays   int       `json:"validity_days" form:"validity_days"`
 	IsDeleted      bool      `json:"is_deleted" gorm:"default:false"`
+	ActivatedAt   *time.Time `json:"activated_at" gorm:"index"`  // When the batch was activated (non-nil = activated)
 	CreatedAt    time.Time  `gorm:"index" json:"created_at"`
 }
 

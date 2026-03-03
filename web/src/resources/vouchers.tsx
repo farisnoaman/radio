@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 import { useMediaQuery, Theme, Box, Card, CardContent, CardActions, TextField as MuiTextField, Button as MuiButton, IconButton, InputAdornment, Dialog, DialogTitle, DialogContent, DialogActions, Typography, Chip } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
@@ -148,12 +148,15 @@ const BatchActions = () => {
                     <Button label="Print" size="small" onClick={() => setPrintOpen(true)}>
                         <PrintIcon />
                     </Button>
-                    <Button label="Activate" size="small" onClick={() => handleAction('activate')} color="primary">
-                        <ToggleOnIcon />
-                    </Button>
-                    <Button label="Deactivate" size="small" onClick={() => handleAction('deactivate')} color="warning">
-                        <ToggleOffIcon />
-                    </Button>
+                    {record.activated_at ? (
+                        <Button label="Deactivate" size="small" onClick={() => handleAction('deactivate')} color="warning">
+                            <ToggleOffIcon />
+                        </Button>
+                    ) : (
+                        <Button label="Activate" size="small" onClick={() => handleAction('activate')} color="primary">
+                            <ToggleOnIcon />
+                        </Button>
+                    )}
                     <Button label="Transfer" size="small" onClick={() => setTransferOpen(true)} color="secondary">
                         <SwapHorizIcon />
                     </Button>
@@ -215,10 +218,10 @@ const VoucherBatchGrid = () => {
         <Box display="grid" gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)' }} gap={2} p={2} sx={{ bgcolor: theme => theme.palette.mode === 'dark' ? 'transparent' : 'rgba(0,0,0,0.02)' }}>
             {data.map(record => (
                 <RecordContextProvider value={record} key={record.id}>
-                    <Card 
-                        elevation={0} 
-                        sx={{ 
-                            borderRadius: 3, 
+                    <Card
+                        elevation={0}
+                        sx={{
+                            borderRadius: 3,
                             border: theme => `1px solid ${theme.palette.divider}`,
                             transition: 'box-shadow 0.2s',
                             '&:hover': { boxShadow: 4 }
@@ -236,7 +239,7 @@ const VoucherBatchGrid = () => {
                                 </Box>
                                 <StatusField />
                             </Box>
-                            
+
                             <Box sx={{ bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', p: 1.5, borderRadius: 2, mb: 2 }}>
                                 <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
                                     <span style={{ color: 'text.secondary' }}>Product:</span>
@@ -530,10 +533,10 @@ const VoucherGrid = () => {
         <Box display="grid" gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' }} gap={1} p={1} sx={{ bgcolor: theme => theme.palette.mode === 'dark' ? 'transparent' : 'rgba(0,0,0,0.02)' }}>
             {data.map(record => (
                 <RecordContextProvider value={record} key={record.id}>
-                    <Card 
-                        elevation={0} 
-                        sx={{ 
-                            borderRadius: 2, 
+                    <Card
+                        elevation={0}
+                        sx={{
+                            borderRadius: 2,
                             border: theme => `1px solid ${theme.palette.divider}`,
                             transition: 'box-shadow 0.2s',
                             '&:hover': { boxShadow: 2 },
@@ -542,21 +545,21 @@ const VoucherGrid = () => {
                         }}
                     >
                         <Box sx={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, bgcolor: record.status === 'unused' ? 'success.main' : record.status === 'used' ? 'error.main' : 'warning.main' }} />
-                        
+
                         <CardContent sx={{ pb: 1, pl: 2, pt: 1.5 }}>
                             <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
                                 <Typography variant="body2" component="div" sx={{ fontFamily: 'monospace', fontWeight: 600, letterSpacing: 0.5 }}>
                                     <TextField source="code" />
                                 </Typography>
-                                <Chip 
-                                    label={record.status.toUpperCase()} 
-                                    size="small" 
+                                <Chip
+                                    label={record.status.toUpperCase()}
+                                    size="small"
                                     color={record.status === 'unused' ? 'success' : record.status === 'used' ? 'error' : 'default'}
                                     variant={record.status === 'unused' ? 'filled' : 'outlined'}
                                     sx={{ fontWeight: 'bold', fontSize: '0.65rem', height: 20 }}
                                 />
                             </Box>
-                            
+
                             <Box sx={{ bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', p: 1, borderRadius: 1, mb: 1 }}>
                                 <Box display="flex" justifyContent="space-between" mb={0.5}>
                                     <Typography variant="caption" sx={{ color: 'text.secondary' }}>Batch:</Typography>
@@ -585,14 +588,8 @@ const VoucherGrid = () => {
     );
 };
 const VoucherListActions = () => {
-    const [searchParams] = useSearchParams();
-    const filterParam = searchParams.get('filter');
-    let batchId = '';
-    try {
-        const filter = filterParam ? JSON.parse(filterParam) : {};
-        batchId = filter.batch_id || '';
-    } catch {}
-    
+    // VoucherListActions - toolbar for voucher list page
+
     const isMobile = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
     const { filterValues, setFilters, displayedFilters } = useListContext();
     const [searchInput, setSearchInput] = useState(filterValues?.sn || '');
@@ -743,7 +740,7 @@ const VoucherSearchFilters = () => {
                                 value={searchInput}
                                 onChange={(e) => setSearchInput(e.target.value)}
                                 onKeyPress={(e: any) => e.key === 'Enter' && handleSearch()}
-placeholder="e.g. 3-150, 123, or ABC123"
+                                placeholder="e.g. 3-150, 123, or ABC123"
                                 autoFocus
                             />
                             <Box display="flex" gap={1} justifyContent="flex-end">

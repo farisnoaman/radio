@@ -697,9 +697,17 @@ func BulkActivateVouchers(c echo.Context) error {
 		zap.Any("updates", updates),
 	)
 
+	// Update vouchers
 	if err := db.Model(&domain.Voucher{}).Where("batch_id = ? AND status = ?", batchID, "unused").Updates(updates).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "Failed to activate vouchers", err.Error())
 	}
+
+	// Also update the batch activation timestamp
+	if err := db.Model(&domain.VoucherBatch{}).Where("id = ?", batchID).Update("activated_at", &now).Error; err != nil {
+		zap.L().Error("Failed to update batch activated_at", zap.Int64("batch_id", batchID), zap.Error(err))
+		// Don't fail the request, vouchers are already activated
+	}
+
 	return ok(c, nil)
 }
 
@@ -731,6 +739,13 @@ func BulkDeactivateVouchers(c echo.Context) error {
 	if err := GetDB(c).Model(&domain.Voucher{}).Where("batch_id = ? AND status = ?", id, "active").Update("status", "unused").Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "Failed to deactivate vouchers", err.Error())
 	}
+
+	// Also clear the batch activation timestamp
+	batchID, _ := strconv.ParseInt(id, 10, 64)
+	if err := GetDB(c).Model(&domain.VoucherBatch{}).Where("id = ?", id).Update("activated_at", nil).Error; err != nil {
+		zap.L().Error("Failed to clear batch activated_at", zap.Int64("batch_id", batchID), zap.Error(err))
+	}
+
 	return ok(c, nil)
 }
 
