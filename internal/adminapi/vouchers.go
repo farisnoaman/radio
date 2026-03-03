@@ -106,8 +106,8 @@ func ListVouchers(c echo.Context) error {
 	if page < 1 {
 		page = 1
 	}
-	if perPage < 1 || perPage > 100 {
-		perPage = 10
+	if perPage < 1 || perPage > 1000 {
+		perPage = 50
 	}
 
 	var total int64
@@ -125,6 +125,26 @@ func ListVouchers(c echo.Context) error {
 
 	if code := c.QueryParam("code"); code != "" {
 		query = query.Where("code = ?", code)
+	}
+
+	// Search by SN (batchid-voucherid format), voucher ID, or exact code match
+	if sn := c.QueryParam("sn"); sn != "" {
+		parts := strings.Split(sn, "-")
+		if len(parts) == 2 {
+			// SN format: batchid-voucherid
+			batchID, err1 := strconv.ParseInt(parts[0], 10, 64)
+			voucherID, err2 := strconv.ParseInt(parts[1], 10, 64)
+			if err1 == nil && err2 == nil {
+				query = query.Where("batch_id = ? AND id = ?", batchID, voucherID)
+			}
+		} else if _, err := strconv.ParseInt(sn, 10, 64); err == nil {
+			// Pure numeric input - search by voucher ID
+			voucherID, _ := strconv.ParseInt(sn, 10, 64)
+			query = query.Where("id = ?", voucherID)
+		} else {
+			// Exact code match
+			query = query.Where("code = ?", sn)
+		}
 	}
 
 	query.Count(&total)

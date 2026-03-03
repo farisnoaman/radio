@@ -1,7 +1,22 @@
-import { Pagination, PaginationProps } from 'react-admin';
+import { Pagination, PaginationProps, useListContext } from 'react-admin';
+import { useEffect } from 'react';
 
-export const DEFAULT_PAGE_SIZES = [25, 50, 100, 200];
+const DEFAULT_PAGE_SIZES = [10, 50, 100, 200, 500, 1000];
 
-export const ServerPagination = (props: PaginationProps) => (
-  <Pagination rowsPerPageOptions={DEFAULT_PAGE_SIZES} {...props} />
-);
+const ServerPagination = (props: PaginationProps) => {
+  const { perPage, setPerPage } = useListContext();
+  
+  useEffect(() => {
+    if (perPage > 0 && !DEFAULT_PAGE_SIZES.includes(perPage)) {
+      setPerPage(DEFAULT_PAGE_SIZES[0]);
+    }
+  }, [perPage, setPerPage]);
+
+  const rowsPerPageOptions = DEFAULT_PAGE_SIZES.includes(perPage) 
+    ? DEFAULT_PAGE_SIZES 
+    : [...new Set([...DEFAULT_PAGE_SIZES, perPage])].sort((a, b) => a - b);
+
+  return <Pagination rowsPerPageOptions={rowsPerPageOptions} {...props} />;
+};
+
+export { ServerPagination, DEFAULT_PAGE_SIZES };

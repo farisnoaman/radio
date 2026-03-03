@@ -1,4 +1,17 @@
 import React, { useState } from 'react';
+import { useSearchParams, Link } from 'react-router-dom';
+import { useMediaQuery, Theme, Box, Card, CardContent, CardActions, TextField as MuiTextField, Button as MuiButton, IconButton, InputAdornment, Dialog, DialogTitle, DialogContent, DialogActions, Typography, Chip } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import ClearIcon from '@mui/icons-material/Clear';
+import RedeemIcon from '@mui/icons-material/Redeem';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import DownloadIcon from '@mui/icons-material/Download';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ToggleOnIcon from '@mui/icons-material/ToggleOn';
+import ToggleOffIcon from '@mui/icons-material/ToggleOff';
+import DeleteIcon from '@mui/icons-material/Delete';
+import RestoreIcon from '@mui/icons-material/Restore';
+import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import {
     List,
     Datagrid,
@@ -13,6 +26,7 @@ import {
     required,
     ListProps,
     CreateProps,
+    FunctionField,
     ReferenceField,
     Button,
     useNotify,
@@ -21,25 +35,18 @@ import {
     useRecordContext,
     DateTimeInput,
     useGetOne,
-    FunctionField,
     BooleanInput,
     RecordContextProvider,
-    useListContext
+    useListContext,
+    TopToolbar,
+    ExportButton,
+    SortButton
 } from 'react-admin';
-import { useMediaQuery, Theme, Card, CardContent, CardActions, Box, Dialog, DialogTitle, DialogContent, DialogActions, Button as MuiButton, Typography } from '@mui/material';
-import RedeemIcon from '@mui/icons-material/Redeem';
-import VisibilityIcon from '@mui/icons-material/Visibility';
-import DownloadIcon from '@mui/icons-material/Download';
-import ToggleOnIcon from '@mui/icons-material/ToggleOn';
-import ToggleOffIcon from '@mui/icons-material/ToggleOff';
-import DeleteIcon from '@mui/icons-material/Delete';
-import RestoreIcon from '@mui/icons-material/Restore';
-import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
-import { Link } from 'react-router-dom';
 
 import { httpClient } from '../utils/apiClient';
 import VoucherPrintDialog from '../components/VoucherPrintDialog';
 import VoucherTransferDialog from '../components/VoucherTransferDialog';
+import { ServerPagination } from '../components/datagrid/ServerPagination';
 import PrintIcon from '@mui/icons-material/Print';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 
@@ -188,9 +195,8 @@ const BatchActions = () => {
             )}
         </Box>
     );
-};
 
-import { Chip } from '@mui/material';
+};
 
 const StatusField = () => {
     const record = useRecordContext();
@@ -521,26 +527,25 @@ const VoucherGrid = () => {
     const { data, isLoading } = useListContext();
     if (isLoading || !data) return null;
     return (
-        <Box display="grid" gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' }} gap={2} p={2} sx={{ bgcolor: theme => theme.palette.mode === 'dark' ? 'transparent' : 'rgba(0,0,0,0.02)' }}>
+        <Box display="grid" gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)', lg: 'repeat(4, 1fr)' }} gap={1} p={1} sx={{ bgcolor: theme => theme.palette.mode === 'dark' ? 'transparent' : 'rgba(0,0,0,0.02)' }}>
             {data.map(record => (
                 <RecordContextProvider value={record} key={record.id}>
                     <Card 
                         elevation={0} 
                         sx={{ 
-                            borderRadius: 3, 
+                            borderRadius: 2, 
                             border: theme => `1px solid ${theme.palette.divider}`,
                             transition: 'box-shadow 0.2s',
-                            '&:hover': { boxShadow: 4 },
+                            '&:hover': { boxShadow: 2 },
                             position: 'relative',
                             overflow: 'hidden'
                         }}
                     >
-                        {/* Decorative side accent */}
-                        <Box sx={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 4, bgcolor: record.status === 'unused' ? 'success.main' : record.status === 'used' ? 'error.main' : 'warning.main' }} />
+                        <Box sx={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: 3, bgcolor: record.status === 'unused' ? 'success.main' : record.status === 'used' ? 'error.main' : 'warning.main' }} />
                         
-                        <CardContent sx={{ pb: 1, pl: 3 }}>
-                            <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2}>
-                                <Typography variant="h6" component="div" sx={{ fontFamily: 'monospace', fontWeight: 700, letterSpacing: 1 }}>
+                        <CardContent sx={{ pb: 1, pl: 2, pt: 1.5 }}>
+                            <Box display="flex" justifyContent="space-between" alignItems="center" mb={1}>
+                                <Typography variant="body2" component="div" sx={{ fontFamily: 'monospace', fontWeight: 600, letterSpacing: 0.5 }}>
                                     <TextField source="code" />
                                 </Typography>
                                 <Chip 
@@ -548,36 +553,28 @@ const VoucherGrid = () => {
                                     size="small" 
                                     color={record.status === 'unused' ? 'success' : record.status === 'used' ? 'error' : 'default'}
                                     variant={record.status === 'unused' ? 'filled' : 'outlined'}
-                                    sx={{ fontWeight: 'bold', fontSize: '0.7rem' }}
+                                    sx={{ fontWeight: 'bold', fontSize: '0.65rem', height: 20 }}
                                 />
                             </Box>
                             
-                            <Box sx={{ bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', p: 1.5, borderRadius: 2, mb: 2 }}>
-                                <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                    <span style={{ color: 'text.secondary' }}>Batch:</span>
-                                    <strong style={{ maxWidth: '120px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            <Box sx={{ bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', p: 1, borderRadius: 1, mb: 1 }}>
+                                <Box display="flex" justifyContent="space-between" mb={0.5}>
+                                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>Batch:</Typography>
+                                    <Typography variant="caption" noWrap sx={{ maxWidth: 80 }}>
                                         <ReferenceField source="batch_id" reference="voucher-batches"><TextField source="name" /></ReferenceField>
-                                    </strong>
-                                </Typography>
-                                <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                    <span style={{ color: 'text.secondary' }}>Price:</span>
-                                    <strong style={{ textAlign: 'right', color: 'success.main' }}>
-                                        $<TextField source="price" />
-                                    </strong>
-                                </Typography>
-                                <Typography variant="body2" sx={{ display: 'flex', justifyContent: 'space-between', mb: 1 }}>
-                                    <span style={{ color: 'text.secondary' }}>PIN:</span>
-                                    <strong style={{ fontFamily: 'monospace', letterSpacing: 2 }}>
-                                        <FunctionField render={(r:any) => r.require_pin ? (r.pin_view ? r.pin : '****') : 'N/A'} />
-                                    </strong>
-                                </Typography>
-                                <Typography variant="caption" sx={{ display: 'flex', justifyContent: 'space-between', color: 'text.secondary', mt: 1, pt: 1, borderTop: '1px dashed rgba(150,150,150,0.3)' }}>
-                                    <span>Exp:</span>
-                                    <DateField source="expire_time" showTime />
-                                </Typography>
+                                    </Typography>
+                                </Box>
+                                <Box display="flex" justifyContent="space-between" mb={0.5}>
+                                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>Price:</Typography>
+                                    <Typography variant="caption" sx={{ color: 'success.main', fontWeight: 600 }}>$<TextField source="price" /></Typography>
+                                </Box>
+                                <Box display="flex" justifyContent="space-between">
+                                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>Exp:</Typography>
+                                    <Typography variant="caption"><DateField source="expire_time" /></Typography>
+                                </Box>
                             </Box>
                         </CardContent>
-                        <CardActions sx={{ justifyContent: 'flex-end', borderTop: theme => `1px solid ${theme.palette.divider}`, px: 2, py: 1.5 }}>
+                        <CardActions sx={{ justifyContent: 'flex-end', borderTop: theme => `1px solid ${theme.palette.divider}`, px: 1, py: 0.5 }}>
                             <RedeemButton />
                             <ExtendButton />
                         </CardActions>
@@ -587,10 +584,195 @@ const VoucherGrid = () => {
         </Box>
     );
 };
+const VoucherListActions = () => {
+    const [searchParams] = useSearchParams();
+    const filterParam = searchParams.get('filter');
+    let batchId = '';
+    try {
+        const filter = filterParam ? JSON.parse(filterParam) : {};
+        batchId = filter.batch_id || '';
+    } catch {}
+    
+    const isMobile = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
+    const { filterValues, setFilters, displayedFilters } = useListContext();
+    const [searchInput, setSearchInput] = useState(filterValues?.sn || '');
+    const [dialogOpen, setDialogOpen] = useState(false);
+
+    const handleSearch = () => {
+        if (searchInput.trim() === '') {
+            const newFilters = { ...filterValues };
+            delete newFilters.sn;
+            setFilters(newFilters, displayedFilters);
+        } else {
+            setFilters({ ...filterValues, sn: searchInput.trim() }, displayedFilters);
+        }
+        setDialogOpen(false);
+    };
+
+    const handleClear = () => {
+        setSearchInput('');
+        const newFilters = { ...filterValues };
+        delete newFilters.sn;
+        setFilters(newFilters, displayedFilters);
+        setDialogOpen(false);
+    };
+
+    return (
+        <TopToolbar sx={{ flexWrap: 'nowrap', gap: 1, overflowX: 'auto' }}>
+            <Button
+                label="Batches"
+                component={Link}
+                to="/voucher-batches"
+                size="small"
+            >
+                <ArrowBackIcon />
+            </Button>
+            {isMobile && (
+                <>
+                    <MuiButton
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                        onClick={() => setDialogOpen(true)}
+                        startIcon={<SearchIcon />}
+                    >
+                        {filterValues?.sn ? `Search: ${filterValues.sn}` : 'Search'}
+                    </MuiButton>
+                    <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm">
+                        <DialogTitle>Search Vouchers</DialogTitle>
+                        <DialogContent>
+                            <Box display="flex" flexDirection="column" gap={2} pt={1}>
+                                <MuiTextField
+                                    fullWidth
+                                    label="Serial Number, ID, or Code"
+                                    value={searchInput}
+                                    onChange={(e) => setSearchInput(e.target.value)}
+                                    onKeyPress={(e: any) => e.key === 'Enter' && handleSearch()}
+                                    placeholder="e.g. 3-150, 123, or ABC123"
+                                    autoFocus
+                                />
+                                <Box display="flex" gap={1} justifyContent="flex-end">
+                                    <MuiButton onClick={handleClear} disabled={!filterValues?.sn}>
+                                        Clear
+                                    </MuiButton>
+                                    <MuiButton variant="contained" onClick={handleSearch}>
+                                        Search
+                                    </MuiButton>
+                                </Box>
+                            </Box>
+                        </DialogContent>
+                    </Dialog>
+                </>
+            )}
+            <SortButton fields={['id', 'created_at', 'expire_time', 'status']} />
+            <ExportButton />
+        </TopToolbar>
+    );
+};
+const VoucherSearchFilters = () => {
+    const { filterValues, setFilters, displayedFilters } = useListContext();
+    const [searchInput, setSearchInput] = useState(filterValues?.sn || '');
+    const isMobile = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
+    const [dialogOpen, setDialogOpen] = useState(false);
+
+    if (isMobile) return null;
+
+    const handleSearch = () => {
+        if (searchInput.trim() === '') {
+            const newFilters = { ...filterValues };
+            delete newFilters.sn;
+            setFilters(newFilters, displayedFilters);
+        } else {
+            setFilters({ ...filterValues, sn: searchInput.trim() }, displayedFilters);
+        }
+        setDialogOpen(false);
+    };
+
+    const handleClear = () => {
+        setSearchInput('');
+        const newFilters = { ...filterValues };
+        delete newFilters.sn;
+        setFilters(newFilters, displayedFilters);
+        setDialogOpen(false);
+    };
+
+    const searchContent = (
+        <Box display="flex" gap={1} alignItems="center" flex={isMobile ? 1 : 'none'}>
+            <MuiTextField
+                size="small"
+                label="SN / ID / Code"
+                value={searchInput}
+                onChange={(e) => setSearchInput(e.target.value)}
+                onKeyPress={(e: any) => e.key === 'Enter' && handleSearch()}
+                placeholder="e.g. 3-150 or ABC123"
+                sx={{ minWidth: isMobile ? 120 : 200 }}
+                InputProps={{
+                    endAdornment: searchInput && (
+                        <InputAdornment position="end">
+                            <IconButton size="small" onClick={() => setSearchInput('')}>
+                                <ClearIcon fontSize="small" />
+                            </IconButton>
+                        </InputAdornment>
+                    ),
+                }}
+            />
+            <MuiButton variant="contained" size="small" onClick={handleSearch}>
+                Search
+            </MuiButton>
+            {filterValues?.sn && (
+                <MuiButton size="small" onClick={handleClear}>
+                    Clear
+                </MuiButton>
+            )}
+        </Box>
+    );
+
+    if (isMobile) {
+        return (
+            <>
+                <IconButton onClick={() => setDialogOpen(true)} color="primary">
+                    <SearchIcon />
+                </IconButton>
+                <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm">
+                    <DialogTitle>Search Vouchers</DialogTitle>
+                    <DialogContent>
+                        <Box display="flex" flexDirection="column" gap={2} pt={1}>
+                            <MuiTextField
+                                fullWidth
+                                label="Serial Number, ID, or Code"
+                                value={searchInput}
+                                onChange={(e) => setSearchInput(e.target.value)}
+                                onKeyPress={(e: any) => e.key === 'Enter' && handleSearch()}
+placeholder="e.g. 3-150, 123, or ABC123"
+                                autoFocus
+                            />
+                            <Box display="flex" gap={1} justifyContent="flex-end">
+                                <MuiButton onClick={handleClear} disabled={!filterValues?.sn}>
+                                    Clear
+                                </MuiButton>
+                                <MuiButton variant="contained" onClick={handleSearch}>
+                                    Search
+                                </MuiButton>
+                            </Box>
+                        </Box>
+                    </DialogContent>
+                </Dialog>
+            </>
+        );
+    }
+
+    return (
+        <Card sx={{ mb: 2 }}>
+            <CardContent sx={{ py: 1.5 }}>
+                {searchContent}
+            </CardContent>
+        </Card>
+    );
+};
 export const VoucherList = (props: ListProps) => {
     const isSmall = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
     return (
-        <List {...props} sort={{ field: 'id', order: 'DESC' }}>
+        <List {...props} sort={{ field: 'id', order: 'DESC' }} perPage={50} pagination={<ServerPagination />} actions={<VoucherListActions />} filters={<VoucherSearchFilters />}>
             {isSmall ? (
                 <VoucherGrid />
             ) : (
