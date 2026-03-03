@@ -1,4 +1,4 @@
-import React from 'react';
+import React from "react";
 import {
     List,
     Datagrid,
@@ -7,23 +7,39 @@ import {
     NumberField,
     Show,
     SimpleShowLayout,
-    Button,
     useNotify,
     useRefresh,
     useRecordContext,
     TopToolbar,
-    ListButton,
-    FunctionField
-} from 'react-admin';
-import { Box, Card, CardContent, Typography, Chip, Stack, alpha } from '@mui/material';
-import PaymentsIcon from '@mui/icons-material/Payments';
-import ReceiptIcon from '@mui/icons-material/Receipt';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import PrintIcon from '@mui/icons-material/Print';
-import NoteIcon from '@mui/icons-material/Note';
-import WhatsAppIcon from '@mui/icons-material/WhatsApp';
-import { httpClient } from '../utils/apiClient';
+    useSidebarState,
+    FunctionField,
+    useListContext,
+    RecordContextProvider,
+} from "react-admin";
+import { useMediaQuery, Theme } from "@mui/material";
+import {
+    Box,
+    Card,
+    CardContent,
+    Typography,
+    Chip,
+    Stack,
+    alpha,
+    CardActions,
+    IconButton,
+    Tooltip,
+    Button as MuiButton,
+} from "@mui/material";
+import PaymentsIcon from "@mui/icons-material/Payments";
+import ReceiptIcon from "@mui/icons-material/Receipt";
+import MenuIcon from "@mui/icons-material/Menu";
+import WhatsAppIcon from "@mui/icons-material/WhatsApp";
+import NoteIcon from "@mui/icons-material/Note";
+import { httpClient } from "../utils/apiClient";
 
+/* -------------------------------------------------------------------------- */
+/*  Print‑only CSS (kept for the Show view)                                 */
+/* -------------------------------------------------------------------------- */
 const printStyles = `
     @media print {
         @page {
@@ -42,7 +58,6 @@ const printStyles = `
             height: 100% !important;
             overflow: hidden !important;
         }
-        /* Hide sidebar, header, actions */
         .MuiDrawer-root,
         .MuiDrawer-paper,
         .RaSidebar-root,
@@ -54,7 +69,6 @@ const printStyles = `
             display: none !important;
             visibility: hidden !important;
         }
-        /* Reset layout */
         .RaLayout-appFrame,
         .RaLayout-main,
         .RaLayout-content {
@@ -64,7 +78,6 @@ const printStyles = `
             height: 100% !important;
             overflow: hidden !important;
         }
-        /* Content fills page */
         .invoice-content {
             margin: 0 !important;
             padding: 0 !important;
@@ -75,7 +88,6 @@ const printStyles = `
             display: flex !important;
             flex-direction: column !important;
         }
-        /* Compact cards */
         .MuiCard-root {
             page-break-inside: avoid;
             margin-bottom: 6px !important;
@@ -83,7 +95,6 @@ const printStyles = `
         .MuiCardContent-root {
             padding: 8px 12px !important;
         }
-        /* Reduce typography sizes */
         .MuiTypography-h5 {
             font-size: 16pt !important;
         }
@@ -99,25 +110,61 @@ const printStyles = `
         .MuiTypography-caption {
             font-size: 8pt !important;
         }
-        /* Reduce stack spacing */
         .MuiStack-root {
             gap: 6px !important;
         }
     }
 `;
-
 const PrintStyles = () => <style>{printStyles}</style>;
 
+/* -------------------------------------------------------------------------- */
+/*  Helper – lazily load html2canvas & jsPDF and return a blob URL           */
+/* -------------------------------------------------------------------------- */
+const generatePdfUrl = async (): Promise<string> => {
+    // Lazy‑load the libraries only when needed
+    const html2canvas = (await import("html2canvas")).default;
+    const { jsPDF } = await import("jspdf");
+
+    const element = document.querySelector(
+        ".invoice-content"
+    ) as HTMLElement;
+    if (!element) throw new Error("Invoice content not found");
+
+    // Render the invoice DOM to a canvas
+    const canvas = await html2canvas(element, { scale: 2 });
+    const imgData = canvas.toDataURL("image/png");
+
+    // Create a PDF with the canvas image
+    const pdf = new jsPDF("p", "mm", "a4");
+    const imgProps = pdf.getImageProperties(imgData);
+    const pdfWidth = pdf.internal.pageSize.getWidth();
+    const pdfHeight = (imgProps.height * pdfWidth) / imgProps.width;
+    pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
+
+    // Return a temporary object‑URL that can be shared
+    const blob = pdf.output("blob");
+    return URL.createObjectURL(blob);
+};
+
+/* -------------------------------------------------------------------------- */
+/*  Small reusable UI components                                             */
+/* -------------------------------------------------------------------------- */
 const StatusChip = ({ label }: { label?: string }) => {
     const record = useRecordContext();
     if (!record) return null;
 
     let color: "success" | "error" | "warning" | "default" = "default";
-    const status = record.status || 'unpaid';
+    const status = record.status || "unpaid";
     switch (status) {
-        case 'paid': color = 'success'; break;
-        case 'unpaid': color = 'warning'; break;
-        case 'overdue': color = 'error'; break;
+        case "paid":
+            color = "success";
+            break;
+        case "unpaid":
+            color = "warning";
+            break;
+        case "overdue":
+            color = "error";
+            break;
     }
 
     return (
@@ -130,277 +177,968 @@ const StatusChip = ({ label }: { label?: string }) => {
     );
 };
 
-const PayButton = () => {
+/* ---------------------------------------------------- */
+/*  Pay button – Material‑UI (visible label)            */
+/* ---------------------------------------------------- */
+const PayButton = ({
+    size = "small",
+    fullWidth = false,
+}: {
+    size?: "small" | "medium" | "large";
+    fullWidth?: boolean;
+}) => {
     const record = useRecordContext();
     const notify = useNotify();
     const refresh = useRefresh();
 
-    if (!record || record.status !== 'unpaid') return null;
+    if (!record || record.status !== "unpaid") return null;
 
     const handlePay = async (e: React.MouseEvent) => {
         e.stopPropagation();
         try {
-            await httpClient(`/radius/invoices/${record.id}/pay`, { method: 'POST' });
-            notify('resources.radius/invoices.notifications.paid', { type: 'success' });
+            await httpClient(`/radius/invoices/${record.id}/pay`, {
+                method: "POST",
+            });
+            notify("resources.radius/invoices.notifications.paid", {
+                type: "success",
+            });
             refresh();
         } catch (error) {
-            notify('resources.radius/invoices.notifications.pay_error', { type: 'error' });
+            notify(
+                "resources.radius/invoices.notifications.pay_error",
+                { type: "error" }
+            );
         }
     };
 
     return (
-        <Button
-            label="resources.invoices.actions.pay"
-            onClick={handlePay}
+        <MuiButton
             variant="contained"
             color="primary"
             startIcon={<PaymentsIcon />}
-        />
+            onClick={handlePay}
+            size={size}
+            fullWidth={fullWidth}
+            sx={{
+                boxShadow: 2,
+                fontWeight: "bold",
+                "&:hover": { boxShadow: 4 },
+            }}
+        >
+            Pay
+        </MuiButton>
     );
 };
 
-const WhatsAppShareButton = ({ variant = "outlined" }: { variant?: "outlined" | "contained" | "text" }) => {
+/* ---------------------------------------------------- */
+/*  Icon‑only Pay button for the mobile grid             */
+/* ---------------------------------------------------- */
+const PayIconButton = () => {
     const record = useRecordContext();
-    if (!record) return null;
+    const notify = useNotify();
+    const refresh = useRefresh();
 
-    const handleShare = () => {
-        // Format invoice details for WhatsApp message
-        const message = encodeURIComponent(
-            `*Invoice #${record.id}*\n\n` +
-            `User: ${record.username}\n` +
-            `Amount: $${Number(record.amount).toFixed(2)}\n` +
-            `Base Fee: $${Number(record.base_amount || 0).toFixed(2)}\n` +
-            `Usage: ${Number(record.usage_gb || 0).toFixed(2)} GB\n` +
-            `Status: ${record.status?.toUpperCase()}\n` +
-            `Due Date: ${new Date(record.due_date).toLocaleDateString()}\n\n` +
-            `_Please make payment before the due date._`
-        );
+    if (!record || record.status !== "unpaid") return null;
 
-        // Open WhatsApp with pre-filled message
-        const whatsappUrl = `https://wa.me/?text=${message}`;
-        window.open(whatsappUrl, '_blank');
+    const handlePay = async (e: React.MouseEvent) => {
+        e.stopPropagation();
+        try {
+            await httpClient(`/radius/invoices/${record.id}/pay`, {
+                method: "POST",
+            });
+            notify("resources.radius/invoices.notifications.paid", {
+                type: "success",
+            });
+            refresh();
+        } catch (error) {
+            notify(
+                "resources.radius/invoices.notifications.pay_error",
+                { type: "error" }
+            );
+        }
     };
 
     return (
-        <Button
-            label="WhatsApp"
-            onClick={handleShare}
-            variant={variant}
-            color="success"
-            startIcon={<WhatsAppIcon />}
-        />
+        <Tooltip title="Pay">
+            <IconButton
+                onClick={handlePay}
+                size="small"
+                sx={{
+                    backgroundColor: "primary.main",
+                    color: "white",
+                    "&:hover": { backgroundColor: "primary.dark" },
+                    boxShadow: 2,
+                    width: 32,
+                    height: 32,
+                }}
+            >
+                <PaymentsIcon fontSize="small" />
+            </IconButton>
+        </Tooltip>
     );
 };
 
+/* ---------------------------------------------------- */
+/*  WhatsApp share – includes a PDF link                */
+/* ---------------------------------------------------- */
+const WhatsAppShareButton = ({
+    fullWidth = false,
+}: {
+    fullWidth?: boolean;
+}) => {
+    const record = useRecordContext();
+    if (!record) return null;
+
+    const handleShare = async () => {
+        try {
+            const pdfUrl = await generatePdfUrl();
+            const message = encodeURIComponent(
+                `*Invoice #${record.id}*\n\n` +
+                `User: ${record.username}\n` +
+                `Amount: $${Number(record.amount).toFixed(2)}\n` +
+                `Base Fee: $${Number(record.base_amount || 0).toFixed(2)}\n` +
+                `Usage: ${Number(record.usage_gb || 0).toFixed(2)} GB\n` +
+                `Status: ${record.status?.toUpperCase()}\n` +
+                `Due Date: ${new Date(record.due_date).toLocaleDateString()}\n\n` +
+                `PDF: ${pdfUrl}\n\n` +
+                `_Please make payment before the due date._`
+            );
+            window.open(`https://wa.me/?text=${message}`, "_blank");
+        } catch (e) {
+            console.error(e);
+        }
+    };
+
+    return (
+        <MuiButton
+            variant="contained"
+            color="success"
+            startIcon={<WhatsAppIcon />}
+            onClick={handleShare}
+            fullWidth={fullWidth}
+            size={fullWidth ? "medium" : "small"}
+            sx={{
+                boxShadow: 2,
+                fontWeight: "bold",
+                "&:hover": { boxShadow: 4 },
+            }}
+        >
+            WhatsApp
+        </MuiButton>
+    );
+};
+
+/* ---------------------------------------------------- */
+/*  WhatsApp icon‑only button for list cards (mobile)   */
+/* ---------------------------------------------------- */
 const WhatsAppListButton = () => {
     const record = useRecordContext();
     if (!record) return null;
 
-    const handleShare = (e: React.MouseEvent) => {
+    const handleShare = async (e: React.MouseEvent) => {
         e.stopPropagation();
-        const message = encodeURIComponent(
-            `*Invoice #${record.id}*\n\n` +
-            `User: ${record.username}\n` +
-            `Amount: $${Number(record.amount).toFixed(2)}\n` +
-            `Status: ${record.status?.toUpperCase()}\n` +
-            `Due: ${new Date(record.due_date).toLocaleDateString()}\n\n` +
-            `_Please make payment before the due date._`
-        );
-        window.open(`https://wa.me/?text=${message}`, '_blank');
+        try {
+            const pdfUrl = await generatePdfUrl();
+            const message = encodeURIComponent(
+                `*Invoice #${record.id}*\n\n` +
+                `User: ${record.username}\n` +
+                `Amount: $${Number(record.amount).toFixed(2)}\n` +
+                `Status: ${record.status?.toUpperCase()}\n` +
+                `Due: ${new Date(record.due_date).toLocaleDateString()}\n\n` +
+                `PDF: ${pdfUrl}\n\n` +
+                `_Please make payment before the due date._`
+            );
+            window.open(`https://wa.me/?text=${message}`, "_blank");
+        } catch (e) {
+            console.error(e);
+        }
     };
 
     return (
-        <Button
-            label=""
-            onClick={handleShare}
-            color="success"
-            startIcon={<WhatsAppIcon />}
-        />
+        <Tooltip title="Share on WhatsApp">
+            <IconButton
+                onClick={handleShare}
+                size="small"
+                sx={{
+                    backgroundColor: "success.main",
+                    color: "white",
+                    "&:hover": { backgroundColor: "success.dark" },
+                    boxShadow: 2,
+                    width: 32,
+                    height: 32,
+                }}
+            >
+                <WhatsAppIcon fontSize="small" />
+            </IconButton>
+        </Tooltip>
     );
 };
 
-export const InvoiceList = () => (
-    <List sort={{ field: 'id', order: 'DESC' }}>
-        <Datagrid rowClick="show">
-            <TextField source="id" />
-            <TextField source="username" />
-            <NumberField source="usage_gb" options={{ maximumFractionDigits: 2 }} />
-            <NumberField source="amount" options={{ style: 'currency', currency: 'USD' }} />
-            <StatusChip label="Status" />
-            <DateField source="issue_date" />
-            <PayButton />
-            <WhatsAppListButton />
-        </Datagrid>
-    </List>
-);
+/* ---------------------------------------------------- */
+/*  Responsive grid for mobile list view                */
+/* ---------------------------------------------------- */
+const InvoiceGrid = () => {
+    const { data, isLoading } = useListContext();
+    if (isLoading || !data) return null;
 
-const InvoiceShowActions = () => (
-    <TopToolbar>
-        <ListButton icon={<ArrowBackIcon />} />
-        <Button
-            label="Print"
-            onClick={() => window.print()}
-            variant="text"
-            color="primary"
-            startIcon={<PrintIcon />}
-        />
-        <WhatsAppShareButton variant="text" />
-    </TopToolbar>
-);
+    return (
+        <Box
+            display="grid"
+            gridTemplateColumns={{
+                xs: "1fr",
+                sm: "1fr 1fr",
+                md: "repeat(3, 1fr)",
+            }}
+            gap={2}
+            p={2}
+            sx={{
+                bgcolor: (theme) =>
+                    theme.palette.mode === "dark"
+                        ? "transparent"
+                        : "rgba(0,0,0,0.02)",
+            }}
+        >
+            {data.map((record) => (
+                <RecordContextProvider value={record} key={record.id}>
+                    <Card
+                        elevation={0}
+                        sx={{
+                            borderRadius: 3,
+                            border: (theme) =>
+                                `1px solid ${theme.palette.divider}`,
+                            cursor: "pointer",
+                            transition: "box-shadow 0.2s",
+                            "&:hover": { boxShadow: 4 },
+                        }}
+                        onClick={() => {
+                            window.location.href = `#/radius/invoices/${record.id}/show`;
+                        }}
+                    >
+                        <CardContent sx={{ pb: 1 }}>
+                            {/* Header */}
+                            <Box
+                                display="flex"
+                                justifyContent="space-between"
+                                alignItems="flex-start"
+                                mb={2}
+                            >
+                                <Box>
+                                    <Typography
+                                        variant="subtitle1"
+                                        component="div"
+                                        sx={{
+                                            fontWeight: 700,
+                                            lineHeight: 1.2,
+                                        }}
+                                    >
+                                        Invoice #{record.id}
+                                    </Typography>
+                                    <Typography
+                                        variant="caption"
+                                        color="text.secondary"
+                                        sx={{ fontFamily: "monospace" }}
+                                    >
+                                        User: {record.username}
+                                    </Typography>
+                                </Box>
+                                <StatusChip />
+                            </Box>
 
+                            {/* Summary */}
+                            <Box
+                                sx={{
+                                    bgcolor: (theme) =>
+                                        alpha(
+                                            theme.palette.grey[500],
+                                            0.05
+                                        ),
+                                    p: 1.5,
+                                    borderRadius: 2,
+                                    mb: 2,
+                                }}
+                            >
+                                <Box
+                                    display="flex"
+                                    justifyContent="space-between"
+                                    mb={1}
+                                >
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                    >
+                                        Usage:
+                                    </Typography>
+                                    <Typography
+                                        variant="body2"
+                                        sx={{ fontWeight: "bold" }}
+                                    >
+                                        {Number(record.usage_gb).toFixed(2)} GB
+                                    </Typography>
+                                </Box>
+                                <Box
+                                    display="flex"
+                                    justifyContent="space-between"
+                                    mb={1}
+                                >
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                    >
+                                        Amount:
+                                    </Typography>
+                                    <Typography
+                                        variant="body2"
+                                        sx={{
+                                            fontWeight: "bold",
+                                            color: "success.main",
+                                        }}
+                                    >
+                                        ${Number(record.amount).toFixed(2)}
+                                    </Typography>
+                                </Box>
+                                <Box
+                                    display="flex"
+                                    justifyContent="space-between"
+                                >
+                                    <Typography
+                                        variant="body2"
+                                        color="text.secondary"
+                                    >
+                                        Issued:
+                                    </Typography>
+                                    <Typography
+                                        variant="body2"
+                                        sx={{ fontFamily: "monospace" }}
+                                    >
+                                        {new Date(
+                                            record.issue_date
+                                        ).toLocaleDateString()}
+                                    </Typography>
+                                </Box>
+                            </Box>
+                        </CardContent>
+
+                        {/* Action buttons – **no print button** */}
+                        <CardActions
+                            sx={{
+                                justifyContent: "flex-end",
+                                borderTop: (theme) =>
+                                    `1px solid ${theme.palette.divider}`,
+                                px: 2,
+                                py: 1.5,
+                                gap: 1,
+                            }}
+                        >
+                            <Box onClick={(e) => e.stopPropagation()}>
+                                <PayIconButton />
+                            </Box>
+
+                            <Box onClick={(e) => e.stopPropagation()}>
+                                <WhatsAppListButton />
+                            </Box>
+                        </CardActions>
+                    </Card>
+                </RecordContextProvider>
+            ))}
+        </Box>
+    );
+};
+
+/* -------------------------------------------------------------------------- */
+/*  LIST VIEW                                                                */
+/* -------------------------------------------------------------------------- */
+export const InvoiceList = () => {
+    const isMobile = useMediaQuery(
+        (theme: Theme) => theme.breakpoints.down("sm")
+    );
+
+    return (
+        <List sort={{ field: "id", order: "DESC" }}>
+            {isMobile ? (
+                <InvoiceGrid />
+            ) : (
+                <Datagrid rowClick="show">
+                    <TextField source="id" />
+                    <TextField source="username" />
+                    <NumberField
+                        source="usage_gb"
+                        options={{ maximumFractionDigits: 2 }}
+                    />
+                    <NumberField
+                        source="amount"
+                        options={{ style: "currency", currency: "USD" }}
+                    />
+                    <StatusChip label="Status" />
+                    <DateField source="issue_date" />
+                    <PayButton />
+                    <WhatsAppListButton />
+                </Datagrid>
+            )}
+        </List>
+    );
+};
+
+/* -------------------------------------------------------------------------- */
+/*  SHOW VIEW – toolbar (hamburger menu, no back, no print)                 */
+/* -------------------------------------------------------------------------- */
+const InvoiceShowActions = () => {
+    const [, setSidebarOpen] = useSidebarState();
+
+    return (
+        <TopToolbar
+            sx={{
+                justifyContent: "space-between",
+                flexWrap: "wrap",
+                gap: 1,
+            }}
+        >
+            {/* Hamburger menu – opens the sidebar */}
+            <IconButton onClick={() => setSidebarOpen(true)} size="large">
+                <MenuIcon />
+            </IconButton>
+
+            {/* WhatsApp share (PDF attached) */}
+            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                <WhatsAppShareButton />
+            </Box>
+        </TopToolbar>
+    );
+};
+
+/* -------------------------------------------------------------------------- */
+/*  SHOW VIEW – main layout                                                */
+/* -------------------------------------------------------------------------- */
 export const InvoiceShow = () => {
+    const isMobile = useMediaQuery(
+        (theme: Theme) => theme.breakpoints.down("sm")
+    );
+
     return (
         <Show actions={<InvoiceShowActions />}>
             <PrintStyles />
             <SimpleShowLayout>
-                <Box sx={{ p: 0.5 }} className="invoice-content">
-                    <Stack spacing={0.5} sx={{ height: '100%' }}>
-                        {/* Header Summary Card - Compact */}
-                        <Card elevation={2} sx={{
-                            borderRadius: 1,
-                            background: 'linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)',
-                            color: 'white',
-                            flexShrink: 0
-                        }}>
-                            <CardContent sx={{ p: 1, py: 1.5 }}>
-                                <Box display="flex" justifyContent="space-between" alignItems="center">
+                <Box sx={{ width: "100%" }} className="invoice-content">
+                    <Stack
+                        spacing={isMobile ? 1 : 2}
+                        sx={{ height: "100%" }}
+                    >
+                        {/* -------------------------------------------------- */}
+                        {/* Header summary card                               */}
+                        {/* -------------------------------------------------- */}
+                        <Card
+                            elevation={3}
+                            sx={{
+                                borderRadius: 2,
+                                background:
+                                    "linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%)",
+                                color: "white",
+                                flexShrink: 0,
+                                mx: isMobile ? 0 : 2,
+                                mt: isMobile ? 0 : 2,
+                            }}
+                        >
+                            <CardContent sx={{ p: isMobile ? 2 : 3 }}>
+                                <Box
+                                    display="flex"
+                                    justifyContent="space-between"
+                                    alignItems="center"
+                                >
                                     <Box>
-                                        <Typography variant="h6" fontWeight={700} sx={{ fontSize: '1.1rem' }}>
+                                        <Typography
+                                            variant={isMobile ? "h6" : "h5"}
+                                            fontWeight={700}
+                                        >
                                             INVOICE
                                         </Typography>
-                                        <Typography variant="body2" sx={{ opacity: 0.9, fontSize: '0.85rem' }}>
-                                            User: <TextField source="username" sx={{ fontWeight: 600, color: 'inherit' }} />
+                                        <Typography
+                                            variant="body2"
+                                            sx={{ opacity: 0.9, mt: 0.5 }}
+                                        >
+                                            User:{" "}
+                                            <TextField
+                                                source="username"
+                                                sx={{
+                                                    fontWeight: 600,
+                                                    color: "inherit",
+                                                }}
+                                            />
                                         </Typography>
                                     </Box>
+
                                     <Box textAlign="right">
                                         <StatusChip />
-                                        <Typography variant="h6" fontWeight={800} sx={{ mt: 0.5, fontSize: '1.25rem' }}>
-                                            <NumberField source="amount" options={{ style: 'currency', currency: 'USD' }} />
+                                        <Typography
+                                            variant={isMobile ? "h5" : "h4"}
+                                            fontWeight={800}
+                                            sx={{ mt: 1 }}
+                                        >
+                                            <NumberField
+                                                source="amount"
+                                                options={{
+                                                    style: "currency",
+                                                    currency: "USD",
+                                                }}
+                                            />
+                                        </Typography>
+                                        <Typography
+                                            variant="caption"
+                                            sx={{
+                                                opacity: 0.8,
+                                                display: "block",
+                                            }}
+                                        >
+                                            Total Due
                                         </Typography>
                                     </Box>
                                 </Box>
                             </CardContent>
                         </Card>
 
-                        <Box display="grid" gridTemplateColumns={{ xs: '1fr', md: '2fr 1fr' }} gap={0.5} sx={{ flex: 1, minHeight: 0 }}>
-                            <Stack spacing={0.5}>
-                                {/* Billing Details Card - Compact */}
-                                <Card elevation={1} sx={{ borderRadius: 1 }}>
-                                    <CardContent sx={{ p: 1, py: 0.75 }}>
-                                        <Typography variant="subtitle1" fontWeight={600} sx={{ fontSize: '0.95rem', mb: 0.5, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                            <ReceiptIcon color="primary" sx={{ fontSize: 18 }} /> Billing Breakdown
+                        {/* -------------------------------------------------- */}
+                        {/* Main two‑column grid                           */}
+                        {/* -------------------------------------------------- */}
+                        <Box
+                            display="grid"
+                            gridTemplateColumns={{
+                                xs: "1fr",
+                                md: "2fr 1fr",
+                            }}
+                            gap={isMobile ? 1 : 2}
+                            sx={{
+                                flex: 1,
+                                minHeight: 0,
+                                px: isMobile ? 0 : 2,
+                            }}
+                        >
+                            {/* -------------------- LEFT COLUMN -------------------- */}
+                            <Stack spacing={isMobile ? 1 : 2}>
+                                {/* Billing breakdown */}
+                                <Card elevation={2} sx={{ borderRadius: 2 }}>
+                                    <CardContent sx={{ p: isMobile ? 2 : 3 }}>
+                                        <Typography
+                                            variant="h6"
+                                            fontWeight={600}
+                                            gutterBottom
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                                mb: 2,
+                                            }}
+                                        >
+                                            <ReceiptIcon color="primary" />
+                                            Billing Breakdown
                                         </Typography>
-                                        <Box sx={{ fontSize: '0.85rem' }}>
-                                            <Box display="flex" justifyContent="space-between" py={0.25} borderBottom="1px solid #f0f0f0">
-                                                <Typography color="textSecondary" sx={{ fontSize: '0.85rem' }}>Base Monthly Fee</Typography>
-                                                <Typography fontWeight={600} sx={{ fontSize: '0.85rem' }}><NumberField source="base_amount" options={{ style: 'currency', currency: 'USD' }} /></Typography>
+
+                                        <Box>
+                                            {/* Base monthly fee */}
+                                            <Box
+                                                display="flex"
+                                                justifyContent="space-between"
+                                                py={1}
+                                                borderBottom="1px solid #f0f0f0"
+                                            >
+                                                <Typography color="textSecondary">
+                                                    Base Monthly Fee
+                                                </Typography>
+                                                <Typography fontWeight={600}>
+                                                    <NumberField
+                                                        source="base_amount"
+                                                        options={{
+                                                            style: "currency",
+                                                            currency: "USD",
+                                                        }}
+                                                    />
+                                                </Typography>
                                             </Box>
-                                            <Box display="flex" justifyContent="space-between" py={0.25} borderBottom="1px solid #f0f0f0">
-                                                <Typography color="textSecondary" sx={{ fontSize: '0.85rem' }}>Data Usage</Typography>
-                                                <Typography fontWeight={600} sx={{ fontSize: '0.85rem' }}><NumberField source="usage_gb" options={{ maximumFractionDigits: 2 }} /> GB</Typography>
+
+                                            {/* Data usage */}
+                                            <Box
+                                                display="flex"
+                                                justifyContent="space-between"
+                                                py={1}
+                                                borderBottom="1px solid #f0f0f0"
+                                            >
+                                                <Typography color="textSecondary">
+                                                    Data Usage
+                                                </Typography>
+                                                <Typography fontWeight={600}>
+                                                    <NumberField
+                                                        source="usage_gb"
+                                                        options={{
+                                                            maximumFractionDigits: 2,
+                                                        }}
+                                                    />{" "}
+                                                    GB
+                                                </Typography>
                                             </Box>
-                                            <Box display="flex" justifyContent="space-between" py={0.25} borderBottom="1px solid #f0f0f0">
-                                                <Typography color="textSecondary" sx={{ fontSize: '0.85rem' }}>Price per GB</Typography>
-                                                <Typography fontWeight={600} sx={{ fontSize: '0.85rem' }}><NumberField source="price_per_gb" options={{ style: 'currency', currency: 'USD' }} /></Typography>
+
+                                            {/* Price per GB */}
+                                            <Box
+                                                display="flex"
+                                                justifyContent="space-between"
+                                                py={1}
+                                                borderBottom="1px solid #f0f0f0"
+                                            >
+                                                <Typography color="textSecondary">
+                                                    Price per GB
+                                                </Typography>
+                                                <Typography fontWeight={600}>
+                                                    <NumberField
+                                                        source="price_per_gb"
+                                                        options={{
+                                                            style: "currency",
+                                                            currency: "USD",
+                                                        }}
+                                                    />
+                                                </Typography>
                                             </Box>
-                                            <Box display="flex" justifyContent="space-between" py={0.25} borderBottom="1px solid #f0f0f0" bgcolor="rgba(59, 130, 246, 0.04)" px={0.5}>
-                                                <Typography fontWeight={600} color="primary" sx={{ fontSize: '0.85rem' }}>Usage Charge</Typography>
-                                                <FunctionField render={(record) => {
-                                                    const consumption = (record.usage_gb || 0) * (record.price_per_gb || 0);
-                                                    return <Typography fontWeight={700} color="primary" sx={{ fontSize: '0.85rem' }}>{consumption.toLocaleString('en-US', { style: 'currency', currency: 'USD' })}</Typography>;
-                                                }} />
+
+                                            {/* Usage charge – highlighted */}
+                                            <Box
+                                                display="flex"
+                                                justifyContent="space-between"
+                                                py={1}
+                                                borderBottom="1px solid #f0f0f0"
+                                                bgcolor="rgba(59, 130, 246, 0.04)"
+                                                px={1}
+                                            >
+                                                <Typography
+                                                    fontWeight={600}
+                                                    color="primary"
+                                                >
+                                                    Usage Charge
+                                                </Typography>
+                                                <FunctionField
+                                                    render={(record) => {
+                                                        const consumption =
+                                                            (record.usage_gb ||
+                                                                0) *
+                                                            (record.price_per_gb ||
+                                                                0);
+                                                        return (
+                                                            <Typography
+                                                                fontWeight={700}
+                                                                color="primary"
+                                                            >
+                                                                {consumption.toLocaleString(
+                                                                    "en-US",
+                                                                    {
+                                                                        style: "currency",
+                                                                        currency:
+                                                                            "USD",
+                                                                    }
+                                                                )}
+                                                            </Typography>
+                                                        );
+                                                    }}
+                                                />
                                             </Box>
-                                            <Box display="flex" justifyContent="space-between" py={0.5}>
-                                                <Typography fontWeight={700} sx={{ fontSize: '0.95rem' }}>Total</Typography>
-                                                <Typography fontWeight={800} color="primary.main" sx={{ fontSize: '0.95rem' }}>
-                                                    <NumberField source="amount" options={{ style: 'currency', currency: 'USD' }} />
+
+                                            {/* Total amount */}
+                                            <Box
+                                                display="flex"
+                                                justifyContent="space-between"
+                                                py={1.5}
+                                            >
+                                                <Typography
+                                                    variant="h6"
+                                                    fontWeight={700}
+                                                >
+                                                    Total Amount
+                                                </Typography>
+                                                <Typography
+                                                    variant="h6"
+                                                    fontWeight={800}
+                                                    color="primary.main"
+                                                >
+                                                    <NumberField
+                                                        source="amount"
+                                                        options={{
+                                                            style: "currency",
+                                                            currency: "USD",
+                                                        }}
+                                                    />
                                                 </Typography>
                                             </Box>
                                         </Box>
                                     </CardContent>
                                 </Card>
 
-                                {/* Usage Statistics - Compact */}
-                                <Card elevation={1} sx={{ borderRadius: 1 }}>
-                                    <CardContent sx={{ p: 1, py: 0.75 }}>
-                                        <Typography variant="subtitle1" fontWeight={600} sx={{ fontSize: '0.95rem', mb: 0.5, display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                            <PaymentsIcon color="primary" sx={{ fontSize: 18 }} /> Usage Stats
+                                {/* Usage statistics */}
+                                <Card elevation={2} sx={{ borderRadius: 2 }}>
+                                    <CardContent sx={{ p: isMobile ? 2 : 3 }}>
+                                        <Typography
+                                            variant="h6"
+                                            fontWeight={600}
+                                            gutterBottom
+                                            sx={{
+                                                display: "flex",
+                                                alignItems: "center",
+                                                gap: 1,
+                                                mb: 2,
+                                            }}
+                                        >
+                                            <PaymentsIcon color="primary" />
+                                            Usage Statistics
                                         </Typography>
-                                        <Box display="grid" gridTemplateColumns="1fr 1fr" gap={0.5}>
-                                            <Box px={0.5} py={0.25} bgcolor="#f8fafc" borderRadius={1}>
-                                                <Typography variant="caption" color="textSecondary" display="block" sx={{ fontSize: '0.75rem' }}>Sessions</Typography>
-                                                <Typography fontWeight={700} sx={{ fontSize: '0.9rem' }}><NumberField source="session_count" /></Typography>
+
+                                        <Box
+                                            display="grid"
+                                            gridTemplateColumns="1fr 1fr"
+                                            gap={2}
+                                        >
+                                            <Box
+                                                p={2}
+                                                bgcolor="#f8fafc"
+                                                borderRadius={2}
+                                            >
+                                                <Typography
+                                                    variant="body2"
+                                                    color="textSecondary"
+                                                >
+                                                    Total Sessions
+                                                </Typography>
+                                                <Typography
+                                                    variant="h5"
+                                                    fontWeight={700}
+                                                >
+                                                    <NumberField
+                                                        source="session_count"
+                                                    />
+                                                </Typography>
                                             </Box>
-                                            <Box px={0.5} py={0.25} bgcolor="#f8fafc" borderRadius={1}>
-                                                <Typography variant="caption" color="textSecondary" display="block" sx={{ fontSize: '0.75rem' }}>Data Used</Typography>
-                                                <Typography fontWeight={700} sx={{ fontSize: '0.9rem' }}><NumberField source="usage_gb" options={{ maximumFractionDigits: 2 }} /> GB</Typography>
+
+                                            <Box
+                                                p={2}
+                                                bgcolor="#f8fafc"
+                                                borderRadius={2}
+                                            >
+                                                <Typography
+                                                    variant="body2"
+                                                    color="textSecondary"
+                                                >
+                                                    Data Consumed
+                                                </Typography>
+                                                <Typography
+                                                    variant="h5"
+                                                    fontWeight={700}
+                                                >
+                                                    <NumberField
+                                                        source="usage_gb"
+                                                        options={{
+                                                            maximumFractionDigits: 2,
+                                                        }}
+                                                    />{" "}
+                                                    GB
+                                                </Typography>
                                             </Box>
                                         </Box>
                                     </CardContent>
                                 </Card>
                             </Stack>
 
-                            <Stack spacing={0.5}>
-                                {/* Dates and References - Compact */}
-                                <Card elevation={1} sx={{ borderRadius: 1 }}>
-                                    <CardContent sx={{ p: 1, py: 0.75 }}>
-                                        <Typography variant="body2" color="textSecondary" sx={{ fontSize: '0.8rem' }}>Invoice Ref</Typography>
-                                        <Typography fontWeight={600} sx={{ fontSize: '0.95rem' }} gutterBottom>#<TextField source="id" /></Typography>
+                            {/* -------------------- RIGHT COLUMN -------------------- */}
+                            <Stack spacing={isMobile ? 1 : 2}>
+                                {/* Dates & references */}
+                                <Card elevation={2} sx={{ borderRadius: 2 }}>
+                                    <CardContent sx={{ p: isMobile ? 2 : 3 }}>
+                                        <Typography
+                                            variant="subtitle2"
+                                            color="textSecondary"
+                                            gutterBottom
+                                        >
+                                            Invoice Reference
+                                        </Typography>
+                                        <Typography
+                                            variant="h6"
+                                            fontWeight={600}
+                                            gutterBottom
+                                        >
+                                            #<TextField source="id" />
+                                        </Typography>
 
-                                        <Box mt={0.25}>
-                                            <Typography variant="caption" color="textSecondary" display="block" sx={{ fontSize: '0.75rem' }}>Issue Date</Typography>
-                                            <Typography sx={{ fontSize: '0.85rem' }} fontWeight={500}><DateField source="issue_date" showTime /></Typography>
-                                        </Box>
-
-                                        <Box mt={0.25} p={0.5} borderRadius={1} bgcolor={alpha('#ef4444', 0.05)} border={`1px solid ${alpha('#ef4444', 0.1)}`}>
-                                            <Typography variant="caption" color="error" display="block" fontWeight={600} sx={{ fontSize: '0.75rem' }}>Due Date</Typography>
-                                            <Typography sx={{ fontSize: '0.85rem' }} fontWeight={700} color="error.main"><DateField source="due_date" /></Typography>
-                                        </Box>
-
-                                        <Box mt={0.25}>
-                                            <Typography variant="caption" color="textSecondary" display="block" sx={{ fontSize: '0.75rem' }}>Billing Period</Typography>
-                                            <Typography sx={{ fontSize: '0.85rem' }} fontWeight={500}>
-                                                <DateField source="billing_period_start" /> - <DateField source="billing_period_end" />
+                                        {/* Issue date */}
+                                        <Box mt={1}>
+                                            <Typography
+                                                variant="caption"
+                                                color="textSecondary"
+                                                display="block"
+                                            >
+                                                Issue Date
+                                            </Typography>
+                                            <Typography fontWeight={500}>
+                                                <DateField
+                                                    source="issue_date"
+                                                    showTime
+                                                />
                                             </Typography>
                                         </Box>
 
+                                        {/* Due date – highlighted */}
+                                        <Box
+                                            mt={2}
+                                            p={2}
+                                            borderRadius={2}
+                                            bgcolor={alpha("#ef4444", 0.05)}
+                                            border={`1px solid ${alpha(
+                                                "#ef4444",
+                                                0.2
+                                            )}`}
+                                        >
+                                            <Typography
+                                                variant="body2"
+                                                color="error"
+                                                display="block"
+                                                fontWeight={600}
+                                            >
+                                                Due Date
+                                            </Typography>
+                                            <Typography
+                                                variant="h6"
+                                                fontWeight={700}
+                                                color="error.main"
+                                            >
+                                                <DateField source="due_date" />
+                                            </Typography>
+                                        </Box>
+
+                                        {/* Billing period */}
+                                        <Box mt={2}>
+                                            <Typography
+                                                variant="caption"
+                                                color="textSecondary"
+                                                display="block"
+                                            >
+                                                Billing Period
+                                            </Typography>
+                                            <Typography fontWeight={500}>
+                                                <DateField
+                                                    source="billing_period_start"
+                                                />{" "}
+                                                -{" "}
+                                                <DateField
+                                                    source="billing_period_end"
+                                                />
+                                            </Typography>
+                                        </Box>
+
+                                        {/* Paid‑at (optional) */}
                                         {useRecordContext()?.paid_at && (
-                                            <Box mt={0.25} p={0.5} borderRadius={1} bgcolor={alpha('#10b981', 0.05)} border={`1px solid ${alpha('#10b981', 0.1)}`}>
-                                                <Typography variant="caption" color="success.main" display="block" fontWeight={600} sx={{ fontSize: '0.75rem' }}>Paid On</Typography>
-                                                <Typography sx={{ fontSize: '0.85rem' }} fontWeight={700} color="success.main"><DateField source="paid_at" showTime /></Typography>
+                                            <Box
+                                                mt={2}
+                                                p={2}
+                                                borderRadius={2}
+                                                bgcolor={alpha("#10b981", 0.05)}
+                                                border={`1px solid ${alpha(
+                                                    "#10b981",
+                                                    0.2
+                                                )}`}
+                                            >
+                                                <Typography
+                                                    variant="body2"
+                                                    color="success.main"
+                                                    display="block"
+                                                    fontWeight={600}
+                                                >
+                                                    Paid On
+                                                </Typography>
+                                                <Typography
+                                                    variant="h6"
+                                                    fontWeight={700}
+                                                    color="success.main"
+                                                >
+                                                    <DateField
+                                                        source="paid_at"
+                                                        showTime
+                                                    />
+                                                </Typography>
                                             </Box>
                                         )}
                                     </CardContent>
                                 </Card>
 
-                                {/* Actions Card - No Print */}
-                                <Card elevation={1} sx={{ borderRadius: 1, bgcolor: '#f1f5f9' }} className="no-print">
-                                    <CardContent sx={{ p: 1 }}>
-                                        <Typography variant="subtitle2" gutterBottom sx={{ fontSize: '0.85rem' }}>Actions</Typography>
-                                        <Box display="flex" flexDirection="column" gap={0.5}>
-                                            <PayButton />
-                                            <Button
-                                                label="Print"
-                                                onClick={() => window.print()}
-                                                variant="outlined"
-                                                color="primary"
-                                                startIcon={<PrintIcon />}
+                                {/* ------------------- QUICK ACTIONS ------------------- */}
+                                <Card
+                                    elevation={3}
+                                    sx={{
+                                        borderRadius: 2,
+                                        bgcolor: "#ffffff",
+                                        border: "1px solid",
+                                        borderColor: "grey.200",
+                                    }}
+                                    className="no-print"
+                                >
+                                    <CardContent
+                                        sx={{ p: isMobile ? 2 : 3 }}
+                                    >
+                                        <Typography
+                                            variant="h6"
+                                            gutterBottom
+                                            sx={{
+                                                fontWeight: 600,
+                                                mb: 2,
+                                            }}
+                                        >
+                                            Quick Actions
+                                        </Typography>
+
+                                        <Box
+                                            display="flex"
+                                            flexDirection="column"
+                                            gap={1.5}
+                                        >
+                                            {/* Pay */}
+                                            <PayButton
+                                                size={
+                                                    isMobile ? "medium" : "small"
+                                                }
+                                                fullWidth={isMobile}
                                             />
-                                            <WhatsAppShareButton />
+
+                                            {/* WhatsApp (PDF attached) */}
+                                            <WhatsAppShareButton
+                                                fullWidth={isMobile}
+                                            />
                                         </Box>
                                     </CardContent>
                                 </Card>
                             </Stack>
                         </Box>
 
-                        {/* Remark Section - No Print */}
-                        <Card elevation={0} sx={{ borderRadius: 1, bgcolor: '#f8fafc', border: '1px dashed #cbd5e1', flexShrink: 0 }} className="no-print">
-                            <CardContent sx={{ p: 1, py: 0.75 }}>
-                                <Typography variant="subtitle2" color="textSecondary" sx={{ fontSize: '0.8rem' }}>
-                                    <NoteIcon sx={{ fontSize: 14, verticalAlign: 'middle', mr: 0.5 }} /> Remarks
+                        {/* ------------------- Remarks (non‑print) ------------------- */}
+                        <Card
+                            elevation={1}
+                            sx={{
+                                borderRadius: 2,
+                                bgcolor: "#ffffff",
+                                border: "1px dashed #cbd5e1",
+                                flexShrink: 0,
+                                mx: isMobile ? 0 : 2,
+                                mb: isMobile ? 0 : 2,
+                            }}
+                            className="no-print"
+                        >
+                            <CardContent sx={{ p: isMobile ? 2 : 3 }}>
+                                <Typography
+                                    variant="subtitle1"
+                                    color="textSecondary"
+                                    gutterBottom
+                                >
+                                    <NoteIcon
+                                        sx={{
+                                            fontSize: 20,
+                                            verticalAlign: "middle",
+                                            mr: 0.5,
+                                        }}
+                                    />{" "}
+                                    Internal Remarks
                                 </Typography>
-                                <Typography sx={{ fontSize: '0.8rem' }}>
-                                    <TextField source="remark" emptyText="No remarks" />
+                                <Typography variant="body1">
+                                    <TextField
+                                        source="remark"
+                                        emptyText="No additional remarks"
+                                    />
                                 </Typography>
                             </CardContent>
                         </Card>
