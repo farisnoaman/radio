@@ -55,13 +55,15 @@ export const CustomLayout = ({ sx, children, ...rest }: CustomLayoutProps & { ch
           maxWidth: 'calc(100% - 130px)',
           pointerEvents: 'none'
         }}>
-          <Typography variant="h6" sx={{
+          <Typography component="div" sx={{
             fontWeight: 'bold',
             whiteSpace: 'nowrap',
             overflow: 'hidden',
             textOverflow: 'ellipsis',
             pointerEvents: 'auto',
-            color: 'text.primary'
+            color: 'text.primary',
+            fontSize: '1.25rem',
+            lineHeight: 1.6
           }}>
             <TitlePortal />
           </Typography>

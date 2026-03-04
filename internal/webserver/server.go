@@ -38,6 +38,8 @@ var JwtSkipPrefix = []string{
 	"/realip",
 	apiBasePath + "/auth/login",
 	apiBasePath + "/auth/refresh",
+	apiBasePath + "/dashboard/ws",
+	"/dashboard/ws",
 }
 
 var server *AdminServer
@@ -338,8 +340,9 @@ func jwtSkipFunc() func(c echo.Context) bool {
 			return true
 		}
 
+		requestPath := c.Request().URL.Path
 		for _, prefix := range JwtSkipPrefix {
-			if strings.HasPrefix(c.Path(), prefix) {
+			if strings.HasPrefix(requestPath, prefix) {
 				return true
 			}
 		}

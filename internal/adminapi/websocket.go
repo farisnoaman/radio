@@ -7,7 +7,7 @@ import (
 )
 
 func registerWebsocketRoutes() {
-	webserver.ApiGET("/ws/dashboard", DashboardWebSocket)
+	webserver.GET("/api/v1/dashboard/ws", DashboardWebSocket)
 }
 
 func DashboardWebSocket(c echo.Context) error {

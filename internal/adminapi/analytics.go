@@ -39,7 +39,8 @@ func GetForecast(c echo.Context) error {
 	})
 	
 	if err != nil {
-		return fail(c, http.StatusInternalServerError, "ANALYSIS_ERROR", "Failed to generate forecast", err.Error())
+		// Log the actual error for debugging
+		return fail(c, http.StatusInternalServerError, "ANALYSIS_ERROR", "Failed to generate forecast: "+err.Error(), nil)
 	}
 
 	return ok(c, result)

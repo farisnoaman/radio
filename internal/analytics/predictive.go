@@ -2,6 +2,7 @@ package analytics
 
 import (
 	"errors"
+	"log"
 	"time"
 
 	"gorm.io/gorm"
@@ -38,6 +39,8 @@ func NewPredictiveEngine(db *gorm.DB) *PredictiveEngine {
 
 // Forecast generates a prediction based on historical data
 func (e *PredictiveEngine) Forecast(req PredictionRequest) (*PredictionResult, error) {
+	log.Printf("[analytics] Forecast request: metric=%s, days=%d, future=%d", req.Metric, req.Days, req.Future)
+	
 	var history []DataPoint
 	var err error
 
@@ -51,8 +54,11 @@ func (e *PredictiveEngine) Forecast(req PredictionRequest) (*PredictionResult, e
 
 
 	if err != nil {
+		log.Printf("[analytics] Error getting history: %v", err)
 		return nil, err
 	}
+
+	log.Printf("[analytics] Got %d history points", len(history))
 
 	if len(history) < 2 {
 		return &PredictionResult{
@@ -78,65 +84,96 @@ func (e *PredictiveEngine) Forecast(req PredictionRequest) (*PredictionResult, e
 
 func (e *PredictiveEngine) getTrafficHistory(days int) ([]DataPoint, error) {
 	startDate := time.Now().AddDate(0, 0, -days)
+	
+	// Use string for date because strftime returns "YYYY-MM-DD"
 	var results []struct {
-		Date  time.Time
+		Date  string
 		Total float64
 	}
 
-	// Group by date and sum traffic
-	// Using generic SQL compatible with SQLite/PG for date grouping
-	err := e.db.Table("tr_radius_accountings").
-		Select("date(acct_start_time) as date, sum(acct_input_octets + acct_output_octets) as total").
+	// Try with new column names (acct_input_total) first
+	err := e.db.Table("radius_accounting").
+		Select("strftime('%Y-%m-%d', acct_start_time, 'localtime') as date, SUM(acct_input_total + acct_output_total) as total").
 		Where("acct_start_time > ?", startDate).
-		Group("date").
-		Order("date").
+		Group("strftime('%Y-%m-%d', acct_start_time, 'localtime')").
+		Order("strftime('%Y-%m-%d', acct_start_time, 'localtime')").
 		Scan(&results).Error
 
 	if err != nil {
-		return nil, err
+		log.Printf("[analytics] Error with acct_input_total: %v, trying fallback...", err)
+		// Fallback: try with old column name pattern
+		err = e.db.Table("radius_accounting").
+			Select("strftime('%Y-%m-%d', acct_start_time, 'localtime') as date, SUM(AcctInputTotal + AcctOutputTotal) as total").
+			Where("acct_start_time > ?", startDate).
+			Group("strftime('%Y-%m-%d', acct_start_time, 'localtime')").
+			Order("strftime('%Y-%m-%d', acct_start_time, 'localtime')").
+			Scan(&results).Error
 	}
 
-	dataPoints := make([]DataPoint, len(results))
-	for i, r := range results {
-		dataPoints[i] = DataPoint{
-			Timestamp: r.Date,
-			Value:     r.Total / 1024 / 1024, // MB
+	if err != nil {
+		log.Printf("[analytics] Both column attempts failed: %v", err)
+		// Return empty data instead of error - chart will just show no data
+		return []DataPoint{}, nil
+	}
+
+	dataPoints := make([]DataPoint, 0, len(results))
+	for _, r := range results {
+		t, err := time.Parse("2006-01-02", r.Date)
+		if err != nil {
+			log.Printf("[analytics] Warning: Failed to parse date %s: %v", r.Date, err)
+			continue
 		}
+		dataPoints = append(dataPoints, DataPoint{
+			Timestamp: t,
+			Value:     r.Total / 1024 / 1024, // MB
+		})
 	}
 	return dataPoints, nil
 }
 
 func (e *PredictiveEngine) getUserHistory(days int) ([]DataPoint, error) {
 	startDate := time.Now().AddDate(0, 0, -days)
+	
+	// Use string for date because strftime returns "YYYY-MM-DD"
 	var results []struct {
-		Date  time.Time
+		Date  string
 		Count int64
 	}
 
-	err := e.db.Table("tr_radius_users").
-		Select("date(created_at) as date, count(*) as count").
+	err := e.db.Table("radius_user").
+		Select("strftime('%Y-%m-%d', created_at, 'localtime') as date, count(*) as count").
 		Where("created_at > ?", startDate).
-		Group("date").
-		Order("date").
+		Group("strftime('%Y-%m-%d', created_at, 'localtime')").
+		Order("strftime('%Y-%m-%d', created_at, 'localtime')").
 		Scan(&results).Error
 
 	if err != nil {
-		return nil, err
+		log.Printf("[analytics] Error getting user history: %v", err)
+		// Return empty data instead of error
+		return []DataPoint{}, nil
 	}
 
 	// We need cumulative count for user growth
 	var cumulative int64
 	
 	// Get initial count before startDate
-	e.db.Table("tr_radius_users").Where("created_at <= ?", startDate).Count(&cumulative)
+	if err := e.db.Table("radius_user").Where("created_at <= ?", startDate).Count(&cumulative).Error; err != nil {
+		log.Printf("[analytics] Warning: Failed to get initial user count: %v", err)
+		cumulative = 0
+	}
 
-	dataPoints := make([]DataPoint, len(results))
-	for i, r := range results {
+	dataPoints := make([]DataPoint, 0, len(results))
+	for _, r := range results {
 		cumulative += r.Count
-		dataPoints[i] = DataPoint{
-			Timestamp: r.Date,
-			Value:     float64(cumulative),
+		t, err := time.Parse("2006-01-02", r.Date)
+		if err != nil {
+			log.Printf("[analytics] Warning: Failed to parse date %s: %v", r.Date, err)
+			continue
 		}
+		dataPoints = append(dataPoints, DataPoint{
+			Timestamp: t,
+			Value:     float64(cumulative),
+		})
 	}
 	return dataPoints, nil
 }
@@ -160,7 +197,15 @@ func (e *PredictiveEngine) calculateLinearRegression(history []DataPoint, future
 		sumX2 += x * x
 	}
 
-	slope := (n*sumXY - sumX*sumY) / (n*sumX2 - sumX*sumX)
+	// Guard against division by zero (when all X values are identical)
+	denominator := n*sumX2 - sumX*sumX
+	var slope float64
+	if denominator == 0 {
+		log.Printf("[analytics] Warning: Division by zero in linear regression - all data points have same timestamp")
+		slope = 0
+	} else {
+		slope = (n*sumXY - sumX*sumY) / denominator
+	}
 	intercept := (sumY - slope*sumX) / n
 
 	var forecast []DataPoint
