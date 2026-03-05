@@ -52,6 +52,12 @@ func setupTestDB(t *testing.T) *gorm.DB {
 		&domain.VoucherSubscription{},
 		&domain.VoucherBundle{},
 		&domain.VoucherBundleItem{},
+		// Agent hierarchy & commission tables for new features
+		&domain.AgentHierarchy{},
+		&domain.CommissionLog{},
+		&domain.CommissionSummary{},
+		&domain.PayoutRequest{},
+		&domain.PayoutLog{},
 		&domain.Invoice{},
 	)
 	require.NoError(t, err)
@@ -139,6 +145,12 @@ func CreateTestAppContext(t *testing.T) (*gorm.DB, *echo.Echo, app.AppContext) {
 		&domain.VoucherSubscription{},
 		&domain.VoucherBundle{},
 		&domain.VoucherBundleItem{},
+		// Agent hierarchy & commission tables for new features
+		&domain.AgentHierarchy{},
+		&domain.CommissionLog{},
+		&domain.CommissionSummary{},
+		&domain.PayoutRequest{},
+		&domain.PayoutLog{},
 	)
 	require.NoError(t, err)
 

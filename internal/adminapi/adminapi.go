@@ -20,6 +20,7 @@ func Init(appCtx app.AppContext) {
 	registerProductRoutes()
 	registerVoucherRoutes()
 	registerAgentRoutes()
+	registerAgentHierarchyRoutes()
 	registerFinancialRoutes()
 	registerSystemLogRoutes()
 	registerBackupRoutes()

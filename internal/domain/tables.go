@@ -23,6 +23,10 @@ var Tables = []interface{}{
 	&VoucherSubscription{},
 	&VoucherBundle{},
 	&VoucherBundleItem{},
+	// Agent Hierarchy & Commissions
+	&AgentHierarchy{},
+	&CommissionLog{},
+	&CommissionSummary{},
 	// Lifecycle
 	&SessionLog{},
 	// Billing

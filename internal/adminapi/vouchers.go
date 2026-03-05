@@ -557,6 +557,17 @@ func RedeemVoucher(c echo.Context) error {
 
 	LogOperation(c, "redeem_voucher", fmt.Sprintf("Redeemed voucher %s for user %s", voucher.Code, user.Username))
 
+	// Calculate commissions for agent hierarchy
+	if batch.AgentID != 0 {
+		if err := CalculateCommissions(GetDB(c), batch.AgentID, voucher.ID, voucher.Price); err != nil {
+			// Log error but don't fail the redemption
+			zap.L().Error("failed to calculate commissions",
+				zap.Error(err),
+				zap.Int64("voucher_id", voucher.ID),
+				zap.Int64("agent_id", batch.AgentID))
+		}
+	}
+
 	return ok(c, user)
 }
 
