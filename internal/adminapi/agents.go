@@ -57,6 +57,36 @@ func ListAgents(c echo.Context) error {
 	return paged(c, agents, total, page, perPage)
 }
 
+// GetOneAgent retrieves a single agent by ID
+func GetOneAgent(c echo.Context) error {
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid agent ID", nil)
+	}
+
+	db := GetDB(c)
+	var agent struct {
+		domain.SysOpr
+		Balance float64 `json:"balance"`
+	}
+
+	// Query agent with wallet balance
+	err = db.Table("sys_opr").
+		Select("sys_opr.*, COALESCE(agent_wallet.balance, 0) as balance").
+		Joins("LEFT JOIN agent_wallet ON sys_opr.id = agent_wallet.agent_id").
+		Where("sys_opr.id = ? AND sys_opr.level = ?", id, "agent").
+		First(&agent).Error
+
+	if err != nil {
+		if err.Error() == "record not found" {
+			return fail(c, http.StatusNotFound, "AGENT_NOT_FOUND", "Agent not found", nil)
+		}
+		return fail(c, http.StatusInternalServerError, "QUERY_FAILED", "Failed to query agent", err.Error())
+	}
+
+	return ok(c, agent)
+}
+
 // AgentTopupRequest
 type AgentTopupRequest struct {
 	Amount float64 `json:"amount" validate:"required,gt=0"`
@@ -512,6 +542,7 @@ func CreateAgent(c echo.Context) error {
 
 func registerAgentRoutes() {
 	webserver.ApiGET("/agents", ListAgents)
+	webserver.ApiGET("/agents/:id", GetOneAgent)
 	webserver.ApiPOST("/agents", CreateAgent)
 	webserver.ApiPOST("/agents/:id/topup", TopupAgent)
 	webserver.ApiGET("/agents/:id/wallet", GetAgentWallet)
