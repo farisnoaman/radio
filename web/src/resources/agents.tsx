@@ -36,6 +36,9 @@ import {
 } from '@mui/material';
 import AddCardIcon from '@mui/icons-material/AddCard';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import VisibilityIcon from '@mui/icons-material/Visibility';
+import IconButton from '@mui/material/IconButton';
+import Tooltip from '@mui/material/Tooltip';
 import { httpClient } from '../utils/apiClient';
 
 const AgentListActions = () => (
@@ -291,26 +294,27 @@ const AgentGrid = () => {
                         <CardActions sx={{ 
                             justifyContent: 'flex-end', 
                             borderTop: theme => `1px solid ${theme.palette.divider}`, 
-                            px: 2.5, 
-                            py: 1.5,
-                            gap: 1,
+                            px: 2, 
+                            py: 1,
+                            gap: 0.5,
                             bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)'
                         }}>
-                            <Button 
-                                component={Link} 
-                                to={`/agents/${record.id}/show`}
-                                variant="contained"
-                                color="primary"
-                                sx={{ 
-                                    textTransform: 'none', 
-                                    borderRadius: 2,
-                                    px: 2.5,
-                                    py: 0.75
-                                }}
-                                startIcon={<span>🔍</span>}
-                            >
-                                View Details
-                            </Button>
+                            <Tooltip title="View Details">
+                                <IconButton 
+                                    component={Link} 
+                                    to={`/agents/${record.id}/show`}
+                                    size="small"
+                                    sx={{ 
+                                        bgcolor: 'primary.main',
+                                        color: 'white',
+                                        '&:hover': { bgcolor: 'primary.dark' },
+                                        width: 36,
+                                        height: 36
+                                    }}
+                                >
+                                    <VisibilityIcon sx={{ fontSize: 20 }} />
+                                </IconButton>
+                            </Tooltip>
                             <TopupButton />
                         </CardActions>
                     </Card>
