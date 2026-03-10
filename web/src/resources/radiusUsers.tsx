@@ -36,6 +36,7 @@ import {
   FunctionField,
   EditButton,
   Button,
+  RecordContextProvider,
 } from 'react-admin';
 import UserAnonymizeDialog from '../components/UserAnonymizeDialog';
 import NoAccountsIcon from '@mui/icons-material/NoAccounts';
@@ -44,6 +45,7 @@ import {
   Chip,
   Card,
   CardContent,
+  CardActions,
   Typography,
   IconButton,
   Tooltip,
@@ -938,6 +940,150 @@ const AnonymizeButton = () => {
   );
 };
 
+// ============ Mobile Card Grid Component ============
+
+const UserCardGrid = () => {
+  const { data, isLoading } = useListContext<RadiusUser>();
+  const theme = useTheme();
+  
+  if (isLoading || !data) return null;
+
+  return (
+    <Box 
+      display="grid" 
+      gridTemplateColumns={{ xs: '1fr', sm: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }} 
+      gap={2} 
+      p={0}
+      sx={{ bgcolor: theme.palette.mode === 'dark' ? 'transparent' : 'rgba(0,0,0,0.02)' }}
+    >
+      {data.map(record => (
+        <RecordContextProvider value={record} key={record.id}>
+          <Card 
+            elevation={2} 
+            sx={{ 
+              borderRadius: 2.5,
+              transition: 'all 0.3s ease',
+              '&:hover': { 
+                transform: 'translateY(-2px)',
+                boxShadow: 4 
+              }
+            }}
+          >
+            <CardContent sx={{ pb: 1, pt: 1.5, px: 2 }}>
+              {/* Header: Avatar, Username, Status */}
+              <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1.5}>
+                <Box display="flex" alignItems="center" gap={1.5}>
+                  <Avatar 
+                    sx={{ 
+                      bgcolor: record.status === 'enabled' ? 'primary.main' : 'grey.400', 
+                      width: 44, 
+                      height: 44, 
+                      fontSize: '1rem', 
+                      fontWeight: 'bold' 
+                    }}
+                  >
+                    {record.username?.charAt(0).toUpperCase() || 'U'}
+                  </Avatar>
+                  <Box minWidth={0}>
+                    <Typography 
+                      variant="subtitle1" 
+                      component="div" 
+                      sx={{ 
+                        fontWeight: 700, 
+                        lineHeight: 1.2,
+                        overflow: 'hidden', 
+                        textOverflow: 'ellipsis', 
+                        whiteSpace: 'nowrap',
+                        maxWidth: 150
+                      }}
+                    >
+                      {record.username || '-'}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      #{String(record.id).slice(-6)}
+                    </Typography>
+                  </Box>
+                </Box>
+                <StatusIndicator isEnabled={record.status === 'enabled'} />
+              </Box>
+
+              {/* User Info Section */}
+              <Box 
+                sx={{ 
+                  bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', 
+                  p: 1.5, 
+                  borderRadius: 1.5,
+                  mb: 1.5 
+                }}
+              >
+                <Box display="flex" alignItems="center" gap={1} mb={1}>
+                  <Typography variant="caption" color="text.secondary" sx={{ minWidth: 70 }}>
+                    Name:
+                  </Typography>
+                  <Typography variant="body2" fontWeight="bold" noWrap>
+                    {record.realname || '-'}
+                  </Typography>
+                </Box>
+                <Box display="flex" alignItems="center" gap={1} mb={1}>
+                  <Typography variant="caption" color="text.secondary" sx={{ minWidth: 70 }}>
+                    Email:
+                  </Typography>
+                  <Typography variant="body2" noWrap>
+                    {record.email || '-'}
+                  </Typography>
+                </Box>
+                <Box display="flex" alignItems="center" gap={1}>
+                  <Typography variant="caption" color="text.secondary" sx={{ minWidth: 70 }}>
+                    IP:
+                  </Typography>
+                  <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
+                    {record.ip_addr || '-'}
+                  </Typography>
+                </Box>
+              </Box>
+
+              {/* Stats Row */}
+              <Box display="flex" justifyContent="space-between" gap={1} mb={1}>
+                <Box flex={1}>
+                  <Typography variant="caption" color="text.secondary">Profile</Typography>
+                  <Typography variant="body2" fontWeight="bold" noWrap>
+                    {record.profile_id || '-'}
+                  </Typography>
+                </Box>
+                <Box flex={1}>
+                  <Typography variant="caption" color="text.secondary">Type</Typography>
+                  <Typography variant="body2" fontWeight="bold" noWrap>
+                    {record.billing_type || '-'}
+                  </Typography>
+                </Box>
+                <Box flex={1}>
+                  <Typography variant="caption" color="text.secondary">Expire</Typography>
+                  <Typography variant="body2" noWrap>
+                    {formatExpireTime(record.expire_time).text}
+                  </Typography>
+                </Box>
+              </Box>
+            </CardContent>
+
+            {/* Actions */}
+            <CardActions sx={{ 
+              justifyContent: 'flex-end', 
+              borderTop: theme => `1px solid ${theme.palette.divider}`, 
+              px: 1.5, 
+              py: 1,
+              gap: 0.5,
+              bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)'
+            }}>
+              <AnonymizeButton />
+              <EditButton label="" size="small" />
+            </CardActions>
+          </Card>
+        </RecordContextProvider>
+      ))}
+    </Box>
+  );
+};
+
 const RadiusUserListContent = () => {
   const translate = useTranslate();
   const theme = useTheme();
@@ -994,136 +1140,161 @@ const RadiusUserListContent = () => {
       {/* 活动筛选标签 */}
       <ActiveFilters fieldLabels={fieldLabels} valueLabels={{ status: statusLabels }} />
 
-      {/* 表格容器 */}
-      <Card
-        elevation={0}
-        sx={{
-          borderRadius: 2,
-          border: theme => `1px solid ${theme.palette.divider}`,
-          overflow: 'hidden',
-        }}
-      >
-        {/* 表格统计信息 */}
-        <Box
-          sx={{
-            px: 2,
-            py: 1,
-            bgcolor: theme =>
-              theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)',
-            borderBottom: theme => `1px solid ${theme.palette.divider}`,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <Typography variant="body2" color="text.secondary">
-            {translate('resources.radius/users.total_users', { _: 'Total %{count} users', count: total?.toLocaleString() || 0 })}
-          </Typography>
-        </Box>
-
-        {/* 响应式表格 */}
-        <Box
-          sx={{
-            overflowX: 'auto',
-            '& .RaDatagrid-root': {
-              minWidth: isMobile ? 1000 : 'auto',
-            },
-            '& .RaDatagrid-thead': {
-              position: 'sticky',
-              top: 0,
-              zIndex: 1,
+      {isMobile ? (
+        /* Mobile Card Grid View - with p={0} */
+        <Box p={0}>
+          {/* Statistics bar */}
+          <Box
+            sx={{
+              px: 2,
+              py: 1,
               bgcolor: theme =>
-                theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
-              '& th': {
-                fontWeight: 600,
-                fontSize: '0.8rem',
-                color: 'text.secondary',
-                textTransform: 'uppercase',
-                letterSpacing: '0.5px',
-                py: 1.5,
-                borderBottom: theme => `2px solid ${theme.palette.divider}`,
-              },
-            },
-            '& .RaDatagrid-tbody': {
-              '& tr': {
-                transition: 'background-color 0.15s ease',
-                cursor: 'pointer',
-                '&:hover': {
-                  bgcolor: theme =>
-                    theme.palette.mode === 'dark'
-                      ? 'rgba(255,255,255,0.05)'
-                      : 'rgba(25, 118, 210, 0.04)',
-                },
-                '&:nth-of-type(odd)': {
-                  bgcolor: theme =>
-                    theme.palette.mode === 'dark'
-                      ? 'rgba(255,255,255,0.01)'
-                      : 'rgba(0,0,0,0.01)',
-                },
-              },
-              '& td': {
-                py: 1.5,
-                fontSize: '0.875rem',
-                borderBottom: theme => `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-              },
-            },
+                theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)',
+              borderBottom: theme => `1px solid ${theme.palette.divider}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {translate('resources.radius/users.total_users', { _: 'Total %{count} users', count: total?.toLocaleString() || 0 })}
+            </Typography>
+          </Box>
+          <UserCardGrid />
+        </Box>
+      ) : (
+        /* Desktop Table View */
+        /* 表格容器 */
+        <Card
+          elevation={0}
+          sx={{
+            borderRadius: 2,
+            border: theme => `1px solid ${theme.palette.divider}`,
+            overflow: 'hidden',
           }}
         >
-          <Datagrid rowClick="show" bulkActionButtons={false}>
-            <FunctionField
-              source="username"
-              label={translate('resources.radius/users.fields.username', { _: '用户名' })}
-              render={() => <UsernameField />}
-            />
-            <TextField
-              source="realname"
-              label={translate('resources.radius/users.fields.realname', { _: '真实姓名' })}
-            />
-            <EmailField
-              source="email"
-              label={translate('resources.radius/users.fields.email', { _: '邮箱' })}
-            />
-            <TextField
-              source="mobile"
-              label={translate('resources.radius/users.fields.mobile', { _: '手机号' })}
-            />
-            <FunctionField
-              source="ip_addr"
-              label={translate('resources.radius/users.fields.ip_addr', { _: 'IP地址' })}
-              render={() => <IpAddressField />}
-            />
-            <ReferenceField
-              source="profile_id"
-              reference="radius/profiles"
-              label={translate('resources.radius/users.fields.profile_id', { _: '计费策略' })}
-            >
-              <TextField source="name" />
-            </ReferenceField>
-            <FunctionField
-              source="expire_time"
-              label={translate('resources.radius/users.fields.expire_time', { _: '过期时间' })}
-              render={() => <ExpireTimeField />}
-            />
-            <TextField
-              source="billing_type"
-              label={translate('resources.radius/users.fields.billing_type', { _: '计费类型' })}
-            />
-            <DateField
-              source="created_at"
-              label={translate('resources.radius/users.fields.created_at', { _: '创建时间' })}
-              showTime
-            />
-            <FunctionField
-              render={() => (
-                <Box sx={{ display: 'flex', gap: 1 }}>
-                  <EditButton />
-                  <AnonymizeButton />
-                </Box>
-              )}
-            />
-          </Datagrid>
-        </Box>
-      </Card>
+          {/* 表格统计信息 */}
+          <Box
+            sx={{
+              px: 2,
+              py: 1,
+              bgcolor: theme =>
+                theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.01)',
+              borderBottom: theme => `1px solid ${theme.palette.divider}`,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+            }}
+          >
+            <Typography variant="body2" color="text.secondary">
+              {translate('resources.radius/users.total_users', { _: 'Total %{count} users', count: total?.toLocaleString() || 0 })}
+            </Typography>
+          </Box>
+
+          {/* 响应式表格 */}
+          <Box
+            sx={{
+              overflowX: 'auto',
+              '& .RaDatagrid-root': {
+                minWidth: isMobile ? 1000 : 'auto',
+              },
+              '& .RaDatagrid-thead': {
+                position: 'sticky',
+                top: 0,
+                zIndex: 1,
+                bgcolor: theme =>
+                  theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.02)',
+                '& th': {
+                  fontWeight: 600,
+                  fontSize: '0.8rem',
+                  color: 'text.secondary',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.5px',
+                  py: 1.5,
+                  borderBottom: theme => `2px solid ${theme.palette.divider}`,
+                },
+              },
+              '& .RaDatagrid-tbody': {
+                '& tr': {
+                  transition: 'background-color 0.15s ease',
+                  cursor: 'pointer',
+                  '&:hover': {
+                    bgcolor: theme =>
+                      theme.palette.mode === 'dark'
+                        ? 'rgba(255,255,255,0.05)'
+                        : 'rgba(25, 118, 210, 0.04)',
+                  },
+                  '&:nth-of-type(odd)': {
+                    bgcolor: theme =>
+                      theme.palette.mode === 'dark'
+                        ? 'rgba(255,255,255,0.01)'
+                        : 'rgba(0,0,0,0.01)',
+                  },
+                },
+                '& td': {
+                  py: 1.5,
+                  fontSize: '0.875rem',
+                  borderBottom: theme => `1px solid ${alpha(theme.palette.divider, 0.5)}`,
+                },
+              },
+            }}
+          >
+            <Datagrid rowClick="show" bulkActionButtons={false}>
+              <FunctionField
+                source="username"
+                label={translate('resources.radius/users.fields.username', { _: '用户名' })}
+                render={() => <UsernameField />}
+              />
+              <TextField
+                source="realname"
+                label={translate('resources.radius/users.fields.realname', { _: '真实姓名' })}
+              />
+              <EmailField
+                source="email"
+                label={translate('resources.radius/users.fields.email', { _: '邮箱' })}
+              />
+              <TextField
+                source="mobile"
+                label={translate('resources.radius/users.fields.mobile', { _: '手机号' })}
+              />
+              <FunctionField
+                source="ip_addr"
+                label={translate('resources.radius/users.fields.ip_addr', { _: 'IP地址' })}
+                render={() => <IpAddressField />}
+              />
+              <ReferenceField
+                source="profile_id"
+                reference="radius/profiles"
+                label={translate('resources.radius/users.fields.profile_id', { _: '计费策略' })}
+              >
+                <TextField source="name" />
+              </ReferenceField>
+              <FunctionField
+                source="expire_time"
+                label={translate('resources.radius/users.fields.expire_time', { _: '过期时间' })}
+                render={() => <ExpireTimeField />}
+              />
+              <TextField
+                source="billing_type"
+                label={translate('resources.radius/users.fields.billing_type', { _: '计费类型' })}
+              />
+              <DateField
+                source="created_at"
+                label={translate('resources.radius/users.fields.created_at', { _: '创建时间' })}
+                showTime
+              />
+              <FunctionField
+                render={() => (
+                  <Box sx={{ display: 'flex', gap: 1 }}>
+                    <EditButton />
+                    <AnonymizeButton />
+                  </Box>
+                )}
+              />
+            </Datagrid>
+          </Box>
+        </Card>
+      )}
     </Box>
   );
 };
