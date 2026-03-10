@@ -19,7 +19,8 @@ import {
     CreateButton,
     FunctionField,
     useListContext,
-    RecordContextProvider
+    RecordContextProvider,
+    Link
 } from 'react-admin';
 import { Box, Card, CardContent, CardActions, Typography, useMediaQuery, Theme, Avatar, Chip } from '@mui/material';
 import {
@@ -162,6 +163,12 @@ const AgentGrid = () => {
                         </CardContent>
                         <CardActions sx={{ justifyContent: 'flex-end', borderTop: theme => `1px solid ${theme.palette.divider}`, px: 2, py: 1.5 }}>
                             <TopupButton />
+                            <Button 
+                                component={Link} 
+                                to={`/agents/${record.id}/show`}
+                                label="Hierarchy" 
+                                sx={{ textTransform: 'none' }}
+                            />
                         </CardActions>
                     </Card>
                 </RecordContextProvider>
