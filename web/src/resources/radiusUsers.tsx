@@ -963,10 +963,14 @@ const UserCardGrid = () => {
             sx={{ 
               borderRadius: 2.5,
               transition: 'all 0.3s ease',
+              cursor: 'pointer',
               '&:hover': { 
                 transform: 'translateY(-2px)',
                 boxShadow: 4 
               }
+            }}
+            onClick={() => {
+              window.location.href = `#/radius/users/${record.id}/show`;
             }}
           >
             <CardContent sx={{ pb: 1, pt: 1.5, px: 2 }}>
@@ -1074,8 +1078,10 @@ const UserCardGrid = () => {
               gap: 0.5,
               bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)'
             }}>
-              <AnonymizeButton />
-              <EditButton label="" size="small" />
+              <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
+                <AnonymizeButton />
+                <EditButton label="" size="small" />
+              </Box>
             </CardActions>
           </Card>
         </RecordContextProvider>
