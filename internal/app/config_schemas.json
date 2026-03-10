@@ -12,6 +12,15 @@
       "description_i18n": "config.web.cache_ttl.description"
     },
     {
+      "key": "radius.ServerIP",
+      "type": "string",
+      "default": "",
+      "title": "RADIUS Server IP",
+      "title_i18n": "config.radius.server_ip.title",
+      "description": "The IP address of this RADIUS server that Mikrotik routers should point to (e.g., 192.168.1.100). Used to auto-configure discovered routers.",
+      "description_i18n": "config.radius.server_ip.description"
+    },
+    {
       "key": "radius.EapMethod",
       "type": "string",
       "default": "eap-md5",

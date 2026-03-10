@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import {
   Box,
   Typography,
@@ -21,12 +21,19 @@ import {
   alpha,
   Tooltip,
   LinearProgress,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions,
 } from '@mui/material';
 import {
   Search as SearchIcon,
   Add as AddIcon,
   Devices as DeviceIcon,
   Wifi as WifiIcon,
+  ContentCopy as CopyIcon,
+  CheckCircle as CheckIcon,
 } from '@mui/icons-material';
 import { useNotify } from 'react-admin';
 import { apiRequest } from '../utils/apiClient';
@@ -52,11 +59,54 @@ interface ScanResult {
   results: DiscoveredDevice[];
 }
 
+interface SetupInfo {
+  device: DiscoveredDevice;
+  secret: string;
+  radiusServerIP: string;
+}
+
+const CodeBlock = ({ code }: { code: string }) => {
+  const [copied, setCopied] = useState(false);
+  const handleCopy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <Box
+      sx={{
+        position: 'relative',
+        bgcolor: '#1e1e1e',
+        borderRadius: 1,
+        p: 2,
+        mb: 1,
+        fontFamily: 'monospace',
+        fontSize: '0.8rem',
+        overflowX: 'auto',
+      }}
+    >
+      <Typography
+        component="pre"
+        sx={{ color: '#d4d4d4', m: 0, whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}
+      >
+        {code}
+      </Typography>
+      <IconButton
+        size="small"
+        onClick={handleCopy}
+        sx={{ position: 'absolute', top: 4, right: 4, color: copied ? 'success.main' : 'grey.400' }}
+      >
+        {copied ? <CheckIcon fontSize="small" /> : <CopyIcon fontSize="small" />}
+      </IconButton>
+    </Box>
+  );
+};
+
 const NetworkDiscovery = () => {
   const theme = useTheme();
-  void theme; // satisfies TypeScript - theme is used in sx callbacks
+  void theme;
   const notify = useNotify();
-  
+
   const [ipRange, setIpRange] = useState('192.168.1.0/24');
   const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('');
@@ -64,6 +114,19 @@ const NetworkDiscovery = () => {
   const [, setProgress] = useState(0);
   const [scanResult, setScanResult] = useState<ScanResult | null>(null);
   const [addingDevices, setAddingDevices] = useState<Set<string>>(new Set());
+  const [setupInfo, setSetupInfo] = useState<SetupInfo | null>(null);
+  const [radiusServerIP, setRadiusServerIP] = useState('');
+
+  // Load the configured RADIUS server IP
+  useEffect(() => {
+    apiRequest<any>('/system/settings?type=radius&name=ServerIP&perPage=100&page=1')
+      .then((data: any) => {
+        const items: any[] = Array.isArray(data) ? data : (data?.data ?? []);
+        const entry = items.find((s: any) => s.type === 'radius' && s.name === 'ServerIP');
+        if (entry?.value) setRadiusServerIP(entry.value);
+      })
+      .catch(() => {/*ignore*/ });
+  }, []);
 
   const handleScan = useCallback(async () => {
     if (!ipRange.trim()) {
@@ -91,20 +154,18 @@ const NetworkDiscovery = () => {
           password: password,
         }),
       });
-      
+
       clearTimeout(timeoutId);
-      console.log('Scan result:', result);
-      
+
       if (result) {
         setScanResult(result);
         notify(`Found ${result.found_count} MikroTik devices`, { type: 'success' });
       }
     } catch (error: any) {
-      console.error('Scan error:', error);
       if (error.name === 'AbortError') {
         notify('Scan timed out', { type: 'error' });
       } else {
-        notify(error.message || error.toString() || 'Scan failed', { type: 'error' });
+        notify(error.message || 'Scan failed', { type: 'error' });
       }
     } finally {
       setScanning(false);
@@ -113,7 +174,7 @@ const NetworkDiscovery = () => {
   }, [ipRange, username, password, notify]);
 
   const handleAddDevice = useCallback(async (device: DiscoveredDevice) => {
-    const secret = prompt('Enter RADIUS secret for this device:', 'mikrotik');
+    const secret = prompt('Enter RADIUS shared secret for this device:', 'mikrotik');
     if (!secret) return;
 
     setAddingDevices(prev => new Set(prev).add(device.ip));
@@ -123,13 +184,14 @@ const NetworkDiscovery = () => {
         method: 'POST',
         body: JSON.stringify({
           ip: device.ip,
-          secret: secret,
+          secret,
           name: device.identity || device.model || `Mikrotik-${device.ip}`,
           model: device.model,
           tags: 'discovered',
         }),
       });
       notify('Device added to NAS successfully', { type: 'success' });
+      setSetupInfo({ device, secret, radiusServerIP });
     } catch (error: any) {
       notify(error.message || 'Failed to add device', { type: 'error' });
     } finally {
@@ -139,7 +201,7 @@ const NetworkDiscovery = () => {
         return next;
       });
     }
-  }, [notify]);
+  }, [notify, radiusServerIP]);
 
   const handleAddAll = useCallback(async () => {
     if (!scanResult) return;
@@ -147,7 +209,7 @@ const NetworkDiscovery = () => {
     const devices = scanResult.results.filter(r => r.is_router_os);
     if (devices.length === 0) return;
 
-    const secret = prompt('Enter RADIUS secret for all devices:', 'mikrotik');
+    const secret = prompt('Enter RADIUS shared secret for all devices:', 'mikrotik');
     if (!secret) return;
 
     setAddingDevices(new Set(devices.map(d => d.ip)));
@@ -157,22 +219,29 @@ const NetworkDiscovery = () => {
         method: 'POST',
         body: JSON.stringify(devices.map(d => ({
           ip: d.ip,
-          secret: secret,
+          secret,
           name: d.identity || d.model || `Mikrotik-${d.ip}`,
           model: d.model,
           tags: 'discovered',
         }))),
       });
       notify(`Added ${result.added_count} devices to NAS`, { type: 'success' });
+      // Show setup for first device as example
+      if (devices.length > 0) {
+        setSetupInfo({ device: devices[0], secret, radiusServerIP });
+      }
     } catch (error: any) {
       notify(error.message || 'Failed to add devices', { type: 'error' });
     } finally {
       setAddingDevices(new Set());
     }
-  }, [scanResult, notify]);
+  }, [scanResult, notify, radiusServerIP]);
 
   const mikrotikDevices = scanResult?.results.filter(r => r.is_router_os) || [];
   const otherDevices = scanResult?.results.filter(r => !r.is_router_os) || [];
+
+  const radiusIP = setupInfo?.radiusServerIP || radiusServerIP || '<RADIUS_SERVER_IP>';
+  const secret = setupInfo?.secret || 'your-secret';
 
   return (
     <Box sx={{ p: 3 }}>
@@ -182,8 +251,19 @@ const NetworkDiscovery = () => {
           Network Discovery
         </Typography>
         <Typography variant="body2" color="text.secondary">
-          Scan your network to discover MikroTik RouterOS devices
+          Scan your network to discover MikroTik RouterOS devices and add them to RADIUS
         </Typography>
+        {!radiusServerIP && (
+          <Alert severity="warning" sx={{ mt: 1 }}>
+            RADIUS Server IP not configured. Go to <strong>Settings → System Config</strong> and set the{' '}
+            <strong>radius.ServerIP</strong> to this server's IP address so discovered routers know where to send authentication requests.
+          </Alert>
+        )}
+        {radiusServerIP && (
+          <Alert severity="success" sx={{ mt: 1 }}>
+            RADIUS Server IP: <strong>{radiusServerIP}</strong>. Discovered routers will be configured to point here.
+          </Alert>
+        )}
       </Box>
 
       {/* Scan Form */}
@@ -205,10 +285,10 @@ const NetworkDiscovery = () => {
               size="small"
               sx={{ flexGrow: 1, maxWidth: 300 }}
               disabled={scanning}
-              helperText="Enter IP range in CIDR notation (e.g., 192.168.1.0/24)"
+              helperText="e.g., 192.168.1.0/24"
             />
             <TextField
-              label="Username"
+              label="RouterOS Username"
               value={username}
               onChange={e => setUsername(e.target.value)}
               placeholder="admin"
@@ -217,10 +297,10 @@ const NetworkDiscovery = () => {
               disabled={scanning}
             />
             <TextField
-              label="Password"
+              label="RouterOS Password"
               value={password}
               onChange={e => setPassword(e.target.value)}
-              placeholder="Enter password"
+              placeholder="password"
               type="password"
               size="small"
               sx={{ width: 150 }}
@@ -239,7 +319,7 @@ const NetworkDiscovery = () => {
               variant="outlined"
               onClick={async () => {
                 try {
-                  const testIp = prompt('Enter IP to test:', '10.0.0.1');
+                  const testIp = prompt('Enter IP to test connection:', '10.0.0.1');
                   if (!testIp) return;
                   const result = await apiRequest<any>(`/network/discovery/test?ip=${testIp}&port=8728`);
                   notify(result?.message || 'Connection OK', { type: 'success' });
@@ -372,11 +452,12 @@ const NetworkDiscovery = () => {
                         <TableCell>{device.version || '-'}</TableCell>
                         <TableCell>{device.serial || '-'}</TableCell>
                         <TableCell align="right">
-                          <Tooltip title="Add to NAS">
+                          <Tooltip title="Add to NAS & get setup guide">
                             <IconButton
                               size="small"
                               onClick={() => handleAddDevice(device)}
                               disabled={addingDevices.has(device.ip)}
+                              color="primary"
                             >
                               {addingDevices.has(device.ip) ? (
                                 <CircularProgress size={20} />
@@ -394,7 +475,7 @@ const NetworkDiscovery = () => {
             </Card>
           )}
 
-          {/* Other Devices (found but not MikroTik) */}
+          {/* Other Devices */}
           {otherDevices.length > 0 && (
             <Alert severity="info" sx={{ mb: 3 }}>
               Found {otherDevices.length} hosts but they are not MikroTik RouterOS devices.
@@ -405,11 +486,11 @@ const NetworkDiscovery = () => {
           {/* Empty State */}
           {scanResult.total_hosts > 0 && scanResult.found_count === 0 && (
             <Alert severity="warning">
-              No MikroTik devices found in the specified IP range. Make sure:
+              No MikroTik devices found in the specified range. Make sure:
               <ul style={{ margin: '8px 0 0 0', paddingLeft: '20px' }}>
                 <li>MikroTik devices are powered on and accessible</li>
-                <li>RouterOS API service is enabled on the device</li>
-                <li>Firewall allows access on ports 8728 (HTTP) or 8729 (HTTPS)</li>
+                <li>RouterOS API service is enabled (IP → Services → api: enabled)</li>
+                <li>Firewall allows access on ports 8728 or 8729</li>
               </ul>
             </Alert>
           )}
@@ -435,10 +516,63 @@ const NetworkDiscovery = () => {
             Enter an IP range above and click "Start Scan" to discover MikroTik devices on your network.
           </Typography>
           <Typography variant="caption" color="text.disabled">
-            Supported: MikroTik RouterOS devices with API enabled on port 8728 or 8729
+            Supported: MikroTik RouterOS with API enabled on port 8728 or 8729
           </Typography>
         </Card>
       )}
+
+      {/* Setup Instructions Dialog */}
+      <Dialog
+        open={!!setupInfo}
+        onClose={() => setSetupInfo(null)}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <CheckIcon color="success" />
+          Device Added — Configure Mikrotik RADIUS
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText component="div">
+            <Alert severity="success" sx={{ mb: 2 }}>
+              <strong>{setupInfo?.device.identity || setupInfo?.device.ip}</strong> has been added to NAS.
+              Now configure RADIUS on the Mikrotik router using the commands below.
+            </Alert>
+
+            <Typography variant="subtitle1" fontWeight={600} gutterBottom>
+              1. Add RADIUS Server (via Terminal / SSH)
+            </Typography>
+            <CodeBlock code={`/radius add address=${radiusIP} secret=${secret} service=hotspot,ppp authentication-port=1812 accounting-port=1813 comment="ToughRADIUS"`} />
+
+            <Typography variant="subtitle1" fontWeight={600} gutterBottom sx={{ mt: 2 }}>
+              2. Enable RADIUS for Hotspot
+            </Typography>
+            <CodeBlock code={`/ip hotspot profile set [find default=yes] use-radius=yes`} />
+
+            <Typography variant="subtitle1" fontWeight={600} gutterBottom sx={{ mt: 2 }}>
+              3. Enable RADIUS for PPPoE
+            </Typography>
+            <CodeBlock code={`/ppp aaa set use-radius=yes`} />
+
+            <Typography variant="subtitle1" fontWeight={600} gutterBottom sx={{ mt: 2 }}>
+              4. Verify RADIUS Connection
+            </Typography>
+            <CodeBlock code={`/radius print\n/radius monitor [find]`} />
+
+            <Alert severity="info" sx={{ mt: 2 }}>
+              <strong>Tip:</strong> Make sure this server (<strong>{radiusIP || 'your RADIUS server IP'}</strong>) allows UDP traffic on ports 1812 and 1813 from the Mikrotik router's IP (<strong>{setupInfo?.device.ip}</strong>).
+              {!setupInfo?.radiusServerIP && (
+                <> Configure the RADIUS Server IP in <strong>Settings → System Config → RADIUS Server IP</strong> to avoid using a placeholder here.</>
+              )}
+            </Alert>
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setSetupInfo(null)} variant="contained">
+            Done
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Box>
   );
 };

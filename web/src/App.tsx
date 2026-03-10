@@ -87,6 +87,11 @@ import {
   AgentCreate,
 } from './resources/agents';
 import {
+  ServerList,
+  ServerCreate,
+  ServerEdit,
+} from './resources/servers';
+import {
   VoucherBundleList,
   VoucherBundleCreate,
 } from './resources/voucherBundles';
@@ -164,6 +169,14 @@ const App = () => (
       edit={NodeEdit}
       create={NodeCreate}
       show={NodeShow}
+    />
+
+    {/* Servers */}
+    <Resource
+      name="network/servers"
+      list={ServerList}
+      edit={ServerEdit}
+      create={ServerCreate}
     />
 
     {/* 操作员管理 */}

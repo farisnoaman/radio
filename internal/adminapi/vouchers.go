@@ -1,10 +1,10 @@
 package adminapi
 
 import (
+	"context"
 	"encoding/csv"
 	"fmt"
 	"net/http"
-
 	"strconv"
 	"strings"
 	"time"
@@ -12,8 +12,9 @@ import (
 	"github.com/labstack/echo/v4"
 	"gorm.io/gorm"
 
-
 	"github.com/talkincode/toughradius/v9/internal/domain"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/coa"
+	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth/checkers"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"go.uber.org/zap"
@@ -660,7 +661,7 @@ func ExtendVoucher(c echo.Context) error {
 }
 
 // BulkActivateVouchers activates all vouchers in a batch
-// BulkActivateVouchers activates all vouchers in a batch
+// This creates RadiusUser records automatically so users can authenticate directly
 func BulkActivateVouchers(c echo.Context) error {
 	id := c.Param("id")
 	batchID, _ := strconv.ParseInt(id, 10, 64)
@@ -676,6 +677,11 @@ func BulkActivateVouchers(c echo.Context) error {
 		return fail(c, http.StatusNotFound, "PRODUCT_NOT_FOUND", "Product not found", err.Error())
 	}
 
+	var profile domain.RadiusProfile
+	if err := db.First(&profile, product.RadiusProfileID).Error; err != nil {
+		return fail(c, http.StatusNotFound, "PROFILE_NOT_FOUND", "Profile not found", err.Error())
+	}
+
 	now := time.Now()
 	zap.L().Debug("bulk activate vouchers",
 		zap.Int64("batch_id", batchID),
@@ -684,80 +690,394 @@ func BulkActivateVouchers(c echo.Context) error {
 		zap.Int64("product_validity_seconds", product.ValiditySeconds),
 		zap.Time("batch_print_expire_time", func() time.Time { if batch.PrintExpireTime != nil { return *batch.PrintExpireTime }; return time.Time{} }()),
 	)
+
 	updates := map[string]interface{}{
 		"status":       "active",
 		"activated_at": now,
 	}
 
+	expireTime := now.AddDate(1, 0, 0)
+
 	// Calculate expiration for fixed type
 	if batch.ExpirationType != "first_use" {
 		if batch.PrintExpireTime != nil && !batch.PrintExpireTime.IsZero() {
-			updates["expire_time"] = *batch.PrintExpireTime
+			expireTime = *batch.PrintExpireTime
 		} else if product.ValiditySeconds > 0 {
-			updates["expire_time"] = now.Add(time.Duration(product.ValiditySeconds) * time.Second)
+			expireTime = now.Add(time.Duration(product.ValiditySeconds) * time.Second)
 		} else {
 			// Default: set expire time to 30 days from now if no validity specified
-			updates["expire_time"] = now.AddDate(0, 0, 30)
+			expireTime = now.AddDate(0, 0, 30)
 		}
+		updates["expire_time"] = expireTime
 	} else {
 		// ensure expire_time is zero for first_use
 		updates["expire_time"] = time.Time{}
+		// For first_use, set expiry to far future - will be calculated on first login
+		expireTime = time.Date(9999, 12, 31, 23, 59, 59, 0, time.UTC)
 	}
 
 	zap.L().Debug("bulk activate vouchers updates",
 		zap.Any("updates", updates),
 	)
 
-	// Update vouchers
-	if err := db.Model(&domain.Voucher{}).Where("batch_id = ? AND status = ?", batchID, "unused").Updates(updates).Error; err != nil {
-		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "Failed to activate vouchers", err.Error())
-	}
-
-	// Also update the batch activation timestamp
-	if err := db.Model(&domain.VoucherBatch{}).Where("id = ?", batchID).Update("activated_at", &now).Error; err != nil {
-		zap.L().Error("Failed to update batch activated_at", zap.Int64("batch_id", batchID), zap.Error(err))
-		// Don't fail the request, vouchers are already activated
-	}
-
-	return ok(c, nil)
-}
-
-// BulkDeactivateVouchers deactivates all active vouchers in a batch
-func BulkDeactivateVouchers(c echo.Context) error {
-	id := c.Param("id")
-
-	// Find all active vouchers in this batch to get their codes (usernames)
+	// Get all unused vouchers for this batch
 	var vouchers []domain.Voucher
-	if err := GetDB(c).Where("batch_id = ? AND status = ?", id, "active").Find(&vouchers).Error; err != nil {
+	if err := db.Where("batch_id = ? AND status = ?", batchID, "unused").Find(&vouchers).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "QUERY_FAILED", "Failed to query vouchers", err.Error())
 	}
 
-	// Disconnect online sessions for these vouchers
-	for _, v := range vouchers {
-		var session domain.RadiusOnline
-		// Check if user is online
-		if err := GetDB(c).Where("username = ?", v.Code).First(&session).Error; err == nil {
-			// User is online, disconnect them
-			if err := DisconnectSession(c, session); err != nil {
-				// Log error but continue with other vouchers
-				zap.L().Error("Failed to disconnect voucher user",
-					zap.String("username", v.Code),
-					zap.Error(err))
-			}
+	if len(vouchers) == 0 {
+		return fail(c, http.StatusConflict, "NO_VOUCHERS", "No unused vouchers in this batch", nil)
+	}
+
+	tx := db.Begin()
+
+	// Update vouchers status
+	if err := tx.Model(&domain.Voucher{}).Where("batch_id = ? AND status = ?", batchID, "unused").Updates(updates).Error; err != nil {
+		tx.Rollback()
+		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "Failed to activate vouchers", err.Error())
+	}
+
+	// Create RadiusUser for each voucher
+	upRate := product.UpRate
+	downRate := product.DownRate
+	dataQuota := product.DataQuota
+	if upRate == 0 {
+		upRate = profile.UpRate
+	}
+	if downRate == 0 {
+		downRate = profile.DownRate
+	}
+	if dataQuota == 0 {
+		dataQuota = profile.DataQuota
+	}
+
+	for _, voucher := range vouchers {
+		user := domain.RadiusUser{
+			Username:        voucher.Code,
+			Password:        voucher.Code,
+			ProfileId:       profile.ID,
+			Status:          "enabled",
+			ExpireTime:      expireTime,
+			CreatedAt:        now,
+			UpdatedAt:        now,
+			UpRate:          upRate,
+			DownRate:        downRate,
+			DataQuota:       dataQuota,
+			AddrPool:        profile.AddrPool,
+			VoucherBatchID:  batchID,
+			VoucherCode:     voucher.Code,
+		}
+
+		if err := tx.Create(&user).Error; err != nil {
+			zap.L().Error("Failed to create RadiusUser for voucher",
+				zap.String("voucher_code", voucher.Code),
+				zap.Error(err))
 		}
 	}
 
-	if err := GetDB(c).Model(&domain.Voucher{}).Where("batch_id = ? AND status = ?", id, "active").Update("status", "unused").Error; err != nil {
+	// Also update the batch activation timestamp
+	if err := tx.Model(&domain.VoucherBatch{}).Where("id = ?", batchID).Update("activated_at", &now).Error; err != nil {
+		zap.L().Error("Failed to update batch activated_at", zap.Int64("batch_id", batchID), zap.Error(err))
+	}
+
+	if err := tx.Commit().Error; err != nil {
+		return fail(c, http.StatusInternalServerError, "COMMIT_FAILED", "Failed to commit transaction", err.Error())
+	}
+
+	// Add batch to active cache
+	if cache := checkers.GetVoucherBatchCache(); cache != nil {
+		cache.AddBatch(batchID)
+	}
+
+	LogOperation(c, "bulk_activate_vouchers", fmt.Sprintf("Activated batch %d with %d vouchers", batchID, len(vouchers)))
+
+	return ok(c, map[string]interface{}{
+		"activated_count": len(vouchers),
+		"batch_id":       batchID,
+		"expire_time":    expireTime,
+	})
+}
+
+// BulkDeactivateVouchers deactivates all active vouchers in a batch
+// Supports graceful disconnect with grace period notification
+func BulkDeactivateVouchers(c echo.Context) error {
+	id := c.Param("id")
+	batchID, _ := strconv.ParseInt(id, 10, 64)
+
+	// Parse grace period from query params (default 5 minutes)
+	gracePeriodStr := c.QueryParam("grace_period")
+	graceDuration := 5 * time.Minute
+	if gracePeriodStr != "" {
+		if gp, err := strconv.Atoi(gracePeriodStr); err == nil && gp >= 0 {
+			graceDuration = time.Duration(gp) * time.Second
+		}
+	}
+
+	// Parse reason from query params
+	reason := c.QueryParam("reason")
+	if reason == "" {
+		reason = "batch_deactivated_by_admin"
+	}
+
+	db := GetDB(c)
+
+	// Find all active vouchers in this batch to get their codes (usernames)
+	var vouchers []domain.Voucher
+	if err := db.Where("batch_id = ? AND status = ?", id, "active").Find(&vouchers).Error; err != nil {
+		return fail(c, http.StatusInternalServerError, "QUERY_FAILED", "Failed to query vouchers", err.Error())
+	}
+
+	if len(vouchers) == 0 {
+		return fail(c, http.StatusConflict, "NO_ACTIVE_VOUCHERS", "No active vouchers in this batch", nil)
+	}
+
+	// Find all online users from this batch
+	var onlineSessions []domain.RadiusOnline
+	if err := db.Joins("JOIN radius_user ON radius_user.username = radius_online.username").
+		Where("radius_user.voucher_batch_id = ?", batchID).
+		Find(&onlineSessions).Error; err != nil {
+		zap.L().Error("Failed to query online sessions for batch",
+			zap.Int64("batch_id", batchID),
+			zap.Error(err))
+	}
+
+	// If grace period > 0, send warning and schedule disconnect
+	if graceDuration > 0 && len(onlineSessions) > 0 {
+		// Send grace period warning via CoA (Session-Timeout update)
+		// Note: This is a best-effort warning, actual disconnect happens after grace period
+		go func() {
+			// Get a fresh DB connection for the goroutine
+			// This is a simplified approach - in production you'd want proper connection management
+			sendGracePeriodWarnings(db, batchID, graceDuration, reason)
+		}()
+
+		// Schedule actual disconnect after grace period
+		go func() {
+			time.Sleep(graceDuration)
+			disconnectBatchUsersAsync(db, batchID, reason)
+		}()
+
+		zap.L().Info("Grace period disconnect scheduled",
+			zap.Int64("batch_id", batchID),
+			zap.Duration("grace_period", graceDuration),
+			zap.Int("online_users", len(onlineSessions)),
+			zap.String("reason", reason))
+
+		// Update voucher status immediately but don't disconnect yet
+		tx := db.Begin()
+		if err := tx.Model(&domain.Voucher{}).Where("batch_id = ? AND status = ?", batchID, "active").Update("status", "deactivating").Error; err != nil {
+			tx.Rollback()
+			return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "Failed to update voucher status", err.Error())
+		}
+		tx.Commit()
+
+		// Remove batch from active cache immediately to prevent new connections
+		if cache := checkers.GetVoucherBatchCache(); cache != nil {
+			cache.RemoveBatch(batchID)
+		}
+
+		return ok(c, map[string]interface{}{
+			"status":          "grace_period_scheduled",
+			"batch_id":        batchID,
+			"grace_period":    graceDuration.Seconds(),
+			"online_users":    len(onlineSessions),
+			"disconnect_at":   time.Now().Add(graceDuration).Format(time.RFC3339),
+			"message":         "Users will be disconnected after grace period",
+		})
+	}
+
+	// Immediate disconnect (grace period = 0)
+	// Disconnect all online users
+	for _, session := range onlineSessions {
+		if err := DisconnectSession(c, session); err != nil {
+			zap.L().Error("Failed to disconnect voucher user",
+				zap.String("username", session.Username),
+				zap.Error(err))
+		}
+	}
+
+	tx := db.Begin()
+
+	// Update voucher status to unused
+	if err := tx.Model(&domain.Voucher{}).Where("batch_id = ? AND status IN ?", batchID, []string{"active", "deactivating"}).Update("status", "unused").Error; err != nil {
+		tx.Rollback()
 		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "Failed to deactivate vouchers", err.Error())
 	}
 
-	// Also clear the batch activation timestamp
-	batchID, _ := strconv.ParseInt(id, 10, 64)
-	if err := GetDB(c).Model(&domain.VoucherBatch{}).Where("id = ?", id).Update("activated_at", nil).Error; err != nil {
+	// Clear the batch activation timestamp
+	if err := tx.Model(&domain.VoucherBatch{}).Where("id = ?", batchID).Update("activated_at", nil).Error; err != nil {
 		zap.L().Error("Failed to clear batch activated_at", zap.Int64("batch_id", batchID), zap.Error(err))
 	}
 
-	return ok(c, nil)
+	if err := tx.Commit().Error; err != nil {
+		return fail(c, http.StatusInternalServerError, "COMMIT_FAILED", "Failed to commit transaction", err.Error())
+	}
+
+	// Remove batch from active cache
+	if cache := checkers.GetVoucherBatchCache(); cache != nil {
+		cache.RemoveBatch(batchID)
+	}
+
+	LogOperation(c, "bulk_deactivate_vouchers", fmt.Sprintf("Deactivated batch %d, disconnected %d users", batchID, len(onlineSessions)))
+
+	return ok(c, map[string]interface{}{
+		"status":            "deactivated",
+		"batch_id":          batchID,
+		"deactivated_count": len(vouchers),
+		"disconnected_count": len(onlineSessions),
+	})
+}
+
+// sendGracePeriodWarnings sends CoA requests to warn users about impending disconnect
+func sendGracePeriodWarnings(db *gorm.DB, batchID int64, graceDuration time.Duration, reason string) {
+	if db == nil {
+		zap.L().Error("Cannot send grace period warnings: database not available")
+		return
+	}
+
+	graceSeconds := int(graceDuration.Seconds())
+
+	var onlineSessions []domain.RadiusOnline
+	if err := db.Joins("JOIN radius_user ON radius_user.username = radius_online.username").
+		Where("radius_user.voucher_batch_id = ?", batchID).
+		Find(&onlineSessions).Error; err != nil {
+		zap.L().Error("Failed to query online sessions for grace period warning",
+			zap.Int64("batch_id", batchID),
+			zap.Error(err))
+		return
+	}
+
+	for _, session := range onlineSessions {
+		var nas domain.NetNas
+		if err := db.Where("ipaddr = ?", session.NasAddr).First(&nas).Error; err != nil {
+			zap.L().Warn("NAS not found for grace period warning",
+				zap.String("nas_addr", session.NasAddr))
+			continue
+		}
+
+		coaPort := nas.CoaPort
+		if coaPort <= 0 {
+			coaPort = 3799
+		}
+
+		vendorCode := nas.VendorCode
+		if vendorCode == "" {
+			vendorCode = "generic"
+		}
+
+		coaReq := coa.CoARequest{
+			NASIP:          nas.Ipaddr,
+			NASPort:        coaPort,
+			Secret:         nas.Secret,
+			Username:       session.Username,
+			AcctSessionID:  session.AcctSessionId,
+			VendorCode:     vendorCode,
+			SessionTimeout: graceSeconds,
+			Reason:         reason,
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		client := coa.NewClient(coa.Config{Timeout: 5 * time.Second, RetryCount: 2})
+		resp := client.SendCoA(ctx, coaReq)
+		cancel()
+
+		if resp.Success {
+			zap.L().Info("Grace period warning sent",
+				zap.String("username", session.Username),
+				zap.Int("grace_seconds", graceSeconds))
+		} else {
+			zap.L().Warn("Failed to send grace period warning",
+				zap.String("username", session.Username),
+				zap.Error(resp.Error))
+		}
+	}
+}
+
+// disconnectBatchUsersAsync disconnects all users from a batch after grace period
+func disconnectBatchUsersAsync(db *gorm.DB, batchID int64, reason string) {
+	if db == nil {
+		zap.L().Error("Cannot disconnect batch users: database not available")
+		return
+	}
+
+	zap.L().Info("Starting batch user disconnect",
+		zap.Int64("batch_id", batchID),
+		zap.String("reason", reason))
+
+	// Find all online sessions for this batch
+	var onlineSessions []domain.RadiusOnline
+	if err := db.Joins("JOIN radius_user ON radius_user.username = radius_online.username").
+		Where("radius_user.voucher_batch_id = ?", batchID).
+		Find(&onlineSessions).Error; err != nil {
+		zap.L().Error("Failed to query online sessions for disconnect",
+			zap.Int64("batch_id", batchID),
+			zap.Error(err))
+		return
+	}
+
+	disconnectedCount := 0
+	for _, session := range onlineSessions {
+		var nas domain.NetNas
+		if err := db.Where("ipaddr = ?", session.NasAddr).First(&nas).Error; err != nil {
+			zap.L().Warn("NAS not found for disconnect",
+				zap.String("nas_addr", session.NasAddr))
+			continue
+		}
+
+		coaPort := nas.CoaPort
+		if coaPort <= 0 {
+			coaPort = 3799
+		}
+
+		vendorCode := nas.VendorCode
+		if vendorCode == "" {
+			vendorCode = "generic"
+		}
+
+		discReq := coa.DisconnectRequest{
+			NASIP:         nas.Ipaddr,
+			NASPort:       coaPort,
+			Secret:         nas.Secret,
+			Username:       session.Username,
+			AcctSessionID: session.AcctSessionId,
+			VendorCode:    vendorCode,
+			Reason:        reason,
+		}
+
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		client := coa.NewClient(coa.Config{Timeout: 5 * time.Second, RetryCount: 2})
+		resp := client.SendDisconnect(ctx, discReq)
+		cancel()
+
+		if resp.Success {
+			// Delete session from database
+			db.Delete(&domain.RadiusOnline{}, "acct_session_id = ?", session.AcctSessionId)
+			disconnectedCount++
+			zap.L().Info("User disconnected",
+				zap.String("username", session.Username))
+		} else {
+			zap.L().Warn("Failed to disconnect user",
+				zap.String("username", session.Username),
+				zap.Error(resp.Error))
+		}
+	}
+
+	// Update voucher status to unused
+	db.Model(&domain.Voucher{}).Where("batch_id = ? AND status = ?", batchID, "deactivating").Update("status", "unused")
+
+	// Clear batch activation timestamp
+	db.Model(&domain.VoucherBatch{}).Where("id = ?", batchID).Update("activated_at", nil)
+
+	// Remove from active cache
+	if cache := checkers.GetVoucherBatchCache(); cache != nil {
+		cache.RemoveBatch(batchID)
+	}
+
+	zap.L().Info("Batch disconnect completed",
+		zap.Int64("batch_id", batchID),
+		zap.Int("disconnected_count", disconnectedCount),
+		zap.String("reason", reason))
 }
 
 // DeleteVoucherBatch soft deletes a batch and its vouchers

@@ -88,6 +88,7 @@ func TestTableNameUniqueness(t *testing.T) {
 		"sys_opr_log":            true,
 		"net_node":               true,
 		"net_nas":                true,
+		"net_server":             true,
 		"radius_profile":         true,
 		"radius_user":            true,
 		"radius_online":          true,
@@ -103,6 +104,9 @@ func TestTableNameUniqueness(t *testing.T) {
 		"agent_wallet":           true,
 		"wallet_log":             true,
 		"invoice":                true,
+		"commission_log":         true,
+		"commission_summary":     true,
+		"agent_hierarchy":        true,
 	}
 
 	assert.Equal(t, len(expectedNames), len(tableNames), "Table name count should match")

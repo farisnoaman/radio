@@ -207,7 +207,10 @@ const StatusField = () => {
     if (record.is_deleted) {
         return <Chip label="Deleted" color="error" size="small" variant="outlined" />;
     }
-    return <Chip label="Active" color="success" size="small" variant="outlined" />;
+    if (!record.activated_at) {
+        return <Chip label="Inactive" color="default" size="small" variant="outlined" />;
+    }
+    return <Chip label="Active" color="success" size="small" variant="filled" />;
 };
 
 

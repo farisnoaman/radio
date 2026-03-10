@@ -1,6 +1,8 @@
 package plugins
 
 import (
+	"time"
+
 	"github.com/talkincode/toughradius/v9/internal/app"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/accounting/handlers"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth/checkers"
@@ -50,6 +52,12 @@ func InitPlugins(
 		registry.RegisterPolicyChecker(checkers.NewFirstUseActivator(voucherRepo, userRepo))
 	}
 
+	// Initialize voucher batch cache and register voucher auth checker
+	if voucherRepo != nil {
+		checkers.InitVoucherBatchCache(2 * time.Minute)
+		registry.RegisterPolicyChecker(checkers.NewVoucherAuthChecker(voucherRepo, checkers.GetVoucherBatchCache()))
+	}
+
 	// Register response enhancers
 	registry.RegisterResponseEnhancer(enhancers.NewDefaultAcceptEnhancer())
 	registry.RegisterResponseEnhancer(enhancers.NewHuaweiAcceptEnhancer())
@@ -76,6 +84,8 @@ func InitPlugins(
 		// Advanced Lifecycle: Session Logging
 		if db != nil {
 			registry.RegisterAccountingHandler(handlers.NewSessionLogHandler(db))
+			// Voucher quota sync - updates voucher usage from accounting
+			registry.RegisterAccountingHandler(handlers.NewVoucherQuotaSyncHandler(db))
 		}
 	}
 

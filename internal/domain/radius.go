@@ -85,6 +85,11 @@ type RadiusUser struct {
 	LastOnline      time.Time `json:"last_online"`
 	CreatedAt       time.Time `gorm:"index" json:"created_at"`
 	UpdatedAt       time.Time `json:"updated_at"`
+
+	// Voucher linkage fields
+	// These fields link a RadiusUser to a voucher for batch-level control
+	VoucherBatchID int64  `json:"voucher_batch_id,string" gorm:"index" form:"voucher_batch_id"`
+	VoucherCode    string `json:"voucher_code" gorm:"index" form:"voucher_code"`
 }
 
 // TableName Specify table name

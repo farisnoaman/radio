@@ -41,6 +41,7 @@ func (a *Application) initJob() {
 
 	_, err = a.sched.AddFunc("@every 1m", func() {
 		go a.SchedSubscriptionRenewalTask()
+		go a.SchedServerMonitorTask()
 	})
 	if err != nil {
 		zap.S().Errorf("init job error %s", err.Error())
