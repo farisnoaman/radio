@@ -1012,40 +1012,7 @@ const UserCardGrid = () => {
                 <StatusIndicator isEnabled={record.status === 'enabled'} />
               </Box>
 
-              {/* User Info Section */}
-              <Box 
-                sx={{ 
-                  bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', 
-                  p: 1.5, 
-                  borderRadius: 1.5,
-                  mb: 1.5 
-                }}
-              >
-                <Box display="flex" alignItems="center" gap={1} mb={1}>
-                  <Typography variant="caption" color="text.secondary" sx={{ minWidth: 70 }}>
-                    Name:
-                  </Typography>
-                  <Typography variant="body2" fontWeight="bold" noWrap>
-                    {record.realname || '-'}
-                  </Typography>
-                </Box>
-                <Box display="flex" alignItems="center" gap={1} mb={1}>
-                  <Typography variant="caption" color="text.secondary" sx={{ minWidth: 70 }}>
-                    Email:
-                  </Typography>
-                  <Typography variant="body2" noWrap>
-                    {record.email || '-'}
-                  </Typography>
-                </Box>
-                <Box display="flex" alignItems="center" gap={1}>
-                  <Typography variant="caption" color="text.secondary" sx={{ minWidth: 70 }}>
-                    IP:
-                  </Typography>
-                  <Typography variant="body2" sx={{ fontFamily: 'monospace' }}>
-                    {record.ip_addr || '-'}
-                  </Typography>
-                </Box>
-              </Box>
+
 
               {/* Stats Row */}
               <Box display="flex" justifyContent="space-between" gap={1} mb={1}>
