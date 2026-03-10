@@ -1205,6 +1205,9 @@ func registerAgentHierarchyRoutes() {
 
 	// Root agents list
 	webserver.ApiGET("/agents/roots", GetRootAgents)
+	
+	// Agent status toggle
+	webserver.ApiPUT("/agents/:id/status", UpdateAgentStatus)
 }
 
 // GetRootAgents retrieves all root-level agents (no parent)
@@ -1225,4 +1228,44 @@ func GetRootAgents(c echo.Context) error {
 	}
 
 	return ok(c, agents)
+}
+
+// UpdateAgentStatus updates the status of an agent
+func UpdateAgentStatus(c echo.Context) error {
+	agentID, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid agent ID", nil)
+	}
+
+	var req struct {
+		Status string `json:"status" validate:"required,oneof=active inactive suspended terminated"`
+	}
+	if err := c.Bind(&req); err != nil {
+		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse request", err.Error())
+	}
+	if err := c.Validate(&req); err != nil {
+		return err
+	}
+
+	// Get current user for authorization
+	currentUser, err := resolveOperatorFromContext(c)
+	if err != nil {
+		return fail(c, http.StatusUnauthorized, "UNAUTHORIZED", "Authentication failed", err.Error())
+	}
+
+	if currentUser.Level != "super" && currentUser.Level != "admin" {
+		return fail(c, http.StatusForbidden, "PERMISSION_DENIED", "Only admins can update agent status", nil)
+	}
+
+	if err := GetDB(c).Model(&domain.AgentHierarchy{}).
+		Where("agent_id = ?", agentID).
+		Update("status", req.Status).Error; err != nil {
+		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "Failed to update status", err.Error())
+	}
+
+	zap.L().Info("Agent status updated",
+		zap.Int64("agent_id", agentID),
+		zap.String("status", req.Status))
+
+	return ok(c, map[string]interface{}{"message": "Status updated successfully"})
 }
