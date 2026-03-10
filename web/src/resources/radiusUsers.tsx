@@ -959,20 +959,23 @@ const UserCardGrid = () => {
     >
       {data.map(record => (
         <RecordContextProvider value={record} key={record.id}>
-          <Card 
-            elevation={2} 
-            sx={{ 
-              borderRadius: 2.5,
-              transition: 'all 0.3s ease',
-              cursor: 'pointer',
-              '&:hover': { 
-                transform: 'translateY(-2px)',
-                boxShadow: 4 
-              }
-            }}
-            onClick={() => {
-              window.location.href = `#/radius/users/${record.id}/show`;
-            }}
+            <Card 
+              elevation={2} 
+              sx={{ 
+                borderRadius: 2.5,
+                transition: 'all 0.3s ease',
+                cursor: 'pointer',
+                '&:hover': { 
+                  transform: 'translateY(-4px)',
+                  boxShadow: 6,
+                  bgcolor: theme => theme.palette.mode === 'dark' 
+                    ? 'rgba(255,255,255,0.08)' 
+                    : 'rgba(25, 118, 210, 0.04)'
+                }
+              }}
+              onClick={() => {
+                window.location.href = `#/radius/users/${record.id}/show`;
+              }}
           >
             <CardContent sx={{ pb: 1, pt: 1.5, px: 2 }}>
               {/* Header: Avatar, Username, Status */}
