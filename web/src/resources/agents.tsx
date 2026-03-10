@@ -126,135 +126,193 @@ const AgentGrid = () => {
     return (
         <Box 
             display="grid" 
-            gridTemplateColumns={{ xs: '1fr 1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)' }} 
-            gap={1.5} 
-            p={1.5} 
+            gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)' }} 
+            gap={3} 
+            p={3} 
             sx={{ bgcolor: theme => theme.palette.mode === 'dark' ? 'transparent' : 'rgba(0,0,0,0.02)' }}
         >
             {data.map(record => (
                 <RecordContextProvider value={record} key={record.id}>
                     <Card 
-                        elevation={0} 
+                        elevation={2} 
                         sx={{ 
-                            borderRadius: 2, 
-                            border: theme => `1px solid ${theme.palette.divider}`,
-                            transition: 'box-shadow 0.2s',
-                            '&:hover': { boxShadow: 4 }
+                            borderRadius: 3, 
+                            transition: 'all 0.3s ease',
+                            '&:hover': { 
+                                transform: 'translateY(-4px)',
+                                boxShadow: 6 
+                            }
                         }}
                     >
-                        <CardContent sx={{ pb: 1, pt: 1.5, px: 1.5 }}>
+                        <CardContent sx={{ pb: 2, pt: 2.5, px: 2.5 }}>
                             {/* Header: Avatar, Name, Status */}
-                            <Box display="flex" justifyContent="space-between" alignItems="flex-start" gap={1}>
-                                <Box display="flex" alignItems="center" gap={1}>
-                                    <Avatar sx={{ bgcolor: 'secondary.main', width: 32, height: 32, fontSize: '0.875rem', fontWeight: 'bold' }}>
+                            <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2.5}>
+                                <Box display="flex" alignItems="center" gap={1.5}>
+                                    <Avatar 
+                                        sx={{ 
+                                            bgcolor: 'primary.main', 
+                                            width: 48, 
+                                            height: 48, 
+                                            fontSize: '1.1rem', 
+                                            fontWeight: 'bold',
+                                            boxShadow: 2
+                                        }}
+                                    >
                                         {record.username?.charAt(0).toUpperCase()}
                                     </Avatar>
                                     <Box minWidth={0}>
-                                        <Typography variant="subtitle2" component="div" sx={{ fontWeight: 700, lineHeight: 1.2, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                        <Typography 
+                                            variant="h6" 
+                                            component="div" 
+                                            sx={{ 
+                                                fontWeight: 700, 
+                                                lineHeight: 1.2,
+                                                fontSize: '1rem',
+                                                overflow: 'hidden', 
+                                                textOverflow: 'ellipsis', 
+                                                whiteSpace: 'nowrap',
+                                                maxWidth: 150
+                                            }}
+                                        >
                                             {record.username}
                                         </Typography>
                                         <Typography variant="caption" color="text.secondary">
-                                            #{String(record.id).slice(-6)}
+                                            ID: #{String(record.id).slice(-8)}
                                         </Typography>
                                     </Box>
                                 </Box>
                                 <Chip 
-                                    label={record.status === 'enabled' ? '✓' : '×'} 
-                                    size="small" 
+                                    label={record.status === 'enabled' ? 'Active' : 'Inactive'} 
+                                    size="medium" 
                                     color={record.status === 'enabled' ? 'success' : 'default'}
                                     variant="filled" 
-                                    sx={{ minWidth: 24, height: 24, fontSize: '0.75rem' }}
+                                    sx={{ 
+                                        fontWeight: 'bold',
+                                        fontSize: '0.7rem',
+                                        height: 28
+                                    }}
                                 />
                             </Box>
                             
-                            {/* Quick Stats Row */}
-                            <Box display="flex" justifyContent="space-between" mt={1.5} mb={1} gap={1}>
-                                <Box flex={1}>
-                                    <Typography variant="caption" color="text.secondary">Level</Typography>
-                                    <Typography variant="body2" fontWeight="bold" noWrap>
-                                        {record.level !== undefined ? record.level : 'N/A'}
+                            {/* Agent Info Section */}
+                            <Box 
+                                sx={{ 
+                                    bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.03)', 
+                                    p: 2, 
+                                    borderRadius: 2, 
+                                    mb: 2 
+                                }}
+                            >
+                                <Box display="flex" alignItems="center" gap={1} mb={1.5}>
+                                    <Typography variant="caption" color="text.secondary" sx={{ minWidth: 50 }}>
+                                        Name:
+                                    </Typography>
+                                    <Typography variant="body2" fontWeight="bold">
+                                        {record.realname || 'N/A'}
                                     </Typography>
                                 </Box>
-                                <Box flex={1}>
-                                    <Typography variant="caption" color="text.secondary">Balance</Typography>
-                                    <Typography variant="body2" fontWeight="bold" color="primary.main" noWrap>
-                                        ${((record.balance || 0)).toFixed(0)}
+                                <Box display="flex" alignItems="center" gap={1} mb={1.5}>
+                                    <Typography variant="caption" color="text.secondary" sx={{ minWidth: 50 }}>
+                                        Contact:
+                                    </Typography>
+                                    <Typography variant="body2">
+                                        {record.mobile || record.email || 'N/A'}
                                     </Typography>
                                 </Box>
-                                <Box flex={1}>
-                                    <Typography variant="caption" color="text.secondary">Tier</Typography>
-                                    <Typography variant="body2" fontWeight="bold" noWrap>
-                                        {record.level === 0 ? 'Root' : 'L' + (record.level || 0)}
+                                <Box display="flex" alignItems="center" gap={1}>
+                                    <Typography variant="caption" color="text.secondary" sx={{ minWidth: 50 }}>
+                                        Balance:
+                                    </Typography>
+                                    <Typography 
+                                        variant="body1" 
+                                        fontWeight="bold" 
+                                        color="primary.main"
+                                    >
+                                        ${(record.balance || 0).toFixed(2)}
                                     </Typography>
                                 </Box>
                             </Box>
 
-                            {/* Expandable Details Section */}
-                            {expandedCard === record.id && (
-                                <Box 
+                            {/* Statistics Section */}
+                            <Box 
+                                sx={{ 
+                                    bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(33, 150, 243, 0.15)' : 'rgba(33, 150, 243, 0.08)', 
+                                    p: 2, 
+                                    borderRadius: 2,
+                                    mb: 2
+                                }}
+                            >
+                                <Typography 
+                                    variant="caption" 
+                                    color="primary.main" 
                                     sx={{ 
-                                        bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', 
-                                        p: 1, 
-                                        borderRadius: 1, 
-                                        mt: 1,
-                                        animation: 'fadeIn 0.2s ease-in'
+                                        display: 'block', 
+                                        mb: 1.5,
+                                        fontWeight: 600,
+                                        letterSpacing: 0.5
                                     }}
                                 >
-                                    <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-                                        DETAILS
-                                    </Typography>
-                                    <Typography variant="caption" sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                        <span>Name:</span> <strong>{record.realname}</strong>
-                                    </Typography>
-                                    <Typography variant="caption" sx={{ display: 'flex', justifyContent: 'space-between', mb: 0.5 }}>
-                                        <span>Contact:</span> <strong>{record.mobile}</strong>
-                                    </Typography>
-                                    <Typography variant="caption" sx={{ display: 'flex', justifyContent: 'space-between' }}>
-                                        <span>Balance:</span> 
-                                        <strong style={{ color: '#1976d2' }}>
-                                            ${(record.balance || 0).toFixed(2)}
-                                        </strong>
-                                    </Typography>
+                                    STATISTICS
+                                </Typography>
+                                <Box display="flex" justifyContent="space-between" gap={2}>
+                                    <Box textAlign="center" flex={1}>
+                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                            Level
+                                        </Typography>
+                                        <Typography variant="body1" fontWeight="bold" sx={{ fontSize: '1.1rem' }}>
+                                            {record.level !== undefined ? record.level : '-'}
+                                        </Typography>
+                                    </Box>
+                                    <Box textAlign="center" flex={1}>
+                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                            Tier
+                                        </Typography>
+                                        <Typography variant="body1" fontWeight="bold" sx={{ fontSize: '1.1rem' }}>
+                                            {record.level === 0 ? 'Root' : record.level === 1 ? 'Level 1' : `L${record.level || 0}`}
+                                        </Typography>
+                                    </Box>
+                                    <Box textAlign="center" flex={1}>
+                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
+                                            Status
+                                        </Typography>
+                                        <Typography 
+                                            variant="body1" 
+                                            fontWeight="bold" 
+                                            color={record.status === 'enabled' ? 'success.main' : 'error.main'}
+                                            sx={{ fontSize: '1.1rem' }}
+                                        >
+                                            {record.status === 'enabled' ? 'Active' : 'Off'}
+                                        </Typography>
+                                    </Box>
                                 </Box>
-                            )}
+                            </Box>
                         </CardContent>
                         
                         {/* Actions */}
                         <CardActions sx={{ 
-                            justifyContent: 'space-between', 
+                            justifyContent: 'flex-end', 
                             borderTop: theme => `1px solid ${theme.palette.divider}`, 
-                            px: 1, 
-                            py: 0.5,
-                            minHeight: 36
+                            px: 2.5, 
+                            py: 1.5,
+                            gap: 1,
+                            bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)'
                         }}>
                             <Button 
-                                size="small"
-                                onClick={() => setExpandedCard(expandedCard === record.id ? null : record.id)}
+                                component={Link} 
+                                to={`/agents/${record.id}/show`}
+                                variant="contained"
+                                color="primary"
                                 sx={{ 
                                     textTransform: 'none', 
-                                    fontSize: '0.75rem',
-                                    minWidth: 'auto',
-                                    px: 1
+                                    borderRadius: 2,
+                                    px: 2.5,
+                                    py: 0.75
                                 }}
+                                startIcon={<span>🔍</span>}
                             >
-                                {expandedCard === record.id ? '↑ Less' : '↓ More'}
+                                View Details
                             </Button>
-                            <Box display="flex" gap={0.5}>
-                                <TopupButton />
-                                <Button 
-                                    size="small"
-                                    component={Link} 
-                                    to={`/agents/${record.id}/show`}
-                                    sx={{ 
-                                        textTransform: 'none', 
-                                        fontSize: '0.75rem',
-                                        minWidth: 'auto',
-                                        px: 1
-                                    }}
-                                >
-                                    View
-                                </Button>
-                            </Box>
+                            <TopupButton />
                         </CardActions>
                     </Card>
                 </RecordContextProvider>
