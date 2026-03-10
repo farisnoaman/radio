@@ -170,6 +170,32 @@ const AgentGrid = () => {
                                     </Typography>
                                 </Typography>
                             </Box>
+                            {/* Agent Stats Card Section */}
+                            <Box sx={{ mt: 2, p: 1.5, bgcolor: 'rgba(33, 150, 243, 0.1)', borderRadius: 2 }}>
+                                <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                                    AGENT STATISTICS
+                                </Typography>
+                                <Box display="flex" justifyContent="space-between" gap={1}>
+                                    <Box textAlign="center" flex={1}>
+                                        <Typography variant="caption" color="text.secondary">Level</Typography>
+                                        <Typography variant="body2" fontWeight="bold">
+                                            {record.level !== undefined ? record.level : 'N/A'}
+                                        </Typography>
+                                    </Box>
+                                    <Box textAlign="center" flex={1}>
+                                        <Typography variant="caption" color="text.secondary">Status</Typography>
+                                        <Typography variant="body2" fontWeight="bold" color={record.status === 'enabled' ? 'success.main' : 'error.main'}>
+                                            {record.status}
+                                        </Typography>
+                                    </Box>
+                                    <Box textAlign="center" flex={1}>
+                                        <Typography variant="caption" color="text.secondary">Tier</Typography>
+                                        <Typography variant="body2" fontWeight="bold">
+                                            {record.level === 0 ? 'Root' : record.level === 1 ? 'Level 1' : 'Level ' + (record.level || 0)}
+                                        </Typography>
+                                    </Box>
+                                </Box>
+                            </Box>
                         </CardContent>
                         <CardActions sx={{ justifyContent: 'flex-end', borderTop: theme => `1px solid ${theme.palette.divider}`, px: 2, py: 1.5 }}>
                             <TopupButton />
