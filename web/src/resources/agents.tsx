@@ -20,7 +20,8 @@ import {
     FunctionField,
     useListContext,
     RecordContextProvider,
-    Link
+    Link,
+    Filter
 } from 'react-admin';
 import { Box, Card, CardContent, CardActions, Typography, useMediaQuery, Theme, Avatar, Chip } from '@mui/material';
 import {
@@ -39,6 +40,15 @@ const AgentListActions = () => (
     <TopToolbar>
         <CreateButton />
     </TopToolbar>
+);
+
+const AgentFilter = (props: any) => (
+    <Filter {...props}>
+        <TextInput source="q" label="Search" alwaysOn />
+        <TextInput source="username" label="Username" />
+        <TextInput source="realname" label="Name" />
+        <TextInput source="email" label="Email" />
+    </Filter>
 );
 
 const TopupButton = () => {
@@ -179,7 +189,7 @@ const AgentGrid = () => {
 export const AgentList = (props: ListProps) => {
     const isSmall = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
     return (
-        <List {...props} actions={<AgentListActions />}>
+        <List {...props} actions={<AgentListActions />} filters={<AgentFilter />}>
             {isSmall ? (
                 <AgentGrid />
             ) : (
