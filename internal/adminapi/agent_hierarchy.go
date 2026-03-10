@@ -165,23 +165,41 @@ func GetAgentSubAgents(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid agent ID", nil)
 	}
 
+	// Pagination parameters
+	page, _ := strconv.Atoi(c.QueryParam("page"))
+	perPage, _ := strconv.Atoi(c.QueryParam("perPage"))
+	if page < 1 {
+		page = 1
+	}
+	if perPage < 1 || perPage > 100 {
+		perPage = 10
+	}
+	offset := (page - 1) * perPage
+
 	var subAgents []struct {
 		domain.AgentHierarchy
 		AgentName  string `json:"agent_name"`
 		AgentEmail string `json:"agent_email"`
 	}
 
-	query := GetDB(c).Table("agent_hierarchy").
+	baseQuery := GetDB(c).Table("agent_hierarchy").
 		Select("agent_hierarchy.*, sys_opr.realname as agent_name, sys_opr.email as agent_email").
 		Joins("JOIN sys_opr ON agent_hierarchy.agent_id = sys_opr.id").
 		Where("agent_hierarchy.parent_id = ? AND agent_hierarchy.status = ?", agentID, "active").
 		Order("agent_hierarchy.created_at DESC")
 
-	if err := query.Find(&subAgents).Error; err != nil {
+	// Get total count
+	var total int64
+	GetDB(c).Model(&domain.AgentHierarchy{}).
+		Where("parent_id = ? AND status = ?", agentID, "active").
+		Count(&total)
+
+	// Get paginated results
+	if err := baseQuery.Offset(offset).Limit(perPage).Find(&subAgents).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "QUERY_FAILED", "Failed to query sub-agents", err.Error())
 	}
 
-	return ok(c, subAgents)
+	return paged(c, subAgents, total, page, perPage)
 }
 
 // GetAgentHierarchyTree retrieves the complete hierarchy tree for an agent
