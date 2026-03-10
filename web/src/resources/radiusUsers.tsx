@@ -269,8 +269,8 @@ const DetailSectionCard = ({
   >
     <Box
       sx={{
-        px: 2.5,
-        py: 2,
+        px: { xs: 1.5, sm: 2.5 },
+        py: { xs: 1, sm: 2 },
         backgroundColor: theme =>
           alpha(
             theme.palette[color].main,
@@ -280,14 +280,14 @@ const DetailSectionCard = ({
           `1px solid ${alpha(theme.palette[color].main, 0.2)}`,
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+      <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 1.5 } }}>
         <Box
           sx={{
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: 36,
-            height: 36,
+            width: { xs: 32, sm: 36 },
+            height: { xs: 32, sm: 36 },
             borderRadius: 2,
             backgroundColor: theme =>
               alpha(theme.palette[color].main, theme.palette.mode === 'dark' ? 0.3 : 0.15),
@@ -302,7 +302,7 @@ const DetailSectionCard = ({
             sx={{
               fontWeight: 600,
               color: `${color}.main`,
-              fontSize: '1.1rem',
+              fontSize: { xs: '1rem', sm: '1.1rem' },
             }}
           >
             {title}
@@ -314,6 +314,7 @@ const DetailSectionCard = ({
                 color: 'text.secondary',
                 fontSize: '0.9rem',
                 mt: 0.25,
+                display: { xs: 'none', sm: 'block' }
               }}
             >
               {description}
@@ -322,7 +323,7 @@ const DetailSectionCard = ({
         </Box>
       </Box>
     </Box>
-    <CardContent sx={{ p: 2.5 }}>{children}</CardContent>
+    <CardContent sx={{ p: { xs: 1.5, sm: 2.5 } }}>{children}</CardContent>
   </Card>
 );
 
@@ -1828,16 +1829,16 @@ const UserHeaderCard = () => {
         }}
       />
 
-      <CardContent sx={{ p: 3, position: 'relative', zIndex: 1 }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', mb: 3 }}>
-          {/* 左侧：用户信息 */}
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+      <CardContent sx={{ p: { xs: 2, sm: 3 }, position: 'relative', zIndex: 1 }}>
+        <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'flex-start' }, gap: { xs: 2, sm: 0 }, mb: { xs: 2, sm: 3 } }}>
+          {/* Left: User Info */}
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1.5, sm: 2 } }}>
             <Avatar
               sx={{
-                width: 64,
-                height: 64,
+                width: { xs: 48, sm: 64 },
+                height: { xs: 48, sm: 64 },
                 bgcolor: isEnabled ? 'primary.main' : 'grey.500',
-                fontSize: '1.5rem',
+                fontSize: { xs: '1.2rem', sm: '1.5rem' },
                 fontWeight: 700,
                 boxShadow: theme => `0 4px 14px ${alpha(isEnabled ? theme.palette.primary.main : theme.palette.grey[500], 0.4)}`,
               }}
@@ -1845,8 +1846,8 @@ const UserHeaderCard = () => {
               {record.username?.charAt(0).toUpperCase() || 'U'}
             </Avatar>
             <Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5, flexWrap: 'wrap' }}>
+                <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary', fontSize: { xs: '1.1rem', sm: '1.5rem' } }}>
                   {record.username || <EmptyValue message={translate('resources.radius/users.fields.unknown_user', { _: 'Unknown user' })} />}
                 </Typography>
                 {isEnabled ? (
@@ -1868,13 +1869,11 @@ const UserHeaderCard = () => {
                   />
                 )}
               </Box>
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                {record.realname && (
-                  <Typography variant="body2" color="text.secondary">
-                    {record.realname}
-                  </Typography>
-                )}
-              </Box>
+              {record.realname && (
+                <Typography variant="body2" color="text.secondary">
+                  {record.realname}
+                </Typography>
+              )}
               {record.username && (
                 <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
                   <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
@@ -1894,8 +1893,8 @@ const UserHeaderCard = () => {
             </Box>
           </Box>
 
-          {/* 右侧：操作按钮 */}
-          <Box className="no-print" sx={{ display: 'flex', gap: 1 }}>
+          {/* Right: Action buttons */}
+          <Box className="no-print" sx={{ display: 'flex', gap: 1, justifyContent: { xs: 'flex-end', sm: 'flex-start' } }}>
             <Tooltip title={translate('resources.radius/users.print_details', { _: 'Print Details' })}>
               <IconButton
                 onClick={() => window.print()}
@@ -1940,7 +1939,7 @@ const UserHeaderCard = () => {
         <Box
           sx={{
             display: 'grid',
-            gap: 2,
+            gap: 1.5,
             gridTemplateColumns: {
               xs: 'repeat(2, 1fr)',
               sm: 'repeat(4, 1fr)',
