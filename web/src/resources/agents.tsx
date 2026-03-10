@@ -119,7 +119,6 @@ const TopupButton = () => {
 
 const AgentGrid = () => {
     const { data, isLoading } = useListContext();
-    const isMobile = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
     const [expandedCard, setExpandedCard] = useState<number | null>(null);
 
     if (isLoading || !data) return null;
