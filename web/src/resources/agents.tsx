@@ -119,7 +119,6 @@ const TopupButton = () => {
 
 const AgentGrid = () => {
     const { data, isLoading } = useListContext();
-    const [expandedCard, setExpandedCard] = useState<number | null>(null);
 
     if (isLoading || !data) return null;
     
