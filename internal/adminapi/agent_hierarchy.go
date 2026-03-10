@@ -1184,4 +1184,27 @@ func registerAgentHierarchyRoutes() {
 
 	// Performance analytics routes
 	webserver.ApiGET("/agents/:id/performance", GetAgentPerformance)
+
+	// Root agents list
+	webserver.ApiGET("/agents/roots", GetRootAgents)
+}
+
+// GetRootAgents retrieves all root-level agents (no parent)
+func GetRootAgents(c echo.Context) error {
+	var agents []struct {
+		domain.AgentHierarchy
+		AgentName  string `json:"agent_name"`
+		AgentEmail string `json:"agent_email"`
+	}
+
+	query := GetDB(c).Table("agent_hierarchy").
+		Select("agent_hierarchy.*, sys_opr.realname as agent_name, sys_opr.email as agent_email").
+		Joins("JOIN sys_opr ON agent_hierarchy.agent_id = sys_opr.id").
+		Where("agent_hierarchy.parent_id IS NULL AND agent_hierarchy.status = ?", "active")
+
+	if err := query.Find(&agents).Error; err != nil {
+		return fail(c, http.StatusInternalServerError, "QUERY_FAILED", "Failed to query root agents", err.Error())
+	}
+
+	return ok(c, agents)
 }
