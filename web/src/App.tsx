@@ -85,6 +85,7 @@ import {
 import {
   AgentList,
   AgentCreate,
+  AgentShow,
 } from './resources/agents';
 import {
   ServerList,
@@ -219,6 +220,7 @@ const App = () => (
       name="agents"
       list={AgentList}
       create={AgentCreate}
+      show={AgentShow}
     />
 
     {/* System Logs */}

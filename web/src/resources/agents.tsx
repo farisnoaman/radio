@@ -21,7 +21,9 @@ import {
     useListContext,
     RecordContextProvider,
     Link,
-    Filter
+    Filter,
+    Show,
+    SimpleShowLayout
 } from 'react-admin';
 import { Box, Card, CardContent, CardActions, Typography, useMediaQuery, Theme, Avatar, Chip } from '@mui/material';
 import {
@@ -250,4 +252,29 @@ export const AgentCreate = (props: CreateProps) => (
             <TextInput source="status" defaultValue="enabled" style={{ display: 'none' }} />
         </SimpleForm>
     </Create>
+);
+
+import { AgentHierarchyTree } from './AgentHierarchyTree';
+
+export const AgentShow = (props: any) => (
+    <Show {...props}>
+        <SimpleShowLayout>
+            <Box sx={{ mb: 2 }}>
+                <Typography variant="h5" gutterBottom>
+                    Agent Details
+                </Typography>
+            </Box>
+            <TextField source="id" label="ID" />
+            <TextField source="username" label="Username" />
+            <TextField source="realname" label="Name" />
+            <EmailField source="email" label="Email" />
+            <TextField source="mobile" label="Mobile" />
+            <TextField source="status" label="Status" />
+            <FunctionField
+                label="Wallet Balance"
+                render={(record: any) => `$${(record.balance || 0).toFixed(2)}`}
+            />
+            <AgentHierarchyTree />
+        </SimpleShowLayout>
+    </Show>
 );
