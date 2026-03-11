@@ -647,10 +647,10 @@ const UserEmptyListState = () => {
     >
       <PersonIcon sx={{ fontSize: 64, opacity: 0.3, mb: 2 }} />
       <Typography variant="h6" sx={{ opacity: 0.6, mb: 1 }}>
-        {translate('resources.radius/users.empty.title', { _: '暂无用户' })}
+        {translate('resources.radius/users.empty.title', { _: 'No users' })}
       </Typography>
       <Typography variant="body2" sx={{ opacity: 0.5 }}>
-        {translate('resources.radius/users.empty.description', { _: '点击"新建"按钮添加第一个RADIUS用户' })}
+        {translate('resources.radius/users.empty.description', { _: 'Click "Create" to add your first RADIUS user' })}
       </Typography>
     </Box>
   );
@@ -708,11 +708,11 @@ const UserSearchHeaderCard = () => {
   );
 
   const filterFields = [
-    { key: 'username', label: translate('resources.radius/users.fields.username', { _: '用户名' }) },
-    { key: 'realname', label: translate('resources.radius/users.fields.realname', { _: '真实姓名' }) },
-    { key: 'email', label: translate('resources.radius/users.fields.email', { _: '邮箱' }) },
-    { key: 'mobile', label: translate('resources.radius/users.fields.mobile', { _: '手机号' }) },
-    { key: 'ip_addr', label: translate('resources.radius/users.fields.ip_addr', { _: 'IP地址' }) },
+    { key: 'username', label: translate('resources.radius/users.fields.username', { _: 'Username' }) },
+    { key: 'realname', label: translate('resources.radius/users.fields.realname', { _: 'Real Name' }) },
+    { key: 'email', label: translate('resources.radius/users.fields.email', { _: 'Email' }) },
+    { key: 'mobile', label: translate('resources.radius/users.fields.mobile', { _: 'Mobile' }) },
+    { key: 'ip_addr', label: translate('resources.radius/users.fields.ip_addr', { _: 'IP Address' }) },
   ];
 
   return (
@@ -739,7 +739,7 @@ const UserSearchHeaderCard = () => {
       >
         <FilterIcon sx={{ color: 'primary.main', fontSize: 20 }} />
         <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary' }}>
-          {translate('resources.radius/users.filter.title', { _: '筛选条件' })}
+          {translate('resources.radius/users.filter.title', { _: 'Filter Conditions' })}
         </Typography>
       </Box>
 
@@ -777,7 +777,7 @@ const UserSearchHeaderCard = () => {
 
           {/* 操作按钮 */}
           <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
-            <Tooltip title={translate('ra.action.clear_filters', { _: '清除筛选' })}>
+            <Tooltip title={translate('ra.action.clear_filters', { _: 'Clear Filters' })}>
               <IconButton
                 onClick={handleClear}
                 size="small"
@@ -791,7 +791,7 @@ const UserSearchHeaderCard = () => {
                 <ClearIcon />
               </IconButton>
             </Tooltip>
-            <Tooltip title={translate('ra.action.search', { _: '搜索' })}>
+            <Tooltip title={translate('ra.action.search', { _: 'Search' })}>
               <IconButton
                 onClick={handleSearch}
                 color="primary"
@@ -819,7 +819,7 @@ const StatusIndicator = ({ isEnabled }: { isEnabled: boolean }) => {
   return (
     <Chip
       icon={isEnabled ? <EnabledIcon sx={{ fontSize: '0.85rem !important' }} /> : <DisabledIcon sx={{ fontSize: '0.85rem !important' }} />}
-      label={isEnabled ? translate('resources.radius/users.status.enabled', { _: '启用' }) : translate('resources.radius/users.status.disabled', { _: '禁用' })}
+      label={isEnabled ? translate('resources.radius/users.status.enabled', { _: 'Enabled' }) : translate('resources.radius/users.status.disabled', { _: 'Disabled' })}
       size="small"
       color={isEnabled ? 'success' : 'default'}
       variant={isEnabled ? 'filled' : 'outlined'}
@@ -902,7 +902,7 @@ const UserListActions = () => {
     <TopToolbar>
       <SortButton
         fields={['created_at', 'expire_time', 'username']}
-        label={translate('ra.action.sort', { _: '排序' })}
+        label={translate('ra.action.sort', { _: 'Sort' })}
       />
       <CreateButton />
       <ExportButton />
@@ -946,68 +946,86 @@ const AnonymizeButton = () => {
 const UserCardGrid = () => {
   const { data, isLoading } = useListContext<RadiusUser>();
   const theme = useTheme();
-  
+  const [anonymizeOpen, setAnonymizeOpen] = useState(false);
+  const [selectedUsername, setSelectedUsername] = useState('');
+
+  const handleAnonymizeOpen = (e: any, username: string) => {
+    e.stopPropagation();
+    setSelectedUsername(username || '');
+    setAnonymizeOpen(true);
+  };
+
   if (isLoading || !data) return null;
 
   return (
-    <Box 
-      display="grid" 
-      gridTemplateColumns={{ xs: '1fr', sm: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }} 
-      gap={2} 
-      p={0}
-      sx={{ bgcolor: theme.palette.mode === 'dark' ? 'transparent' : 'rgba(0,0,0,0.02)' }}
+    <Box
+      display="grid"
+      gridTemplateColumns={{ xs: '1fr', sm: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(3, 1fr)' }}
+      gap={2}
+      p={2}
+      sx={{
+        bgcolor: theme.palette.mode === 'dark' ? '#1a1a2e' : 'rgba(0,0,0,0.02)',
+        minHeight: '100%'
+      }}
     >
       {data.map(record => (
         <RecordContextProvider value={record} key={record.id}>
-            <Card 
-              elevation={2} 
-              sx={{ 
-                borderRadius: 2.5,
-                transition: 'all 0.3s ease',
-                cursor: 'pointer',
-                '&:hover': { 
-                  transform: 'translateY(-4px)',
-                  boxShadow: 6,
-                  bgcolor: theme => theme.palette.mode === 'dark' 
-                    ? 'rgba(255,255,255,0.08)' 
-                    : 'rgba(25, 118, 210, 0.04)'
-                }
-              }}
-              onClick={() => {
-                window.location.href = `#/radius/users/${record.id}/show`;
-              }}
+          <Card
+            elevation={0}
+            sx={{
+              borderRadius: 2.5,
+              transition: 'all 0.3s ease',
+              cursor: 'pointer',
+              border: theme => `1px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.12)' : theme.palette.divider}`,
+              bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.05)' : 'background.paper',
+              '&:hover': {
+                transform: 'translateY(-4px)',
+                boxShadow: theme => theme.palette.mode === 'dark'
+                  ? '0 8px 25px rgba(0,0,0,0.4)'
+                  : 6,
+                borderColor: 'primary.main',
+                bgcolor: theme => theme.palette.mode === 'dark'
+                  ? 'rgba(255,255,255,0.08)'
+                  : 'rgba(25, 118, 210, 0.04)'
+              }
+            }}
+            onClick={() => {
+              window.location.href = `#/radius/users/${record.id}/show`;
+            }}
           >
-            <CardContent sx={{ pb: 1, pt: 1.5, px: 2 }}>
+            <CardContent sx={{ pb: 1, pt: 1.5, px: 2, color: 'text.primary' }}>
               {/* Header: Avatar, Username, Status */}
               <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={1.5}>
                 <Box display="flex" alignItems="center" gap={1.5}>
-                  <Avatar 
-                    sx={{ 
-                      bgcolor: record.status === 'enabled' ? 'primary.main' : 'grey.400', 
-                      width: 44, 
-                      height: 44, 
-                      fontSize: '1rem', 
-                      fontWeight: 'bold' 
+                  <Avatar
+                    sx={{
+                      bgcolor: record.status === 'enabled' ? 'primary.main' : 'grey.600',
+                      width: 44,
+                      height: 44,
+                      fontSize: '1rem',
+                      fontWeight: 'bold',
+                      border: theme => `2px solid ${theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.2)' : 'transparent'}`
                     }}
                   >
                     {record.username?.charAt(0).toUpperCase() || 'U'}
                   </Avatar>
                   <Box minWidth={0}>
-                    <Typography 
-                      variant="subtitle1" 
-                      component="div" 
-                      sx={{ 
-                        fontWeight: 700, 
+                    <Typography
+                      variant="subtitle1"
+                      component="div"
+                      sx={{
+                        fontWeight: 700,
                         lineHeight: 1.2,
-                        overflow: 'hidden', 
-                        textOverflow: 'ellipsis', 
+                        overflow: 'hidden',
+                        textOverflow: 'ellipsis',
                         whiteSpace: 'nowrap',
-                        maxWidth: 150
+                        maxWidth: 150,
+                        color: 'text.primary'
                       }}
                     >
                       {record.username || '-'}
                     </Typography>
-                    <Typography variant="caption" color="text.secondary">
+                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                       #{String(record.id).slice(-6)}
                     </Typography>
                   </Box>
@@ -1020,20 +1038,20 @@ const UserCardGrid = () => {
               {/* Stats Row */}
               <Box display="flex" justifyContent="space-between" gap={1} mb={1}>
                 <Box flex={1}>
-                  <Typography variant="caption" color="text.secondary">Profile</Typography>
-                  <Typography variant="body2" fontWeight="bold" noWrap>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>Profile</Typography>
+                  <Typography variant="body2" fontWeight="bold" noWrap sx={{ color: 'text.primary' }}>
                     {record.profile_id || '-'}
                   </Typography>
                 </Box>
                 <Box flex={1}>
-                  <Typography variant="caption" color="text.secondary">Type</Typography>
-                  <Typography variant="body2" fontWeight="bold" noWrap>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>Type</Typography>
+                  <Typography variant="body2" fontWeight="bold" noWrap sx={{ color: 'text.primary' }}>
                     {record.billing_type || '-'}
                   </Typography>
                 </Box>
                 <Box flex={1}>
-                  <Typography variant="caption" color="text.secondary">Expire</Typography>
-                  <Typography variant="body2" noWrap>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>Expire</Typography>
+                  <Typography variant="body2" noWrap sx={{ color: 'text.primary' }}>
                     {formatExpireTime(record.expire_time).text}
                   </Typography>
                 </Box>
@@ -1041,22 +1059,60 @@ const UserCardGrid = () => {
             </CardContent>
 
             {/* Actions */}
-            <CardActions sx={{ 
-              justifyContent: 'flex-end', 
-              borderTop: theme => `1px solid ${theme.palette.divider}`, 
-              px: 1.5, 
-              py: 1,
-              gap: 0.5,
+            <CardActions sx={{
+              justifyContent: 'space-between',
+              borderTop: theme => `1px solid ${theme.palette.divider}`,
+              px: 2,
+              py: 1.5,
               bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)'
             }}>
-              <Box sx={{ display: 'flex', gap: 0.5, alignItems: 'center' }}>
-                <AnonymizeButton />
-                <EditButton label="" size="small" />
-              </Box>
+              <Button
+                variant="outlined"
+                size="small"
+                startIcon={<NoAccountsIcon sx={{ fontSize: '1rem' }} />}
+                onClick={(e: any) => handleAnonymizeOpen(e, record.username || '')}
+                sx={{
+                  fontSize: '0.75rem',
+                  textTransform: 'none',
+                  borderColor: 'warning.main',
+                  color: 'warning.main',
+                  '&:hover': {
+                    bgcolor: 'warning.main',
+                    color: 'white',
+                    borderColor: 'warning.main'
+                  }
+                }}
+              >
+                Anonymize
+              </Button>
+              <EditButton
+                label="Edit"
+                size="medium"
+                variant="outlined"
+                sx={{
+                  fontSize: '0.75rem',
+                  textTransform: 'none',
+                  borderColor: 'primary.main',
+                  color: 'primary.main',
+                  '&:hover': {
+                    bgcolor: 'primary.main',
+                    color: 'white',
+                    borderColor: 'primary.main',
+                    borderRadius: 1
+                  }
+                }}
+              />
             </CardActions>
           </Card>
         </RecordContextProvider>
       ))}
+      {anonymizeOpen && (
+        <UserAnonymizeDialog
+          open={anonymizeOpen}
+          onClose={() => setAnonymizeOpen(false)}
+          username={selectedUsername}
+        />
+      )}
     </Box>
   );
 };
@@ -1070,20 +1126,20 @@ const RadiusUserListContent = () => {
   // 活动筛选器标签配置
   const fieldLabels = useMemo(
     () => ({
-      username: translate('resources.radius/users.fields.username', { _: '用户名' }),
-      realname: translate('resources.radius/users.fields.realname', { _: '真实姓名' }),
-      email: translate('resources.radius/users.fields.email', { _: '邮箱' }),
-      mobile: translate('resources.radius/users.fields.mobile', { _: '手机号' }),
-      ip_addr: translate('resources.radius/users.fields.ip_addr', { _: 'IP地址' }),
-      status: translate('resources.radius/users.fields.status', { _: '状态' }),
+      username: translate('resources.radius/users.fields.username', { _: 'Username' }),
+      realname: translate('resources.radius/users.fields.realname', { _: 'Real Name' }),
+      email: translate('resources.radius/users.fields.email', { _: 'Email' }),
+      mobile: translate('resources.radius/users.fields.mobile', { _: 'Mobile' }),
+      ip_addr: translate('resources.radius/users.fields.ip_addr', { _: 'IP Address' }),
+      status: translate('resources.radius/users.fields.status', { _: 'Status' }),
     }),
     [translate],
   );
 
   const statusLabels = useMemo(
     () => ({
-      enabled: translate('resources.radius/users.status.enabled', { _: '启用' }),
-      disabled: translate('resources.radius/users.status.disabled', { _: '禁用' }),
+      enabled: translate('resources.radius/users.status.enabled', { _: 'Enabled' }),
+      disabled: translate('resources.radius/users.status.disabled', { _: 'Disabled' }),
     }),
     [translate],
   );
@@ -1219,45 +1275,45 @@ const RadiusUserListContent = () => {
             <Datagrid rowClick="show" bulkActionButtons={false}>
               <FunctionField
                 source="username"
-                label={translate('resources.radius/users.fields.username', { _: '用户名' })}
+                label={translate('resources.radius/users.fields.username', { _: 'Username' })}
                 render={() => <UsernameField />}
               />
               <TextField
                 source="realname"
-                label={translate('resources.radius/users.fields.realname', { _: '真实姓名' })}
+                label={translate('resources.radius/users.fields.realname', { _: 'Real Name' })}
               />
               <EmailField
                 source="email"
-                label={translate('resources.radius/users.fields.email', { _: '邮箱' })}
+                label={translate('resources.radius/users.fields.email', { _: 'Email' })}
               />
               <TextField
                 source="mobile"
-                label={translate('resources.radius/users.fields.mobile', { _: '手机号' })}
+                label={translate('resources.radius/users.fields.mobile', { _: 'Mobile' })}
               />
               <FunctionField
                 source="ip_addr"
-                label={translate('resources.radius/users.fields.ip_addr', { _: 'IP地址' })}
+                label={translate('resources.radius/users.fields.ip_addr', { _: 'IP Address' })}
                 render={() => <IpAddressField />}
               />
               <ReferenceField
                 source="profile_id"
                 reference="radius/profiles"
-                label={translate('resources.radius/users.fields.profile_id', { _: '计费策略' })}
+                label={translate('resources.radius/users.fields.profile_id', { _: 'Billing Policy' })}
               >
                 <TextField source="name" />
               </ReferenceField>
               <FunctionField
                 source="expire_time"
-                label={translate('resources.radius/users.fields.expire_time', { _: '过期时间' })}
+                label={translate('resources.radius/users.fields.expire_time', { _: 'Expiration Time' })}
                 render={() => <ExpireTimeField />}
               />
               <TextField
                 source="billing_type"
-                label={translate('resources.radius/users.fields.billing_type', { _: '计费类型' })}
+                label={translate('resources.radius/users.fields.billing_type', { _: 'Billing Type' })}
               />
               <DateField
                 source="created_at"
-                label={translate('resources.radius/users.fields.created_at', { _: '创建时间' })}
+                label={translate('resources.radius/users.fields.created_at', { _: 'Created At' })}
                 showTime
               />
               <FunctionField
@@ -1823,7 +1879,7 @@ const UserHeaderCard = () => {
                 {isEnabled ? (
                   <Chip
                     icon={<EnabledIcon sx={{ fontSize: '1rem !important' }} />}
-                    label={translate('resources.radius/users.status.enabled', { _: '启用' })}
+                    label={translate('resources.radius/users.status.enabled', { _: 'Enabled' })}
                     size="small"
                     color="success"
                     sx={{ fontWeight: 600, height: 24 }}
@@ -1831,7 +1887,7 @@ const UserHeaderCard = () => {
                 ) : (
                   <Chip
                     icon={<DisabledIcon sx={{ fontSize: '1rem !important' }} />}
-                    label={translate('resources.radius/users.status.disabled', { _: '禁用' })}
+                    label={translate('resources.radius/users.status.disabled', { _: 'Disabled' })}
                     size="small"
                     color="default"
                     variant="outlined"
@@ -1927,7 +1983,7 @@ const UserHeaderCard = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <EmailIcon sx={{ fontSize: '1.1rem', color: 'info.main' }} />
               <Typography variant="caption" color="text.secondary">
-                {translate('resources.radius/users.fields.email', { _: '邮箱' })}
+                {translate('resources.radius/users.fields.email', { _: 'Email' })}
               </Typography>
             </Box>
             <Typography variant="body2" sx={{ fontWeight: 600, wordBreak: 'break-all' }}>
@@ -1946,7 +2002,7 @@ const UserHeaderCard = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <PhoneIcon sx={{ fontSize: '1.1rem', color: 'success.main' }} />
               <Typography variant="caption" color="text.secondary">
-                {translate('resources.radius/users.fields.mobile', { _: '手机号' })}
+                {translate('resources.radius/users.fields.mobile', { _: 'Mobile' })}
               </Typography>
             </Box>
             <Typography variant="body2" sx={{ fontWeight: 600 }}>
@@ -1965,7 +2021,7 @@ const UserHeaderCard = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <NetworkIcon sx={{ fontSize: '1.1rem', color: 'warning.main' }} />
               <Typography variant="caption" color="text.secondary">
-                {translate('resources.radius/users.fields.ip_addr', { _: 'IP地址' })}
+                {translate('resources.radius/users.fields.ip_addr', { _: 'IP Address' })}
               </Typography>
             </Box>
             <Typography variant="body2" sx={{ fontWeight: 600, fontFamily: 'monospace' }}>
@@ -1984,7 +2040,7 @@ const UserHeaderCard = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <CalendarIcon sx={{ fontSize: '1.1rem', color: expireInfo.color === 'error' ? 'error.main' : expireInfo.color === 'warning' ? 'warning.main' : 'success.main' }} />
               <Typography variant="caption" color="text.secondary">
-                {translate('resources.radius/users.fields.expire_time', { _: '过期时间' })}
+                {translate('resources.radius/users.fields.expire_time', { _: 'Expiration Time' })}
               </Typography>
             </Box>
             <Chip
@@ -2039,10 +2095,10 @@ const UserDetails = () => {
           {/* 顶部概览卡片 */}
           <UserHeaderCard />
 
-          {/* 基本信息 */}
+          {/* Basic Information */}
           <DetailSectionCard
-            title={translate('resources.radius/users.sections.basic', { _: '基本信息' })}
-            description={translate('resources.radius/users.sections.basic_desc', { _: '用户的身份认证信息' })}
+            title={translate('resources.radius/users.sections.basic', { _: 'Basic Information' })}
+            description={translate('resources.radius/users.sections.basic_desc', { _: 'User authentication information' })}
             icon={<PersonIcon />}
             color="primary"
           >
@@ -2058,20 +2114,20 @@ const UserDetails = () => {
               }}
             >
               <DetailItem
-                label={translate('resources.radius/users.fields.username', { _: '用户名' })}
+                label={translate('resources.radius/users.fields.username', { _: 'Username' })}
                 value={record.username}
                 highlight
               />
               <DetailItem
-                label={translate('resources.radius/users.fields.realname', { _: '真实姓名' })}
+                label={translate('resources.radius/users.fields.realname', { _: 'Real Name' })}
                 value={record.realname || <EmptyValue />}
               />
               <DetailItem
-                label={translate('resources.radius/users.fields.status', { _: '状态' })}
+                label={translate('resources.radius/users.fields.status', { _: 'Status' })}
                 value={
                   <Chip
                     icon={record.status === 'enabled' ? <EnabledIcon sx={{ fontSize: '0.9rem !important' }} /> : <DisabledIcon sx={{ fontSize: '0.9rem !important' }} />}
-                    label={record.status === 'enabled' ? translate('resources.radius/users.status.enabled', { _: '启用' }) : translate('resources.radius/users.status.disabled', { _: '禁用' })}
+                    label={record.status === 'enabled' ? translate('resources.radius/users.status.enabled', { _: 'Enabled' }) : translate('resources.radius/users.status.disabled', { _: 'Disabled' })}
                     size="small"
                     color={record.status === 'enabled' ? 'success' : 'default'}
                     sx={{ fontWeight: 600 }}
@@ -2082,10 +2138,10 @@ const UserDetails = () => {
             </Box>
           </DetailSectionCard>
 
-          {/* 联系方式 */}
+          {/* Contact Information */}
           <DetailSectionCard
-            title={translate('resources.radius/users.sections.contact', { _: '联系方式' })}
-            description={translate('resources.radius/users.sections.contact_desc', { _: '联系信息和地址' })}
+            title={translate('resources.radius/users.sections.contact', { _: 'Contact Information' })}
+            description={translate('resources.radius/users.sections.contact_desc', { _: 'Contact details and address' })}
             icon={<ContactIcon />}
             color="info"
           >
@@ -2101,24 +2157,24 @@ const UserDetails = () => {
               }}
             >
               <DetailItem
-                label={translate('resources.radius/users.fields.email', { _: '邮箱' })}
+                label={translate('resources.radius/users.fields.email', { _: 'Email' })}
                 value={record.email || <EmptyValue />}
               />
               <DetailItem
-                label={translate('resources.radius/users.fields.mobile', { _: '手机号' })}
+                label={translate('resources.radius/users.fields.mobile', { _: 'Mobile' })}
                 value={record.mobile || <EmptyValue />}
               />
               <DetailItem
-                label={translate('resources.radius/users.fields.address', { _: '地址' })}
+                label={translate('resources.radius/users.fields.address', { _: 'Address' })}
                 value={record.address || <EmptyValue />}
               />
             </Box>
           </DetailSectionCard>
 
-          {/* 服务配置 */}
+          {/* Service Configuration */}
           <DetailSectionCard
-            title={translate('resources.radius/users.sections.service', { _: '服务配置' })}
-            description={translate('resources.radius/users.sections.service_desc', { _: 'RADIUS服务和权限设置' })}
+            title={translate('resources.radius/users.sections.service', { _: 'Service Configuration' })}
+            description={translate('resources.radius/users.sections.service_desc', { _: 'RADIUS service and permission settings' })}
             icon={<SettingsIcon />}
             color="success"
           >
@@ -2134,7 +2190,7 @@ const UserDetails = () => {
               }}
             >
               <DetailItem
-                label={translate('resources.radius/users.fields.profile_id', { _: '计费策略' })}
+                label={translate('resources.radius/users.fields.profile_id', { _: 'Billing Policy' })}
                 value={
                   record.profile_id ? (
                     <ReferenceField source="profile_id" reference="radius/profiles" link="show">
@@ -2147,7 +2203,7 @@ const UserDetails = () => {
                 highlight
               />
               <DetailItem
-                label={translate('resources.radius/users.fields.expire_time', { _: '过期时间' })}
+                label={translate('resources.radius/users.fields.expire_time', { _: 'Expiration Time' })}
                 value={
                   (() => {
                     const info = formatExpireTime(record.expire_time);
@@ -2201,10 +2257,10 @@ const UserDetails = () => {
             </Card>
           )}
 
-          {/* 网络配置 */}
+          {/* Network Configuration */}
           <DetailSectionCard
-            title={translate('resources.radius/users.sections.network', { _: '网络配置' })}
-            description={translate('resources.radius/users.sections.network_desc', { _: 'IP地址分配设置' })}
+            title={translate('resources.radius/users.sections.network', { _: 'Network Configuration' })}
+            description={translate('resources.radius/users.sections.network_desc', { _: 'IP address assignment settings' })}
             icon={<NetworkIcon />}
             color="warning"
           >
@@ -2219,7 +2275,7 @@ const UserDetails = () => {
               }}
             >
               <DetailItem
-                label={translate('resources.radius/users.fields.ip_addr', { _: 'IPv4地址' })}
+                label={translate('resources.radius/users.fields.ip_addr', { _: 'IPv4 Address' })}
                 value={
                   record.ip_addr ? (
                     <Chip
@@ -2235,7 +2291,7 @@ const UserDetails = () => {
                 }
               />
               <DetailItem
-                label={translate('resources.radius/users.fields.ipv6_addr', { _: 'IPv6地址' })}
+                label={translate('resources.radius/users.fields.ipv6_addr', { _: 'IPv6 Address' })}
                 value={
                   record.ipv6_addr ? (
                     <Chip
@@ -2253,10 +2309,10 @@ const UserDetails = () => {
             </Box>
           </DetailSectionCard>
 
-          {/* 时间信息 */}
+          {/* Timing Information */}
           <DetailSectionCard
-            title={translate('resources.radius/users.sections.timing', { _: '时间信息' })}
-            description={translate('resources.radius/users.sections.timing_desc', { _: '创建和更新时间' })}
+            title={translate('resources.radius/users.sections.timing', { _: 'Timing Information' })}
+            description={translate('resources.radius/users.sections.timing_desc', { _: 'Creation and update times' })}
             icon={<TimeIcon />}
             color="info"
           >
@@ -2271,20 +2327,20 @@ const UserDetails = () => {
               }}
             >
               <DetailItem
-                label={translate('resources.radius/users.fields.created_at', { _: '创建时间' })}
+                label={translate('resources.radius/users.fields.created_at', { _: 'Created At' })}
                 value={formatTimestamp(record.created_at)}
               />
               <DetailItem
-                label={translate('resources.radius/users.fields.updated_at', { _: '更新时间' })}
+                label={translate('resources.radius/users.fields.updated_at', { _: 'Updated At' })}
                 value={formatTimestamp(record.updated_at)}
               />
             </Box>
           </DetailSectionCard>
 
-          {/* 备注信息 */}
+          {/* Remarks */}
           <DetailSectionCard
-            title={translate('resources.radius/users.sections.remark', { _: '备注信息' })}
-            description={translate('resources.radius/users.sections.remark_desc', { _: '额外的说明和备注' })}
+            title={translate('resources.radius/users.sections.remark', { _: 'Remarks' })}
+            description={translate('resources.radius/users.sections.remark_desc', { _: 'Additional notes and comments' })}
             icon={<NoteIcon />}
             color="primary"
           >
@@ -2309,7 +2365,7 @@ const UserDetails = () => {
                   fontStyle: record.remark ? 'normal' : 'italic',
                 }}
               >
-                {record.remark || translate('resources.radius/users.empty.no_remark', { _: '无备注信息' })}
+                {record.remark || translate('resources.radius/users.empty.no_remark', { _: 'No remarks added' })}
               </Typography>
             </Box>
           </DetailSectionCard>

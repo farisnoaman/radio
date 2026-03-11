@@ -15,11 +15,34 @@ import (
 )
 
 // AssignAgentToParentRequest represents the request to assign an agent to a parent agent
+// Note: agent_id is taken from URL parameter, not from body
 type AssignAgentToParentRequest struct {
-	AgentID        int64   `json:"agent_id" validate:"required"`
-	ParentID       *int64  `json:"parent_id"` // null for root agents
+	ParentID       *string `json:"parent_id"` // Can be string or null for root agents
 	CommissionRate float64 `json:"commission_rate" validate:"min=0,max=1"`
 	Territory      string  `json:"territory"`
+}
+
+// parseAgentID safely parses agent ID from request string
+func parseAgentID(value string) (int64, error) {
+	if value == "" {
+		return 0, fmt.Errorf("agent_id cannot be empty")
+	}
+	return strconv.ParseInt(value, 10, 64)
+}
+
+// parseParentID safely parses parent ID from request (handles string or null)
+func parseParentID(value *string) (*int64, error) {
+	if value == nil || *value == "" || *value == "null" {
+		return nil, nil
+	}
+	id, err := strconv.ParseInt(*value, 10, 64)
+	if err != nil {
+		return nil, err
+	}
+	if id == 0 {
+		return nil, nil
+	}
+	return &id, nil
 }
 
 // AssignAgentToParent assigns an agent to a parent agent, establishing hierarchy.
@@ -43,12 +66,28 @@ type AssignAgentToParentRequest struct {
 //   - Recalculates hierarchy levels for affected agents
 //   - Logs the assignment operation
 func AssignAgentToParent(c echo.Context) error {
+	// Get agent ID from URL parameter (not from body) to avoid JavaScript precision issues
+	urlAgentID := c.Param("id")
+	if urlAgentID == "" {
+		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Agent ID is required in URL", nil)
+	}
+	agentID, err := strconv.ParseInt(urlAgentID, 10, 64)
+	if err != nil {
+		return fail(c, http.StatusBadRequest, "INVALID_AGENT_ID", "Invalid agent ID format in URL", err.Error())
+	}
+
 	var req AssignAgentToParentRequest
 	if err := c.Bind(&req); err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse request", err.Error())
 	}
-	if err := c.Validate(&req); err != nil {
-		return err
+
+	// Note: We don't validate agent_id in body since we use URL param as source of truth
+	// But we still bind it for potential validation if needed
+
+	// Parse parent ID from request body (this is user input)
+	parentID, err := parseParentID(req.ParentID)
+	if err != nil {
+		return fail(c, http.StatusBadRequest, "INVALID_PARENT_ID", "Invalid parent ID format", err.Error())
 	}
 
 	// Get current user for authorization
@@ -65,30 +104,36 @@ func AssignAgentToParent(c echo.Context) error {
 
 	// Verify agent exists and is actually an agent
 	var agent domain.SysOpr
-	if err := db.First(&agent, req.AgentID).Error; err != nil {
-		return fail(c, http.StatusNotFound, "AGENT_NOT_FOUND", "Agent not found", nil)
+	if err := db.First(&agent, agentID).Error; err != nil {
+		if err == gorm.ErrRecordNotFound {
+			return fail(c, http.StatusNotFound, "AGENT_NOT_FOUND", fmt.Sprintf("Agent with ID %d not found in sys_opr table", agentID), nil)
+		}
+		return fail(c, http.StatusNotFound, "AGENT_NOT_FOUND", "Agent not found", err.Error())
 	}
 	if agent.Level != "agent" {
-		return fail(c, http.StatusBadRequest, "INVALID_AGENT", "User is not an agent", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_AGENT", fmt.Sprintf("User %s (ID: %d) is not an agent, current level: %s", agent.Username, agent.ID, agent.Level), nil)
 	}
 
 	// If parent specified, verify parent exists and is an agent
-	if req.ParentID != nil {
+	if parentID != nil {
+		zap.L().Debug("Parent ID received", zap.Any("parent_id", parentID))
 		var parent domain.SysOpr
-		if err := db.First(&parent, *req.ParentID).Error; err != nil {
+		if err := db.First(&parent, *parentID).Error; err != nil {
+			zap.L().Error("Parent agent not found in database", zap.Any("parent_id", parentID), zap.Error(err))
 			return fail(c, http.StatusNotFound, "PARENT_NOT_FOUND", "Parent agent not found", nil)
 		}
+		zap.L().Debug("Parent agent found", zap.Int64("parent_id", *parentID), zap.String("parent_level", parent.Level))
 		if parent.Level != "agent" {
 			return fail(c, http.StatusBadRequest, "INVALID_PARENT", "Parent user is not an agent", nil)
 		}
 
 		// Prevent self-assignment
-		if *req.ParentID == req.AgentID {
+		if *parentID == agentID {
 			return fail(c, http.StatusBadRequest, "SELF_ASSIGNMENT", "Agent cannot be its own parent", nil)
 		}
 
 		// Prevent cycles: check if assigning this parent would create a cycle
-		if wouldCreateCycle(db, req.AgentID, *req.ParentID) {
+		if wouldCreateCycle(db, agentID, *parentID) {
 			return fail(c, http.StatusBadRequest, "CYCLE_DETECTED", "This assignment would create a cycle in the hierarchy", nil)
 		}
 	}
@@ -97,8 +142,8 @@ func AssignAgentToParent(c echo.Context) error {
 
 	// Create or update hierarchy record
 	hierarchy := domain.AgentHierarchy{
-		AgentID:        req.AgentID,
-		ParentID:       req.ParentID,
+		AgentID:        agentID,
+		ParentID:       parentID,
 		CommissionRate: req.CommissionRate,
 		Territory:      req.Territory,
 		Status:         "active",
@@ -106,7 +151,7 @@ func AssignAgentToParent(c echo.Context) error {
 	}
 
 	// Calculate the correct level
-	level, err := calculateHierarchyLevel(tx, req.ParentID)
+	level, err := calculateHierarchyLevel(tx, parentID)
 	if err != nil {
 		tx.Rollback()
 		return fail(c, http.StatusInternalServerError, "LEVEL_CALCULATION_FAILED", "Failed to calculate hierarchy level", err.Error())
@@ -119,7 +164,7 @@ func AssignAgentToParent(c echo.Context) error {
 	}
 
 	// Update levels for all descendants
-	if err := updateDescendantLevels(tx, req.AgentID); err != nil {
+	if err := updateDescendantLevels(tx, agentID); err != nil {
 		tx.Rollback()
 		return fail(c, http.StatusInternalServerError, "DESCENDANT_UPDATE_FAILED", "Failed to update descendant levels", err.Error())
 	}
@@ -127,8 +172,8 @@ func AssignAgentToParent(c echo.Context) error {
 	tx.Commit()
 
 	zap.L().Info("Agent assigned to parent",
-		zap.Int64("agent_id", req.AgentID),
-		zap.Any("parent_id", req.ParentID),
+		zap.Int64("agent_id", agentID),
+		zap.Any("parent_id", parentID),
 		zap.Float64("commission_rate", req.CommissionRate),
 		zap.String("territory", req.Territory),
 		zap.Int("level", hierarchy.Level))

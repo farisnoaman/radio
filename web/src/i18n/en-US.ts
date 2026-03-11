@@ -614,6 +614,24 @@ const customEnglishMessages: TranslationMessages = {
         pay_error: 'Failed to record payment',
       },
     },
+    agents: {
+      name: 'Agent |||| Agents',
+      fields: {
+        parent: 'Parent Agent',
+        commission_rate: 'Commission Rate (%)',
+        territory: 'Territory',
+      },
+      hierarchy: {
+        manage: 'Manage Hierarchy',
+        description: 'Assign a parent agent and set commission rate for this agent',
+        no_parent: 'Root Agent (No Parent)',
+        territory_placeholder: 'e.g., North Region, City Center',
+        current_level: 'Current Level',
+        error: 'Failed to update hierarchy',
+        success: 'Hierarchy updated successfully',
+        save: 'Save Hierarchy',
+      },
+    },
   },
   validation: {
     required: 'This field is required',

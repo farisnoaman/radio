@@ -63,7 +63,7 @@ const ProductGrid = () => {
   const { data, isLoading } = useListContext();
   if (isLoading || !data) return null;
   return (
-    <Box display="grid" gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)' }} gap={2} p={2} sx={{ bgcolor: theme => theme.palette.mode === 'dark' ? 'transparent' : 'rgba(0,0,0,0.02)' }}>
+    <Box display="grid" gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)' }} gap={2} p={0} sx={{ bgcolor: theme => theme.palette.mode === 'dark' ? 'transparent' : 'rgba(0,0,0,0.02)' }}>
       {data.map(record => (
         <RecordContextProvider value={record} key={record.id}>
           <Card
@@ -627,10 +627,10 @@ export const ProductShow = (props: ShowProps) => (
 const ValidityInput = () => {
   const record = useRecordContext();
   const { setValue } = useFormContext();
-  
+
   // Get initial value from record (for Edit) or default (for Create)
   const initialSeconds = record?.validity_seconds || 0;
-  
+
   // Calculate unit and value from seconds
   const getUnitAndValue = (seconds: number) => {
     if (seconds > 0 && seconds % 86400 === 0) {
@@ -686,7 +686,7 @@ const ValidityInput = () => {
 const DataQuotaInput = () => {
   const record = useRecordContext();
   const { setValue } = useFormContext();
-  
+
   // Get initial value from record (for Edit) or default (for Create)
   const initialMB = record?.data_quota || 0;
 

@@ -85,6 +85,7 @@ import {
 import {
   AgentList,
   AgentCreate,
+  AgentEdit,
   AgentShow,
 } from './resources/agents';
 import {
@@ -220,6 +221,7 @@ const App = () => (
       name="agents"
       list={AgentList}
       create={AgentCreate}
+      edit={AgentEdit}
       show={AgentShow}
     />
 

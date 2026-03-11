@@ -583,6 +583,24 @@ const customChineseMessages: TranslationMessages = {
         description: '点击"新建"按钮添加第一个操作员',
       },
     },
+    agents: {
+      name: '代理 |||| 代理列表',
+      fields: {
+        parent: '上级代理',
+        commission_rate: '佣金比例 (%)',
+        territory: '区域',
+      },
+      hierarchy: {
+        manage: '管理层级',
+        description: '为此代理分配上级并设置佣金比例',
+        no_parent: '顶级代理 (无上级)',
+        territory_placeholder: '例如：北方区域、市中心',
+        current_level: '当前层级',
+        error: '更新层级失败',
+        success: '层级更新成功',
+        save: '保存层级',
+      },
+    },
   },
   validation: {
     required: '此字段为必填项',

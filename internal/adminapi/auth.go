@@ -53,9 +53,6 @@ func loginHandler(c echo.Context) error {
 	if hashed != operator.Password {
 		return fail(c, http.StatusUnauthorized, "INVALID_CREDENTIALS", "Incorrect username or password", nil)
 	}
-	if strings.EqualFold(operator.Status, common.DISABLED) {
-		return fail(c, http.StatusForbidden, "ACCOUNT_DISABLED", "Account has been disabled", nil)
-	}
 
 	token, err := issueToken(c, operator)
 	if err != nil {
@@ -137,6 +134,9 @@ func resolveOperatorFromContext(c echo.Context) (*domain.SysOpr, error) {
 	err = GetDB(c).Where("id = ?", id).First(&operator).Error
 	if err != nil {
 		return nil, err
+	}
+	if strings.EqualFold(operator.Status, common.DISABLED) {
+		return nil, errors.New("account has been disabled")
 	}
 	operator.Password = ""
 	return &operator, nil

@@ -1,6 +1,7 @@
 package adminapi
 
 import (
+	"errors"
 	"net/http"
 	"strconv"
 	"strings"
@@ -10,6 +11,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 	"github.com/talkincode/toughradius/v9/pkg/common"
+	"gorm.io/gorm"
 )
 
 // ListAgents retrieves the agent list (SysOpr with level=agent)
@@ -54,7 +56,93 @@ func ListAgents(c echo.Context) error {
 		return fail(c, http.StatusInternalServerError, "QUERY_FAILED", "Failed to query agents", err.Error())
 	}
 
+	for i := range agents {
+		agents[i].Password = ""
+	}
+
 	return paged(c, agents, total, page, perPage)
+}
+
+// UpdateAgent updates an existing agent
+// @Summary update an agent
+// @Tags Agent
+// @Param id path int true "Agent ID"
+// @Param agent body operatorPayload true "Agent info"
+// @Success 200 {object} domain.SysOpr
+// @Router /api/v1/agents/{id} [put]
+func UpdateAgent(c echo.Context) error {
+	// Permission check
+	currentOpr, err := resolveOperatorFromContext(c)
+	if err != nil {
+		return fail(c, http.StatusUnauthorized, "UNAUTHORIZED", "Unable to retrieve current user information", nil)
+	}
+
+	if currentOpr.Level != "super" && currentOpr.Level != "admin" {
+		return fail(c, http.StatusForbidden, "PERMISSION_DENIED", "Only admins can update agents", nil)
+	}
+
+	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
+	if err != nil {
+		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid agent ID", nil)
+	}
+
+	var payload operatorPayload
+	if err := c.Bind(&payload); err != nil {
+		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse agent parameters", err.Error())
+	}
+
+	// Find the agent
+	var agent domain.SysOpr
+	if err := GetDB(c).Where("id = ? AND level = ?", id, "agent").First(&agent).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+		return fail(c, http.StatusNotFound, "AGENT_NOT_FOUND", "Agent not found", nil)
+	} else if err != nil {
+		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query agent", err.Error())
+	}
+
+	// Update fields
+	if payload.Username != "" {
+		username := strings.TrimSpace(payload.Username)
+		if len(username) < 3 || len(username) > 30 {
+			return fail(c, http.StatusBadRequest, "INVALID_USERNAME", "Username length must be between 3 and 30 characters", nil)
+		}
+		// Check if username is already used by another account
+		var exists int64
+		GetDB(c).Model(&domain.SysOpr{}).Where("username = ? AND id != ?", username, id).Count(&exists)
+		if exists > 0 {
+			return fail(c, http.StatusConflict, "USERNAME_EXISTS", "Username already exists", nil)
+		}
+		agent.Username = username
+	}
+
+	if payload.Realname != "" {
+		agent.Realname = payload.Realname
+	}
+
+	if payload.Mobile != "" {
+		agent.Mobile = payload.Mobile
+	}
+
+	if payload.Email != "" {
+		agent.Email = payload.Email
+	}
+
+	if payload.Status != "" {
+		if payload.Status != "enabled" && payload.Status != "disabled" {
+			return fail(c, http.StatusBadRequest, "INVALID_STATUS", "Status must be 'enabled' or 'disabled'", nil)
+		}
+		agent.Status = payload.Status
+	}
+
+	if payload.Remark != "" {
+		agent.Remark = payload.Remark
+	}
+
+	// Save the agent
+	if err := GetDB(c).Save(&agent).Error; err != nil {
+		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "Failed to update agent", err.Error())
+	}
+
+	return ok(c, agent)
 }
 
 // GetOneAgent retrieves a single agent by ID
@@ -84,6 +172,7 @@ func GetOneAgent(c echo.Context) error {
 		return fail(c, http.StatusInternalServerError, "QUERY_FAILED", "Failed to query agent", err.Error())
 	}
 
+	agent.Password = ""
 	return ok(c, agent)
 }
 
@@ -544,6 +633,7 @@ func registerAgentRoutes() {
 	webserver.ApiGET("/agents", ListAgents)
 	webserver.ApiGET("/agents/:id", GetOneAgent)
 	webserver.ApiPOST("/agents", CreateAgent)
+	webserver.ApiPUT("/agents/:id", UpdateAgent)
 	webserver.ApiPOST("/agents/:id/topup", TopupAgent)
 	webserver.ApiGET("/agents/:id/wallet", GetAgentWallet)
 	webserver.ApiGET("/agents/:id/wallet/transactions", GetAgentWalletTransactions)
