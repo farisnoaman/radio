@@ -1,10 +1,12 @@
 import polyglotI18nProvider from 'ra-i18n-polyglot';
 import zhCN from './zh-CN';
 import enUS from './en-US';
+import ar from './ar';
 
 const translations = {
   'zh-CN': zhCN,
   'en-US': enUS,
+  'ar': ar,
 };
 
 // 从 localStorage 获取保存的语言设置，如果没有则使用默认语言
@@ -21,6 +23,7 @@ const baseI18nProvider = polyglotI18nProvider(
   [
     { locale: 'zh-CN', name: '简体中文' },
     { locale: 'en-US', name: 'English' },
+    { locale: 'ar', name: 'العربية' },
   ],
   { allowMissing: true }
 );

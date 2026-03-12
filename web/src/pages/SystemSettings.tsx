@@ -1,24 +1,28 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNotify, useTranslate } from 'react-admin';
 import {
     Box,
-    TextField,
     Button,
     Typography,
     Alert,
+    Switch,
+    FormControlLabel,
+    TextField,
+    Accordion,
+    AccordionSummary,
+    AccordionDetails,
     CircularProgress,
+    useTheme,
+    useMediaQuery,
     FormControl,
     InputLabel,
     Select,
     MenuItem,
-    Accordion,
-    AccordionSummary,
-    AccordionDetails,
     Chip,
-    useTheme,
-    useMediaQuery,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ConstructionIcon from '@mui/icons-material/Construction';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import SaveIcon from '@mui/icons-material/Save';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import RestoreIcon from '@mui/icons-material/Restore';
@@ -27,13 +31,13 @@ import StorageIcon from '@mui/icons-material/Storage';
 import CloudIcon from '@mui/icons-material/Cloud';
 import HistoryIcon from '@mui/icons-material/History';
 import SettingsIcon from '@mui/icons-material/Settings';
-import { useApiQuery } from '../../hooks/useApiQuery';
-import { httpClient } from '../../utils/apiClient';
+import { useApiQuery } from '../hooks/useApiQuery';
+import { httpClient } from '../utils/apiClient';
 
 interface BackupConfig {
-    provider: string; // "local", "gdrive", "s3"
+    provider: string;
     retention_days: number;
-    schedule: string; // cron expression
+    schedule: string;
     gdrive_client_id?: string;
     gdrive_client_secret?: string;
     gdrive_folder_id?: string;
@@ -44,24 +48,35 @@ interface BackupItem {
     file_name: string;
     size: number;
     created_at: string;
-    restored_at?: string; // ISO timestamp or null if never restored
+    restored_at?: string;
     type: string;
 }
 
-export const BackupSettings = () => {
+export const SystemSettings = () => {
     const notify = useNotify();
     const translate = useTranslate();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
 
+    const [archiving, setArchiving] = useState(false);
+    const [toggling, setToggling] = useState(false);
+    const [drain, setDrain] = useState(true);
+    const [days, setDays] = useState(30);
+
     const [saving, setSaving] = useState(false);
     const [testing, setTesting] = useState(false);
     const [restoring, setRestoring] = useState(false);
-    const [expanded, setExpanded] = useState<string | false>('general');
     const [config, setConfig] = useState<BackupConfig>({
         provider: 'local',
         retention_days: 7,
         schedule: '0 0 2 * * *'
+    });
+
+    const [expanded, setExpanded] = useState<string | false>('maintenance');
+
+    const { data: status, refetch: refetchMaintenance, isLoading: maintenanceLoading } = useApiQuery<{ active: boolean }>({
+        path: '/system/maintenance',
+        queryKey: ['system', 'maintenance'],
     });
 
     const { data: remoteConfig, isLoading: configLoading } = useApiQuery<BackupConfig>({
@@ -74,7 +89,7 @@ export const BackupSettings = () => {
         queryKey: ['backup', 'list'],
     });
 
-    React.useEffect(() => {
+    useEffect(() => {
         if (remoteConfig && (remoteConfig as any).data) {
             const data = (remoteConfig as any).data;
             if (Array.isArray(data)) {
@@ -94,7 +109,35 @@ export const BackupSettings = () => {
         setExpanded(isExpanded ? panel : false);
     };
 
-    const handleSave = async () => {
+    const handleToggleMaintenance = async () => {
+        setToggling(true);
+        try {
+            const action = status?.active ? 'disable' : 'enable';
+            const path = `/system/maintenance/${action}${action === 'enable' ? `?drain=${drain}` : ''}`;
+            await httpClient(path, { method: 'POST' });
+            notify(`Maintenance mode ${action}d successfully`, { type: 'success' });
+            refetchMaintenance();
+        } catch (error: any) {
+            notify(error?.body?.message || 'Failed to toggle maintenance mode', { type: 'error' });
+        } finally {
+            setToggling(false);
+        }
+    };
+
+    const handleArchiveLogs = async () => {
+        if (!window.confirm(`Are you sure you want to archive and compress logs older than ${days} days?`)) return;
+        setArchiving(true);
+        try {
+            await httpClient(`/system/logs/archive?days=${days}`, { method: 'POST' });
+            notify('Logs archived and compressed successfully', { type: 'success' });
+        } catch (error: any) {
+            notify(error?.body?.message || 'Log archival failed', { type: 'error' });
+        } finally {
+            setArchiving(false);
+        }
+    };
+
+    const handleSaveBackup = async () => {
         setSaving(true);
         try {
             await httpClient('/system/settings', {
@@ -136,9 +179,7 @@ export const BackupSettings = () => {
                 throw new Error('Download failed');
             }
 
-            // Create a blob from the response
             const blob = await response.blob();
-            // Create a download link
             const url = window.URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
@@ -158,7 +199,6 @@ export const BackupSettings = () => {
         try {
             await httpClient(`/system/backup/${id}/restore`, { method: 'POST' });
             notify('Database restored successfully', { type: 'success' });
-            // Refresh the backup list to show updated restored_at timestamp
             refetchBackups();
         } catch (error: any) {
             notify(error?.body?.msg || 'Restore failed', { type: 'error' });
@@ -167,7 +207,7 @@ export const BackupSettings = () => {
         }
     };
 
-    if (configLoading) {
+    if (maintenanceLoading || configLoading) {
         return (
             <Box sx={{ p: 3, display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: 400 }}>
                 <CircularProgress />
@@ -192,22 +232,19 @@ export const BackupSettings = () => {
 
     return (
         <Box sx={{ p: { xs: 2, sm: 3 } }}>
-            {/* Page Title */}
             <Box sx={{ mb: 3 }}>
                 <Typography variant={isMobile ? 'h5' : 'h4'} gutterBottom>
-                    {translate('pages.backup.title', { _: 'Backup & Disaster Recovery' })}
+                    {translate('pages.maintenance.title', { _: 'System Maintenance & Backup' })}
                 </Typography>
                 <Typography variant="body1" color="textSecondary">
-                    {translate('pages.backup.subtitle', { _: 'Configure automated backups and manage database snapshots.' })}
+                    {translate('pages.maintenance.subtitle', { _: 'Manage system availability, log data lifecycle, and backup configuration.' })}
                 </Typography>
             </Box>
 
-            {/* Info Alert */}
             <Alert severity="info" sx={{ mb: 3 }}>
-                {translate('pages.backup.info_message', { _: 'Regular backups protect your data. Configure backup storage and schedule for automated protection.' })}
+                {translate('pages.maintenance.info_message', { _: 'Maintenance operations affect system availability. Regular backups protect your data.' })}
             </Alert>
 
-            {/* Action Buttons */}
             <Box sx={{
                 mb: 3,
                 display: 'flex',
@@ -217,7 +254,7 @@ export const BackupSettings = () => {
                 <Button
                     variant="contained"
                     startIcon={saving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
-                    onClick={handleSave}
+                    onClick={handleSaveBackup}
                     disabled={saving || testing}
                     fullWidth={isMobile}
                 >
@@ -242,7 +279,170 @@ export const BackupSettings = () => {
                 </Button>
             </Box>
 
-            {/* General Settings Section */}
+            <Accordion
+                expanded={expanded === 'maintenance'}
+                onChange={handleAccordionChange('maintenance')}
+                sx={{
+                    mb: 2,
+                    border: status?.active ? '2px solid #ff9800' : 'none',
+                }}
+            >
+                <AccordionSummary
+                    expandIcon={<ExpandMoreIcon />}
+                    sx={{
+                        backgroundColor: status?.active
+                            ? (theme.palette.mode === 'dark' ? 'rgba(255, 152, 0, 0.2)' : '#fff3e0')
+                            : (theme.palette.mode === 'dark' ? 'rgba(25, 118, 210, 0.15)' : '#e3f2fd'),
+                        '&:hover': {
+                            backgroundColor: status?.active
+                                ? (theme.palette.mode === 'dark' ? 'rgba(255, 152, 0, 0.3)' : '#ffe0b2')
+                                : (theme.palette.mode === 'dark' ? 'rgba(25, 118, 210, 0.25)' : '#bbdefb')
+                        }
+                    }}
+                >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
+                        <Box sx={{ color: status?.active ? '#ff9800' : '#1976d2' }}>
+                            <ConstructionIcon />
+                        </Box>
+                        <Box>
+                            <Typography variant="h6" sx={{ color: status?.active ? '#ff9800' : '#1976d2', fontSize: isMobile ? '1rem' : '1.25rem' }}>
+                                {translate('pages.maintenance.maintenance_mode.title', { _: 'Maintenance Mode' })}
+                            </Typography>
+                            <Typography variant="body2" color="textSecondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
+                                {translate('pages.maintenance.maintenance_mode.description', { _: 'Block non-admin users and drain active sessions.' })}
+                            </Typography>
+                        </Box>
+                    </Box>
+                </AccordionSummary>
+                <AccordionDetails>
+                    <Box sx={{
+                        display: 'grid',
+                        gridTemplateColumns: { xs: '1fr', md: 'repeat(auto-fit, minmax(400px, 1fr))' },
+                        gap: 3
+                    }}>
+                        <Box>
+                            {status?.active ? (
+                                <Alert severity="warning" sx={{ mb: 2 }}>
+                                    {translate('pages.maintenance.maintenance_mode.active_warning', { _: 'System is currently in MAINTENANCE MODE. Only administrators can access the API.' })}
+                                </Alert>
+                            ) : (
+                                <Alert severity="info" sx={{ mb: 2 }}>
+                                    {translate('pages.maintenance.maintenance_mode.normal_info', { _: 'System is running normally.' })}
+                                </Alert>
+                            )}
+
+                            <Box sx={{ mb: 2 }}>
+                                <FormControlLabel
+                                    control={
+                                        <Switch
+                                            checked={status?.active || false}
+                                            onChange={handleToggleMaintenance}
+                                            disabled={toggling}
+                                            color="warning"
+                                        />
+                                    }
+                                    label={status?.active
+                                        ? translate('pages.maintenance.maintenance_mode.status_active', { _: 'Active' })
+                                        : translate('pages.maintenance.maintenance_mode.status_inactive', { _: 'Inactive' })
+                                    }
+                                />
+                            </Box>
+
+                            {!status?.active && (
+                                <FormControlLabel
+                                    control={
+                                        <Switch
+                                            checked={drain}
+                                            onChange={(e) => setDrain(e.target.checked)}
+                                        />
+                                    }
+                                    label={translate('pages.maintenance.maintenance_mode.drain_label', { _: 'Drain sessions (Disconnect online users upon enabling)' })}
+                                />
+                            )}
+
+                            <Typography variant="caption" color="textSecondary" sx={{ display: 'block', mt: 2 }}>
+                                {translate('pages.maintenance.maintenance_mode.help', { _: 'Enabling maintenance mode will prevent new user logins and optionally disconnect all current users.' })}
+                            </Typography>
+                        </Box>
+                    </Box>
+                </AccordionDetails>
+            </Accordion>
+
+            <Accordion
+                expanded={expanded === 'logs'}
+                onChange={handleAccordionChange('logs')}
+                sx={{ mb: 2 }}
+            >
+                <AccordionSummary
+                    expandIcon={<ExpandMoreIcon />}
+                    sx={{
+                        backgroundColor: theme.palette.mode === 'dark' ? 'rgba(156, 39, 176, 0.15)' : '#f3e5f5',
+                        '&:hover': {
+                            backgroundColor: theme.palette.mode === 'dark' ? 'rgba(156, 39, 176, 0.25)' : '#e1bee7'
+                        }
+                    }}
+                >
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: { xs: 1, sm: 2 } }}>
+                        <Box sx={{ color: '#9c27b0' }}>
+                            <DeleteSweepIcon />
+                        </Box>
+                        <Box>
+                            <Typography variant="h6" sx={{ color: '#9c27b0', fontSize: isMobile ? '1rem' : '1.25rem' }}>
+                                {translate('pages.maintenance.log_archival.title', { _: 'System Log Archival' })}
+                            </Typography>
+                            <Typography variant="body2" color="textSecondary" sx={{ display: { xs: 'none', sm: 'block' } }}>
+                                {translate('pages.maintenance.log_archival.description', { _: 'Archive and compress old logs to save disk space.' })}
+                            </Typography>
+                        </Box>
+                    </Box>
+                </AccordionSummary>
+                <AccordionDetails>
+                    <Box sx={{
+                        display: 'grid',
+                        gridTemplateColumns: { xs: '1fr', md: 'repeat(auto-fit, minmax(400px, 1fr))' },
+                        gap: 3
+                    }}>
+                        <Box>
+                            <Box sx={{
+                                display: 'flex',
+                                flexDirection: isMobile ? 'column' : 'row',
+                                gap: 2,
+                                alignItems: isMobile ? 'stretch' : 'flex-start',
+                                mb: 2
+                            }}>
+                                <TextField
+                                    label={translate('pages.maintenance.log_archival.retention_days', { _: 'Retention Days' })}
+                                    type="number"
+                                    value={days}
+                                    onChange={(e) => setDays(Number(e.target.value))}
+                                    sx={{ width: isMobile ? '100%' : 150 }}
+                                    helperText={isMobile ? translate('pages.maintenance.log_archival.retention_help', { _: 'Logs older than this will be compressed.' }) : undefined}
+                                />
+                                <Button
+                                    variant="contained"
+                                    color="secondary"
+                                    startIcon={archiving ? <CircularProgress size={20} color="inherit" /> : <SaveIcon />}
+                                    onClick={handleArchiveLogs}
+                                    disabled={archiving}
+                                    sx={{ height: isMobile ? undefined : 56 }}
+                                    fullWidth={isMobile}
+                                >
+                                    {archiving
+                                        ? translate('pages.maintenance.log_archival.archiving', { _: 'Archiving...' })
+                                        : translate('pages.maintenance.log_archival.archive_now', { _: 'Archive Now' })
+                                    }
+                                </Button>
+                            </Box>
+                            {!isMobile && (
+                                <Typography variant="caption" color="textSecondary">
+                                    {translate('pages.maintenance.log_archival.help', { _: 'Compressed logs are stored in the system log directory as .csv.gz files. This process is also triggered automatically on a daily schedule.' })}
+                                </Typography>
+                            )}
+                        </Box>
+                    </Box>
+                </AccordionDetails>
+            </Accordion>
+
             <Accordion
                 expanded={expanded === 'general'}
                 onChange={handleAccordionChange('general')}
@@ -263,7 +463,7 @@ export const BackupSettings = () => {
                         </Box>
                         <Box>
                             <Typography variant="h6" sx={{ color: '#1976d2', fontSize: isMobile ? '1rem' : '1.25rem' }}>
-                                {translate('pages.backup.general.title', { _: 'General Settings' })}
+                                {translate('pages.backup.general.title', { _: 'Backup Settings' })}
                             </Typography>
                             <Typography variant="body2" color="textSecondary">
                                 {translate('pages.backup.general.description', { _: 'Configure backup provider and schedule.' })}
@@ -322,7 +522,6 @@ export const BackupSettings = () => {
                 </AccordionDetails>
             </Accordion>
 
-            {/* Google Drive Configuration Section */}
             {config.provider === 'gdrive' && (
                 <Accordion
                     expanded={expanded === 'gdrive'}
@@ -393,7 +592,6 @@ export const BackupSettings = () => {
                 </Accordion>
             )}
 
-            {/* Available Backups Section */}
             <Accordion
                 expanded={expanded === 'backups'}
                 onChange={handleAccordionChange('backups')}

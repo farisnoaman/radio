@@ -12,8 +12,7 @@ import { SystemConfigPage } from './pages/SystemConfigPage';
 import FinancialPerformance from './pages/FinancialPerformance';
 import { LoginPage } from './pages/LoginPage';
 import { TunnelSettings } from './pages/Settings/TunnelSettings';
-import { BackupSettings } from './pages/Settings/BackupSettings';
-import { MaintenanceSettings } from './pages/Settings/MaintenanceSettings';
+import { SystemSettings } from './pages/SystemSettings';
 import { CustomLayout, CustomError } from './components';
 import { theme, darkTheme } from './theme';
 
@@ -238,8 +237,7 @@ const App = () => (
       <Route path="/account/settings" element={<AccountSettings />} />
       <Route path="/system/config" element={<SystemConfigPage />} />
       <Route path="/settings/tunnel" element={<TunnelSettings />} />
-      <Route path="/settings/backup" element={<BackupSettings />} />
-      <Route path="/system/maintenance" element={<MaintenanceSettings />} />
+      <Route path="/system/maintenance" element={<SystemSettings />} />
       <Route path="/financial/performance" element={<FinancialPerformance />} />
     </CustomRoutes>
   </Admin >

@@ -28,7 +28,6 @@ import {
     CreateProps,
     FunctionField,
     ReferenceField,
-    Button,
     useNotify,
     useRefresh,
     useDataProvider,
@@ -40,7 +39,9 @@ import {
     useListContext,
     TopToolbar,
     ExportButton,
-    SortButton
+    SortButton,
+    useTranslate,
+    useLocale
 } from 'react-admin';
 
 import { httpClient } from '../utils/apiClient';
@@ -57,13 +58,17 @@ const BatchActions = () => {
     const notify = useNotify();
     const refresh = useRefresh();
     const dataProvider = useDataProvider();
+    const translate = useTranslate();
+    const locale = useLocale();
+    const isRTL = locale === 'ar';
 
     if (!record) return null;
 
     const handleAction = async (action: string) => {
         try {
             await httpClient(`/voucher-batches/${record.id}/${action}`, { method: 'POST' });
-            notify(`Batch ${action}ed successfully`, { type: 'success' });
+            const actionKey = action === 'activate' ? 'activated' : action === 'deactivate' ? 'deactivated' : action === 'restore' ? 'restored' : 'refunded';
+            notify(translate(`resources['voucher-batches'].notifications.${actionKey}`), { type: 'success' });
             refresh();
         } catch (error: any) {
             const msg = error?.json?.msg || error?.message || `Failed to ${action} batch`;
@@ -72,13 +77,13 @@ const BatchActions = () => {
     };
 
     const handleDelete = async () => {
-        if (window.confirm('Are you sure you want to delete this batch and all its vouchers?')) {
+        if (window.confirm(translate('resources.voucher-batches.notifications.delete_confirm'))) {
             try {
                 await dataProvider.delete('voucher-batches', { id: record.id });
-                notify('Batch deleted successfully', { type: 'success' });
+                notify(translate('resources.voucher-batches.notifications.deleted'), { type: 'success' });
                 refresh();
             } catch (error) {
-                notify('Failed to delete batch', { type: 'error' });
+                notify(translate('resources.voucher-batches.notifications.delete_error'), { type: 'error' });
             }
         }
     };
@@ -115,9 +120,9 @@ const BatchActions = () => {
             a.click();
             window.URL.revokeObjectURL(url);
             document.body.removeChild(a);
-            notify('Export successful', { type: 'success' });
+            notify(translate('resources.voucher-batches.notifications.export_success'), { type: 'success' });
         } catch (error) {
-            notify('Failed to export batch', { type: 'error' });
+            notify(translate('resources.voucher-batches.notifications.export_error'), { type: 'error' });
         }
     };
 
@@ -130,50 +135,53 @@ const BatchActions = () => {
     const { data: product } = useGetOne('products', { id: record.product_id });
 
     return (
-        <Box display="flex">
-            <Button
-                label="Voucher List"
+        <Box display="flex" gap={0.5} flexWrap="wrap" justifyContent="flex-start">
+            <MuiButton
                 size="small"
+                variant="outlined"
                 component={Link}
                 to={`/vouchers?filter=${JSON.stringify({ batch_id: record.id })}`}
                 onClick={(e: any) => e.stopPropagation()}
+                startIcon={!isRTL ? <VisibilityIcon /> : undefined}
+                endIcon={isRTL ? <VisibilityIcon /> : undefined}
+                sx={{ minWidth: 80, justifyContent: 'space-between' }}
             >
-                <VisibilityIcon />
-            </Button>
+                {translate('resources.voucher-batches.actions.view_list')}
+            </MuiButton>
             {!record.is_deleted && (
                 <>
-                    <Button label="Download" size="small" onClick={handleDownload}>
-                        <DownloadIcon />
-                    </Button>
-                    <Button label="Print" size="small" onClick={() => setPrintOpen(true)}>
-                        <PrintIcon />
-                    </Button>
+                    <MuiButton size="small" variant="outlined" onClick={handleDownload} startIcon={!isRTL ? <DownloadIcon /> : undefined} endIcon={isRTL ? <DownloadIcon /> : undefined} sx={{ minWidth: 80, justifyContent: 'space-between' }}>
+                        {translate('resources.voucher-batches.actions.download')}
+                    </MuiButton>
+                    <MuiButton size="small" variant="outlined" onClick={() => setPrintOpen(true)} startIcon={!isRTL ? <PrintIcon /> : undefined} endIcon={isRTL ? <PrintIcon /> : undefined} sx={{ minWidth: 65, justifyContent: 'space-between' }}>
+                        {translate('resources.voucher-batches.actions.print')}
+                    </MuiButton>
                     {record.activated_at ? (
-                        <Button label="Deactivate" size="small" onClick={() => handleAction('deactivate')} color="warning">
-                            <ToggleOffIcon />
-                        </Button>
+                        <MuiButton size="small" variant="outlined" onClick={() => handleAction('deactivate')} color="warning" startIcon={!isRTL ? <ToggleOffIcon /> : undefined} endIcon={isRTL ? <ToggleOffIcon /> : undefined} sx={{ minWidth: 85, justifyContent: 'space-between' }}>
+                            {translate('resources.voucher-batches.actions.deactivate')}
+                        </MuiButton>
                     ) : (
-                        <Button label="Activate" size="small" onClick={() => handleAction('activate')} color="primary">
-                            <ToggleOnIcon />
-                        </Button>
+                        <MuiButton size="small" variant="outlined" onClick={() => handleAction('activate')} color="primary" startIcon={!isRTL ? <ToggleOnIcon /> : undefined} endIcon={isRTL ? <ToggleOnIcon /> : undefined} sx={{ minWidth: 75, justifyContent: 'space-between' }}>
+                            {translate('resources.voucher-batches.actions.activate')}
+                        </MuiButton>
                     )}
-                    <Button label="Transfer" size="small" onClick={() => setTransferOpen(true)} color="secondary">
-                        <SwapHorizIcon />
-                    </Button>
-                    <Button label="Delete" size="small" onClick={handleDelete} color="error">
-                        <DeleteIcon />
-                    </Button>
+                    <MuiButton size="small" variant="outlined" onClick={() => setTransferOpen(true)} color="secondary" startIcon={!isRTL ? <SwapHorizIcon /> : undefined} endIcon={isRTL ? <SwapHorizIcon /> : undefined} sx={{ minWidth: 70, justifyContent: 'space-between' }}>
+                        {translate('resources.voucher-batches.actions.transfer')}
+                    </MuiButton>
+                    <MuiButton size="small" variant="outlined" onClick={handleDelete} color="error" startIcon={!isRTL ? <DeleteIcon /> : undefined} endIcon={isRTL ? <DeleteIcon /> : undefined} sx={{ minWidth: 60, justifyContent: 'space-between' }}>
+                        {translate('resources.voucher-batches.actions.delete')}
+                    </MuiButton>
                 </>
             )}
             {record.is_deleted && isAdmin && (
                 <>
-                    <Button label="Restore" size="small" onClick={() => handleAction('restore')} color="primary">
-                        <RestoreIcon />
-                    </Button>
+                    <MuiButton size="small" variant="outlined" onClick={() => handleAction('restore')} color="primary" startIcon={!isRTL ? <RestoreIcon /> : undefined} endIcon={isRTL ? <RestoreIcon /> : undefined} sx={{ minWidth: 75, justifyContent: 'space-between' }}>
+                        {translate('resources.voucher-batches.actions.restore')}
+                    </MuiButton>
                     {record.agent_id && record.agent_id !== "0" && (
-                        <Button label="Refund Unused" size="small" onClick={() => handleAction('refund')} color="success">
-                            <CurrencyExchangeIcon />
-                        </Button>
+                        <MuiButton size="small" variant="outlined" onClick={() => handleAction('refund')} color="success" startIcon={!isRTL ? <CurrencyExchangeIcon /> : undefined} endIcon={isRTL ? <CurrencyExchangeIcon /> : undefined} sx={{ minWidth: 100, justifyContent: 'space-between' }}>
+                            {translate('resources.voucher-batches.actions.refund')}
+                        </MuiButton>
                     )}
                 </>
             )}
@@ -203,14 +211,15 @@ const BatchActions = () => {
 
 const StatusField = () => {
     const record = useRecordContext();
+    const translate = useTranslate();
     if (!record) return null;
     if (record.is_deleted) {
-        return <Chip label="Deleted" color="error" size="small" variant="outlined" />;
+        return <Chip label={translate('resources.vouchers.status.deleted')} color="error" size="small" variant="outlined" />;
     }
     if (!record.activated_at) {
-        return <Chip label="Inactive" color="default" size="small" variant="outlined" />;
+        return <Chip label={translate('resources.vouchers.status.inactive')} color="default" size="small" variant="outlined" />;
     }
-    return <Chip label="Active" color="success" size="small" variant="filled" />;
+    return <Chip label={translate('resources.vouchers.status.active')} color="success" size="small" variant="filled" />;
 };
 
 
@@ -447,6 +456,9 @@ const RedeemButton = () => {
     const notify = useNotify();
     const refresh = useRefresh();
     const dataProvider = useDataProvider();
+    const translate = useTranslate();
+    const locale = useLocale();
+    const isRTL = locale === 'ar';
 
     if (!record || record.status !== 'unused') return null;
 
@@ -466,19 +478,19 @@ const RedeemButton = () => {
             await dataProvider.post('vouchers/redeem', {
                 code: record.code,
             });
-            notify('Voucher redeemed successfully', { type: 'success' });
+            notify(translate('resources.vouchers.notifications.redeemed'), { type: 'success' });
             setOpen(false);
             refresh();
         } catch (error) {
-            notify('Redemption failed', { type: 'error' });
+            notify(translate('resources.vouchers.notifications.redeem_error'), { type: 'error' });
         }
     };
 
     return (
         <>
-            <Button label="Redeem" onClick={handleOpen} size="small">
-                <RedeemIcon />
-            </Button>
+            <MuiButton onClick={handleOpen} size="small" startIcon={!isRTL ? <RedeemIcon /> : undefined} endIcon={isRTL ? <RedeemIcon /> : undefined}>
+                {translate('resources.vouchers.actions.redeem')}
+            </MuiButton>
             <Dialog open={open} onClose={handleClose} onClick={(e) => e.stopPropagation()}>
                 <DialogTitle>Redeem Voucher</DialogTitle>
                 <DialogContent>
@@ -503,6 +515,9 @@ import UpdateIcon from '@mui/icons-material/Update';
 const ExtendButton = () => {
     const record = useRecordContext();
     const [open, setOpen] = useState(false);
+    const translate = useTranslate();
+    const locale = useLocale();
+    const isRTL = locale === 'ar';
 
     if (!record || (record.status !== 'used' && record.status !== 'expired')) return null;
 
@@ -513,9 +528,9 @@ const ExtendButton = () => {
 
     return (
         <>
-            <Button label="Extend" onClick={handleOpen} size="small" color="secondary">
-                <UpdateIcon />
-            </Button>
+            <MuiButton onClick={handleOpen} size="small" color="secondary" startIcon={!isRTL ? <UpdateIcon /> : undefined} endIcon={isRTL ? <UpdateIcon /> : undefined}>
+                {translate('resources.vouchers.actions.extend')}
+            </MuiButton>
             {open && (
                 <VoucherExtensionDialog
                     open={open}
@@ -592,6 +607,9 @@ const VoucherGrid = () => {
 };
 const VoucherListActions = () => {
     // VoucherListActions - toolbar for voucher list page
+    const translate = useTranslate();
+    const locale = useLocale();
+    const isRTL = locale === 'ar';
 
     const isMobile = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
     const { filterValues, setFilters, displayedFilters } = useListContext();
@@ -619,14 +637,15 @@ const VoucherListActions = () => {
 
     return (
         <TopToolbar sx={{ flexWrap: 'nowrap', gap: 1, overflowX: 'auto' }}>
-            <Button
-                label="Batches"
+            <MuiButton
                 component={Link}
                 to="/voucher-batches"
                 size="small"
+                startIcon={!isRTL ? <ArrowBackIcon /> : undefined}
+                endIcon={isRTL ? <ArrowBackIcon /> : undefined}
             >
-                <ArrowBackIcon />
-            </Button>
+                {translate('resources.voucher-batches.name')}
+            </MuiButton>
             {isMobile && (
                 <>
                     <MuiButton
@@ -634,29 +653,30 @@ const VoucherListActions = () => {
                         color="primary"
                         size="small"
                         onClick={() => setDialogOpen(true)}
-                        startIcon={<SearchIcon />}
+                        startIcon={!isRTL ? <SearchIcon /> : undefined}
+                        endIcon={isRTL ? <SearchIcon /> : undefined}
                     >
-                        {filterValues?.sn ? `Search: ${filterValues.sn}` : 'Search'}
+                        {filterValues?.sn ? `${translate('common.search')}: ${filterValues.sn}` : translate('common.search')}
                     </MuiButton>
                     <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm">
-                        <DialogTitle>Search Vouchers</DialogTitle>
+                        <DialogTitle>{translate('pages.voucher.search.title')}</DialogTitle>
                         <DialogContent>
                             <Box display="flex" flexDirection="column" gap={2} pt={1}>
                                 <MuiTextField
                                     fullWidth
-                                    label="Serial Number, ID, or Code"
+                                    label={translate('pages.voucher.search.placeholder')}
                                     value={searchInput}
                                     onChange={(e) => setSearchInput(e.target.value)}
                                     onKeyPress={(e: any) => e.key === 'Enter' && handleSearch()}
-                                    placeholder="e.g. 3-150, 123, or ABC123"
+                                    placeholder={translate('pages.voucher.search.example')}
                                     autoFocus
                                 />
                                 <Box display="flex" gap={1} justifyContent="flex-end">
                                     <MuiButton onClick={handleClear} disabled={!filterValues?.sn}>
-                                        Clear
+                                        {translate('pages.voucher.search.clear')}
                                     </MuiButton>
                                     <MuiButton variant="contained" onClick={handleSearch}>
-                                        Search
+                                        {translate('common.search')}
                                     </MuiButton>
                                 </Box>
                             </Box>
@@ -674,6 +694,9 @@ const VoucherSearchFilters = () => {
     const [searchInput, setSearchInput] = useState(filterValues?.sn || '');
     const isMobile = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
     const [dialogOpen, setDialogOpen] = useState(false);
+    const translate = useTranslate();
+    const locale = useLocale();
+    const isRTL = locale === 'ar';
 
     if (isMobile) return null;
 
@@ -700,11 +723,11 @@ const VoucherSearchFilters = () => {
         <Box display="flex" gap={1} alignItems="center" flex={isMobile ? 1 : 'none'}>
             <MuiTextField
                 size="small"
-                label="SN / ID / Code"
+                label={translate('pages.voucher.search.placeholder_short')}
                 value={searchInput}
                 onChange={(e) => setSearchInput(e.target.value)}
                 onKeyPress={(e: any) => e.key === 'Enter' && handleSearch()}
-                placeholder="e.g. 3-150 or ABC123"
+                placeholder={translate('pages.voucher.search.example')}
                 sx={{ minWidth: isMobile ? 120 : 200 }}
                 InputProps={{
                     endAdornment: searchInput && (
@@ -716,12 +739,12 @@ const VoucherSearchFilters = () => {
                     ),
                 }}
             />
-            <MuiButton variant="contained" size="small" onClick={handleSearch}>
-                Search
+            <MuiButton variant="contained" size="small" onClick={handleSearch} startIcon={!isRTL ? <SearchIcon /> : undefined} endIcon={isRTL ? <SearchIcon /> : undefined}>
+                {translate('common.search')}
             </MuiButton>
             {filterValues?.sn && (
                 <MuiButton size="small" onClick={handleClear}>
-                    Clear
+                    {translate('pages.voucher.search.clear')}
                 </MuiButton>
             )}
         </Box>
@@ -734,16 +757,16 @@ const VoucherSearchFilters = () => {
                     <SearchIcon />
                 </IconButton>
                 <Dialog open={dialogOpen} onClose={() => setDialogOpen(false)} fullWidth maxWidth="sm">
-                    <DialogTitle>Search Vouchers</DialogTitle>
+                    <DialogTitle>{translate('pages.voucher.search.title')}</DialogTitle>
                     <DialogContent>
                         <Box display="flex" flexDirection="column" gap={2} pt={1}>
                             <MuiTextField
                                 fullWidth
-                                label="Serial Number, ID, or Code"
+                                label={translate('pages.voucher.search.placeholder')}
                                 value={searchInput}
                                 onChange={(e) => setSearchInput(e.target.value)}
                                 onKeyPress={(e: any) => e.key === 'Enter' && handleSearch()}
-                                placeholder="e.g. 3-150, 123, or ABC123"
+                                placeholder={translate('pages.voucher.search.example')}
                                 autoFocus
                             />
                             <Box display="flex" gap={1} justifyContent="flex-end">

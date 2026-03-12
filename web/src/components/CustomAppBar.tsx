@@ -198,6 +198,15 @@ export const CustomAppBar = (props: AppBarProps) => {
               </ListItemIcon>
               <ListItemText>{translate('appbar.language.en_US')}</ListItemText>
             </MenuItem>
+            <MenuItem
+              onClick={() => handleLanguageSelect('ar')}
+              selected={locale === 'ar'}
+            >
+              <ListItemIcon>
+                {locale === 'ar' && '✓'}
+              </ListItemIcon>
+              <ListItemText>{translate('appbar.language.ar')}</ListItemText>
+            </MenuItem>
           </Menu>
 
           <Tooltip title={translate('appbar.toggle_theme')}>

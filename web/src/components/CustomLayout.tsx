@@ -1,5 +1,5 @@
 import type { SxProps, Theme } from '@mui/material';
-import { Layout, LayoutProps, TitlePortal } from 'react-admin';
+import { Layout, LayoutProps, TitlePortal, useLocale } from 'react-admin';
 import { Box, Typography, useMediaQuery } from '@mui/material';
 
 import { CustomAppBar } from './CustomAppBar';
@@ -7,8 +7,13 @@ import { CustomMenu } from './CustomMenu';
 
 type CustomLayoutProps = LayoutProps & { sx?: SxProps<Theme> };
 
+const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
+
 export const CustomLayout = ({ sx, children, ...rest }: CustomLayoutProps & { children?: React.ReactNode }) => {
   const isSmall = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
+  const locale = useLocale();
+  const isRTL = RTL_LANGUAGES.includes(locale || '');
+
   return (
     <Layout
       {...rest}
@@ -46,30 +51,42 @@ export const CustomLayout = ({ sx, children, ...rest }: CustomLayoutProps & { ch
         ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
       ]}
     >
-      {isSmall && (
-        <Box sx={{
-          position: 'absolute',
-          top: 16,
-          left: 16,
-          zIndex: 10,
-          maxWidth: 'calc(100% - 130px)',
-          pointerEvents: 'none'
-        }}>
-          <Typography component="div" sx={{
-            fontWeight: 'bold',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-            pointerEvents: 'auto',
-            color: 'text.primary',
-            fontSize: '1.25rem',
-            lineHeight: 1.6
+      <Box dir={isRTL ? 'rtl' : 'ltr'} sx={{ 
+        minHeight: '100vh',
+        '& .MuiDrawer-paper': isRTL ? { 
+          position: 'fixed', 
+          height: 'calc(100vh - 48px)', 
+          top: '48px',
+          right: 0,
+          left: 'auto',
+          transform: isRTL ? 'translateX(0)' : 'none'
+        } : {}
+      }}>
+        {isSmall && (
+          <Box sx={{
+            position: 'absolute',
+            top: 16,
+            left: 16,
+            zIndex: 10,
+            maxWidth: 'calc(100% - 130px)',
+            pointerEvents: 'none'
           }}>
-            <TitlePortal />
-          </Typography>
-        </Box>
-      )}
-      {children}
+            <Typography component="div" sx={{
+              fontWeight: 'bold',
+              whiteSpace: 'nowrap',
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+              pointerEvents: 'auto',
+              color: 'text.primary',
+              fontSize: '1.25rem',
+              lineHeight: 1.6
+            }}>
+              <TitlePortal />
+            </Typography>
+          </Box>
+        )}
+        {children}
+      </Box>
     </Layout>
   );
 };
