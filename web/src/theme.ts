@@ -119,33 +119,33 @@ export const createAppTheme = (mode: PaletteMode) => {
         '"Microsoft YaHei"',
         'sans-serif',
       ].join(','),
-      h1: { 
-        fontWeight: 700, 
+      h1: {
+        fontWeight: 700,
         fontSize: '2.5rem',
         lineHeight: 1.2,
       },
-      h2: { 
-        fontWeight: 700, 
+      h2: {
+        fontWeight: 700,
         fontSize: '2rem',
         lineHeight: 1.3,
       },
-      h3: { 
-        fontWeight: 600, 
+      h3: {
+        fontWeight: 600,
         fontSize: '1.75rem',
         lineHeight: 1.3,
       },
-      h4: { 
-        fontWeight: 600, 
+      h4: {
+        fontWeight: 600,
         fontSize: '1.5rem',
         lineHeight: 1.4,
       },
-      h5: { 
-        fontWeight: 600, 
+      h5: {
+        fontWeight: 600,
         fontSize: '1.25rem',
         lineHeight: 1.4,
       },
-      h6: { 
-        fontWeight: 600, 
+      h6: {
+        fontWeight: 600,
         fontSize: '1.125rem',
         lineHeight: 1.5,
       },
@@ -196,8 +196,8 @@ export const createAppTheme = (mode: PaletteMode) => {
           root: {
             borderRadius: 12,
             border: `1px solid ${isDark ? 'rgba(148, 163, 184, 0.1)' : 'rgba(100, 116, 139, 0.12)'}`,
-            boxShadow: isDark 
-              ? '0 1px 3px 0 rgba(0, 0, 0, 0.3)' 
+            boxShadow: isDark
+              ? '0 1px 3px 0 rgba(0, 0, 0, 0.3)'
               : '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
             backgroundImage: 'none',
             transition: 'all 0.3s ease',
@@ -250,6 +250,22 @@ export const createAppTheme = (mode: PaletteMode) => {
                 : '0 4px 8px 0 rgba(0, 0, 0, 0.1)',
             },
           },
+          startIcon: {
+            marginRight: 6,
+            marginLeft: 0,
+            '&.MuiButton-icon': {
+              marginRight: 6,
+              marginLeft: 0,
+            },
+          },
+          endIcon: {
+            marginLeft: 6,
+            marginRight: 0,
+            '&.MuiButton-icon': {
+              marginLeft: 6,
+              marginRight: 0,
+            },
+          },
         },
       },
       MuiIconButton: {
@@ -282,11 +298,11 @@ export const createAppTheme = (mode: PaletteMode) => {
             // 浅色主题使用纯白背景，深色主题使用深色
             backgroundColor: isDark ? '#1e293b' : '#ffffff',
             color: isDark ? '#f1f5f9' : '#1f2937',
-            borderBottom: isDark 
-              ? '1px solid rgba(148, 163, 184, 0.2)' 
+            borderBottom: isDark
+              ? '1px solid rgba(148, 163, 184, 0.2)'
               : '1px solid rgba(229, 231, 235, 0.8)',
-            boxShadow: isDark 
-              ? 'none' 
+            boxShadow: isDark
+              ? 'none'
               : '0 1px 3px 0 rgba(0, 0, 0, 0.05)',
             transition: 'all 0.3s ease',
           },
@@ -430,7 +446,7 @@ export const createAppTheme = (mode: PaletteMode) => {
             '& .RaDatagrid-row': {
               transition: 'background-color 0.15s ease',
               '&:hover': {
-                backgroundColor: isDark 
+                backgroundColor: isDark
                   ? alpha(palette.primary.main, 0.08)
                   : alpha(palette.primary.main, 0.04),
               },

@@ -3,6 +3,35 @@ import chineseMessages from 'ra-language-chinese';
 
 const customChineseMessages: TranslationMessages = {
   ...chineseMessages,
+  ra: {
+    ...chineseMessages.ra,
+    action: {
+      ...chineseMessages.ra?.action,
+      create: '创建',
+      save: '保存',
+      show: '显示',
+      list: '列表',
+      edit: '编辑',
+      delete: '删除',
+      confirm: '确认',
+      cancel: '取消',
+      back: '返回',
+      next: '下一步',
+      previous: '上一步',
+      sort: '排序',
+      export: '导出',
+      filter: '筛选',
+      refresh: '刷新',
+      remove: '移除',
+      add: '添加',
+      remove_all_filters: '清除所有筛选',
+    },
+    sort: {
+      sort_by: '排序方式',
+      ASC: '升序',
+      DESC: '降序',
+    },
+  },
   app: {
     title: 'TOUGHRADIUS v9',
     subtitle: '企业级 RADIUS 服务器管理平台',
@@ -602,17 +631,6 @@ const customChineseMessages: TranslationMessages = {
       },
     },
   },
-  validation: {
-    required: '此字段为必填项',
-    minLength: '最少需要 %{min} 个字符',
-    maxLength: '最多允许 %{max} 个字符',
-    minValue: '最小值为 %{min}',
-    maxValue: '最大值为 %{max}',
-    number: '必须为数字',
-    email: '必须是有效的邮箱地址',
-    oneOf: '必须是以下值之一: %{options}',
-    regex: '必须匹配特定格式 (正则表达式): %{pattern}',
-  },
   pages: {
     account_settings: {
       title: '账号设置',
@@ -851,6 +869,7 @@ const customChineseMessages: TranslationMessages = {
     yes: '是',
     no: '否',
     loading: '加载中...',
+    none: '无',
   },
   error: {
     connectivity_title: '连接问题',

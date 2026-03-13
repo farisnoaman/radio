@@ -13,7 +13,7 @@ import {
     Box,
     CircularProgress,
 } from '@mui/material';
-import { useNotify, useRefresh, useGetList } from 'react-admin';
+import { useNotify, useRefresh, useGetList, useTranslate } from 'react-admin';
 import { httpClient } from '../utils/apiClient';
 
 interface VoucherTransferDialogProps {
@@ -28,6 +28,7 @@ const VoucherTransferDialog: React.FC<VoucherTransferDialogProps> = ({ open, onC
     const [loading, setLoading] = useState(false);
     const notify = useNotify();
     const refresh = useRefresh();
+    const translate = useTranslate();
 
     const { data: agents, isLoading: agentsLoading } = useGetList('agents', {
         pagination: { page: 1, perPage: 100 },
@@ -36,7 +37,7 @@ const VoucherTransferDialog: React.FC<VoucherTransferDialogProps> = ({ open, onC
 
     const handleTransfer = async () => {
         if (!targetAgentId) {
-            notify('Please select a target agent', { type: 'warning' });
+            notify(translate('pages.voucher.dialogs.transfer.select_agent'), { type: 'warning' });
             return;
         }
 
@@ -48,11 +49,11 @@ const VoucherTransferDialog: React.FC<VoucherTransferDialogProps> = ({ open, onC
                     target_agent_id: targetAgentId,
                 }),
             });
-            notify('Batch transferred successfully', { type: 'success' });
+            notify(translate('pages.voucher.dialogs.transfer.success'), { type: 'success' });
             refresh();
             onClose();
         } catch (error: any) {
-            const msg = error?.json?.msg || error?.message || 'Failed to transfer batch';
+            const msg = error?.json?.msg || error?.message || translate('pages.voucher.dialogs.transfer.error');
             notify(msg, { type: 'error' });
         } finally {
             setLoading(false);
@@ -61,14 +62,14 @@ const VoucherTransferDialog: React.FC<VoucherTransferDialogProps> = ({ open, onC
 
     return (
         <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-            <DialogTitle>Transfer Voucher Batch</DialogTitle>
+            <DialogTitle>{translate('pages.voucher.dialogs.transfer.title')}</DialogTitle>
             <DialogContent>
                 <Box mb={2}>
                     <Typography variant="body1">
-                        You are about to transfer batch <strong>{batchName}</strong> (ID: {batchId}) to another agent.
+                        {translate('pages.voucher.dialogs.transfer.message', { batchName, batchId })}
                     </Typography>
                     <Typography variant="body2" color="textSecondary" mt={1}>
-                        This will move all vouchers in this batch to the target agent's ownership.
+                        {translate('pages.voucher.dialogs.transfer.warning')}
                     </Typography>
                 </Box>
 
@@ -78,15 +79,15 @@ const VoucherTransferDialog: React.FC<VoucherTransferDialogProps> = ({ open, onC
                     </Box>
                 ) : (
                     <FormControl fullWidth variant="outlined" margin="normal">
-                        <InputLabel id="target-agent-label">Target Agent</InputLabel>
+                        <InputLabel id="target-agent-label">{translate('pages.voucher.dialogs.transfer.target_agent')}</InputLabel>
                         <Select
                             labelId="target-agent-label"
                             value={targetAgentId}
                             onChange={(e) => setTargetAgentId(e.target.value as string)}
-                            label="Target Agent"
+                            label={translate('pages.voucher.dialogs.transfer.target_agent')}
                         >
                             <MenuItem value="">
-                                <em>None</em>
+                                <em>{translate('common.none')}</em>
                             </MenuItem>
                             {agents?.map((agent: any) => (
                                 <MenuItem key={agent.id} value={agent.id}>
@@ -99,7 +100,7 @@ const VoucherTransferDialog: React.FC<VoucherTransferDialogProps> = ({ open, onC
             </DialogContent>
             <DialogActions>
                 <MuiButton onClick={onClose} disabled={loading}>
-                    Cancel
+                    {translate('common.cancel')}
                 </MuiButton>
                 <MuiButton
                     onClick={handleTransfer}
@@ -107,7 +108,7 @@ const VoucherTransferDialog: React.FC<VoucherTransferDialogProps> = ({ open, onC
                     variant="contained"
                     disabled={loading || !targetAgentId}
                 >
-                    {loading ? <CircularProgress size={24} color="inherit" /> : 'Confirm Transfer'}
+                    {loading ? <CircularProgress size={24} color="inherit" /> : translate('pages.voucher.dialogs.transfer.confirm')}
                 </MuiButton>
             </DialogActions>
         </Dialog>
