@@ -165,6 +165,15 @@ export const createAppTheme = (mode: PaletteMode) => {
           '#root': {
             backgroundColor: palette.background.default,
           },
+          // RTL fixes for select icon
+          '[dir="rtl"] .MuiSelect-icon': {
+            right: 'auto !important',
+            left: '7px !important',
+          },
+          '[dir="rtl"] .MuiSelect-select': {
+            paddingRight: '14px !important',
+            paddingLeft: '32px !important',
+          },
           '*::-webkit-scrollbar': {
             width: '8px',
             height: '8px',

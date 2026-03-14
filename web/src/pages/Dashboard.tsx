@@ -15,7 +15,7 @@ import {
 import { alpha, useTheme } from '@mui/material/styles';
 import ReactECharts from 'echarts-for-react';
 import { useMemo, useState, useEffect } from 'react';
-import { useTranslate, useGetIdentity } from 'react-admin';
+import { useTranslate, useGetIdentity, useLocale } from 'react-admin';
 import { useApiQuery } from '../hooks/useApiQuery';
 import AgentDashboard from '../dashboard/AgentDashboard';
 import { ForecastChart } from '../components/ForecastChart';
@@ -334,8 +334,11 @@ const Dashboard = () => {
     [theme, trafficData, translate],
   );
 
+  const locale = useLocale();
+  const isRTL = locale === 'ar';
+
   return (
-    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3, direction: isRTL ? 'rtl' : 'ltr' }}>
       {isFetching && (
         <LinearProgress
           sx={{

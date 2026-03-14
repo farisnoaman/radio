@@ -13,7 +13,7 @@ import {
     Box,
     CircularProgress,
 } from '@mui/material';
-import { useNotify, useRefresh, useGetList, useTranslate } from 'react-admin';
+import { useNotify, useRefresh, useGetList, useTranslate, useLocale } from 'react-admin';
 import { httpClient } from '../utils/apiClient';
 
 interface VoucherTransferDialogProps {
@@ -29,6 +29,8 @@ const VoucherTransferDialog: React.FC<VoucherTransferDialogProps> = ({ open, onC
     const notify = useNotify();
     const refresh = useRefresh();
     const translate = useTranslate();
+    const locale = useLocale();
+    const isRTL = locale === 'ar';
 
     const { data: agents, isLoading: agentsLoading } = useGetList('agents', {
         pagination: { page: 1, perPage: 100 },
@@ -60,15 +62,25 @@ const VoucherTransferDialog: React.FC<VoucherTransferDialogProps> = ({ open, onC
         }
     };
 
+    const inputLabelProps = {
+        sx: {
+            transformOrigin: isRTL ? 'top right' : 'top left',
+            left: isRTL ? 'auto' : 0,
+            right: isRTL ? 24 : 'auto',
+        },
+    };
+
     return (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-            <DialogTitle>{translate('pages.voucher.dialogs.transfer.title')}</DialogTitle>
+        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm" dir={isRTL ? 'rtl' : 'ltr'}>
+            <DialogTitle sx={{ textAlign: isRTL ? 'right' : 'left' }}>
+                {translate('pages.voucher.dialogs.transfer.title')}
+            </DialogTitle>
             <DialogContent>
                 <Box mb={2}>
-                    <Typography variant="body1">
+                    <Typography variant="body1" sx={{ textAlign: isRTL ? 'right' : 'left' }}>
                         {translate('pages.voucher.dialogs.transfer.message', { batchName, batchId })}
                     </Typography>
-                    <Typography variant="body2" color="textSecondary" mt={1}>
+                    <Typography variant="body2" color="textSecondary" mt={1} sx={{ textAlign: isRTL ? 'right' : 'left' }}>
                         {translate('pages.voucher.dialogs.transfer.warning')}
                     </Typography>
                 </Box>
@@ -79,12 +91,15 @@ const VoucherTransferDialog: React.FC<VoucherTransferDialogProps> = ({ open, onC
                     </Box>
                 ) : (
                     <FormControl fullWidth variant="outlined" margin="normal">
-                        <InputLabel id="target-agent-label">{translate('pages.voucher.dialogs.transfer.target_agent')}</InputLabel>
+                        <InputLabel id="target-agent-label" {...inputLabelProps}>
+                            {translate('pages.voucher.dialogs.transfer.target_agent')}
+                        </InputLabel>
                         <Select
                             labelId="target-agent-label"
                             value={targetAgentId}
                             onChange={(e) => setTargetAgentId(e.target.value as string)}
                             label={translate('pages.voucher.dialogs.transfer.target_agent')}
+                            inputProps={{ style: { textAlign: isRTL ? 'right' : 'left' } }}
                         >
                             <MenuItem value="">
                                 <em>{translate('common.none')}</em>
@@ -98,7 +113,7 @@ const VoucherTransferDialog: React.FC<VoucherTransferDialogProps> = ({ open, onC
                     </FormControl>
                 )}
             </DialogContent>
-            <DialogActions>
+            <DialogActions sx={{ flexDirection: isRTL ? 'row-reverse' : 'row' }}>
                 <MuiButton onClick={onClose} disabled={loading}>
                     {translate('common.cancel')}
                 </MuiButton>

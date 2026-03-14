@@ -14,30 +14,34 @@ import AssessmentOutlinedIcon from '@mui/icons-material/AssessmentOutlined';
 import HistoryOutlinedIcon from '@mui/icons-material/HistoryOutlined';
 import VpnKeyOutlinedIcon from '@mui/icons-material/VpnKeyOutlined';
 import ConstructionIcon from '@mui/icons-material/Construction';
+import PrintIcon from '@mui/icons-material/Print';
 import StorageOutlinedIcon from '@mui/icons-material/StorageOutlined';
 import { Box, useTheme } from '@mui/material';
-import { MenuItemLink, MenuProps, useGetIdentity, useTranslate } from 'react-admin';
+import { MenuItemLink, MenuProps, useGetIdentity, useTranslate, useLocale } from 'react-admin';
+
+const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
 
 const menuItems = [
   { to: '/', labelKey: 'menu.dashboard', icon: <DashboardOutlinedIcon /> }, // Everyone
-  { to: '/network/servers', labelKey: 'Servers', icon: <StorageOutlinedIcon />, permissions: ['super', 'admin'] },
+  { to: '/network/servers', labelKey: 'menu.servers', icon: <StorageOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/network/nodes', labelKey: 'menu.network_nodes', icon: <AccountTreeOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/network/nas', labelKey: 'menu.nas_devices', icon: <RouterOutlinedIcon />, permissions: ['super', 'admin'] },
-  { to: '/cpes', labelKey: 'CPE Devices', icon: <RouterOutlinedIcon />, permissions: ['super', 'admin'] },
+  { to: '/cpes', labelKey: 'menu.cpe_devices', icon: <RouterOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/radius/users', labelKey: 'menu.radius_users', icon: <PeopleAltOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/radius/profiles', labelKey: 'menu.radius_profiles', icon: <SettingsSuggestOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/radius/online', labelKey: 'menu.online_sessions', icon: <SensorsOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/radius/accounting', labelKey: 'menu.accounting', icon: <ReceiptLongOutlinedIcon />, permissions: ['super', 'admin'] },
-  { to: '/radius/invoices', labelKey: 'resources.radius/invoices.name', icon: <ReceiptLongOutlinedIcon />, permissions: ['super', 'admin'] },
+  { to: '/radius/invoices', labelKey: 'menu.invoices', icon: <ReceiptLongOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/system/config', labelKey: 'menu.system_config', icon: <SettingsOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/system/operators', labelKey: 'menu.operators', icon: <AdminPanelSettingsOutlinedIcon />, permissions: ['super', 'admin'] },
-  { to: '/system/logs', labelKey: 'Activity Logs', icon: <HistoryOutlinedIcon />, permissions: ['super', 'admin'] },
-  { to: '/products', labelKey: 'Products', icon: <Inventory2OutlinedIcon />, permissions: ['super', 'admin'] },
-  { to: '/agents', labelKey: 'Agents', icon: <SupportAgentOutlinedIcon />, permissions: ['super', 'admin'] },
-  { to: '/financial/performance', labelKey: 'Financial Performance', icon: <AssessmentOutlinedIcon />, permissions: ['super', 'admin'] },
-  { to: '/settings/tunnel', labelKey: 'Tunnel Settings', icon: <VpnKeyOutlinedIcon />, permissions: ['super', 'admin'] },
+  { to: '/system/logs', labelKey: 'menu.system_logs', icon: <HistoryOutlinedIcon />, permissions: ['super', 'admin'] },
+  { to: '/products', labelKey: 'menu.products', icon: <Inventory2OutlinedIcon />, permissions: ['super', 'admin'] },
+  { to: '/agents', labelKey: 'menu.agents', icon: <SupportAgentOutlinedIcon />, permissions: ['super', 'admin'] },
+  { to: '/financial/performance', labelKey: 'menu.financial_performance', icon: <AssessmentOutlinedIcon />, permissions: ['super', 'admin'] },
+  { to: '/settings/tunnel', labelKey: 'menu.tunnel_settings', icon: <VpnKeyOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/system/maintenance', labelKey: 'menu.maintenance', icon: <ConstructionIcon />, permissions: ['super', 'admin'] },
-  { to: '/voucher-batches', labelKey: 'Vouchers', icon: <ConfirmationNumberOutlinedIcon /> }, // Everyone
+  { to: '/voucher-batches', labelKey: 'menu.vouchers', icon: <ConfirmationNumberOutlinedIcon /> }, // Everyone
+  { to: '/voucher-printing', labelKey: 'menu.print_vouchers', icon: <PrintIcon /> }, // Everyone
 ];
 
 export const CustomMenu = ({ dense, onMenuClick, logout }: MenuProps) => {
@@ -46,21 +50,23 @@ export const CustomMenu = ({ dense, onMenuClick, logout }: MenuProps) => {
   const isDark = theme.palette.mode === 'dark';
   const { data: identity } = useGetIdentity();
   const translate = useTranslate();
+  const locale = useLocale();
+  const isRTL = RTL_LANGUAGES.includes(locale || '');
 
-  // 根据用户权限过滤菜单项
+  // Filter menu items based on user permissions
   const filteredMenuItems = menuItems.filter(item => {
-    if (!item.permissions) return true; // 无权限限制的菜单项对所有人可见
-    if (!identity?.level) return false; // 未登录用户不显示需要权限的菜单
-    return item.permissions.includes(identity.level); // 检查用户权限是否在允许列表中
+    if (!item.permissions) return true;
+    if (!identity?.level) return false;
+    return item.permissions.includes(identity.level);
   });
 
   return (
     <Box
+      dir={isRTL ? 'rtl' : 'ltr'}
       sx={{
         height: '100%',
         display: 'flex',
         flexDirection: 'column',
-        // 侧边栏根据主题使用不同背景色
         backgroundColor: isDark ? '#1e293b' : '#1e40af',
         color: '#ffffff',
         pt: 0,
@@ -76,6 +82,14 @@ export const CustomMenu = ({ dense, onMenuClick, logout }: MenuProps) => {
             leftIcon={item.icon}
             dense={dense}
             onClick={onMenuClick}
+            sx={{
+              textAlign: isRTL ? 'right' : 'left',
+              '& .RaMenuItemLink-icon': {
+                minWidth: isRTL ? 'auto' : undefined,
+                ml: isRTL ? 1 : 0,
+                mr: isRTL ? 0 : undefined,
+              },
+            }}
           />
         ))}
       </Box>
@@ -98,3 +112,4 @@ export const CustomMenu = ({ dense, onMenuClick, logout }: MenuProps) => {
     </Box>
   );
 };
+

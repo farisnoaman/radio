@@ -10,6 +10,7 @@ import Dashboard from './pages/Dashboard';
 import AccountSettings from './pages/AccountSettings';
 import { SystemConfigPage } from './pages/SystemConfigPage';
 import FinancialPerformance from './pages/FinancialPerformance';
+import VoucherPrintingPage from './pages/VoucherPrintingPage';
 import { LoginPage } from './pages/LoginPage';
 import { TunnelSettings } from './pages/Settings/TunnelSettings';
 import { SystemSettings } from './pages/SystemSettings';
@@ -239,6 +240,7 @@ const App = () => (
       <Route path="/settings/tunnel" element={<TunnelSettings />} />
       <Route path="/system/maintenance" element={<SystemSettings />} />
       <Route path="/financial/performance" element={<FinancialPerformance />} />
+      <Route path="/voucher-printing" element={<VoucherPrintingPage />} />
     </CustomRoutes>
   </Admin >
 );

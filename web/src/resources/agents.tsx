@@ -28,7 +28,9 @@ import {
     Link,
     Filter,
     Show,
-    SimpleShowLayout
+    SimpleShowLayout,
+    useTranslate,
+    useLocale,
 } from 'react-admin';
 import { Box, Card, CardContent, CardActions, Typography, useMediaQuery, Theme, Avatar, Chip } from '@mui/material';
 import {
@@ -56,9 +58,10 @@ import {
 
 const ShowIconButton = () => {
     const record = useRecordContext();
-
+    const translate = useTranslate();
+    if (!record) return null;
     return (
-        <Tooltip title="Show">
+        <Tooltip title={translate('resources.agents.actions.show')}>
             <IconButton
                 component={Link}
                 to={`/agents/${record?.id}/show`}
@@ -77,14 +80,17 @@ const AgentListActions = () => (
     </TopToolbar>
 );
 
-const AgentFilter = (props: any) => (
-    <Filter {...props}>
-        <TextInput source="q" label="Search" alwaysOn />
-        <TextInput source="username" label="Username" />
-        <TextInput source="realname" label="Name" />
-        <TextInput source="email" label="Email" />
-    </Filter>
-);
+const AgentFilter = (props: any) => {
+    const translate = useTranslate();
+    return (
+        <Filter {...props}>
+            <TextInput source="q" label={translate('ra.action.search')} alwaysOn />
+            <TextInput source="username" label={translate('resources.agents.fields.username')} />
+            <TextInput source="realname" label={translate('resources.agents.fields.realname')} />
+            <TextInput source="email" label={translate('resources.agents.fields.email')} />
+        </Filter>
+    );
+};
 
 const TopupButton = () => {
     const record = useRecordContext();
@@ -97,6 +103,10 @@ const TopupButton = () => {
     const handleOpen = () => setOpen(true);
     const handleClose = () => setOpen(false);
 
+    const translate = useTranslate();
+    const locale = useLocale();
+    const isRTL = locale === 'ar';
+
     const handleSubmit = async () => {
         if (!record) return;
         try {
@@ -107,51 +117,62 @@ const TopupButton = () => {
                     remark,
                 }),
             });
-            notify('Topup successful', { type: 'success' });
+            notify('resources.agents.dialogs.topup_success', { type: 'success' });
             setOpen(false);
             refresh();
         } catch (error) {
-            notify('Topup failed', { type: 'error' });
+            notify('resources.agents.dialogs.topup_failed', { type: 'error' });
         }
     };
 
     return (
         <>
-            <Tooltip title="Topup">
+            <Tooltip title={translate('resources.agents.actions.topup')}>
                 <MuiButton 
                     size="small" 
                     variant="contained"
                     color="success"
                     onClick={(e) => { e.stopPropagation(); handleOpen(); }} 
                     startIcon={<AddCardIcon />}
-                    sx={{ textTransform: 'none', minWidth: 0, px: 1 }}
+                    sx={{ textTransform: 'none', minWidth: 0, px: 1, ml: isRTL ? 0 : 0.5, mr: isRTL ? 0.5 : 0 }}
                 >
-                    Topup
+                    {translate('resources.agents.actions.topup')}
                 </MuiButton>
             </Tooltip>
-            <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-                <DialogTitle>Topup Agent Wallet</DialogTitle>
+            <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth dir={isRTL ? 'rtl' : 'ltr'}>
+                <DialogTitle>{translate('resources.agents.dialogs.topup_title')}</DialogTitle>
                 <DialogContent>
                     <MuiTextField
                         autoFocus
                         margin="dense"
-                        label="Amount"
+                        label={translate('resources.agents.fields.amount')}
                         type="number"
                         fullWidth
+                        placeholder="0"
                         value={amount}
                         onChange={(e) => setAmount(e.target.value)}
+                        dir={isRTL ? 'rtl' : 'ltr'}
+                        slotProps={{
+                            input: { sx: { textAlign: isRTL ? 'right' : 'left' } },
+                            inputLabel: { sx: { transformOrigin: isRTL ? 'top right' : 'top left', left: isRTL ? 'auto' : 0, right: isRTL ? 24 : 'auto' } }
+                        }}
                     />
                     <MuiTextField
                         margin="dense"
-                        label="Remark"
+                        label={translate('resources.agents.fields.remark')}
                         fullWidth
                         value={remark}
                         onChange={(e) => setRemark(e.target.value)}
+                        dir={isRTL ? 'rtl' : 'ltr'}
+                        slotProps={{
+                            input: { sx: { textAlign: isRTL ? 'right' : 'left' } },
+                            inputLabel: { sx: { transformOrigin: isRTL ? 'top right' : 'top left', left: isRTL ? 'auto' : 0, right: isRTL ? 24 : 'auto' } }
+                        }}
                     />
                 </DialogContent>
-                <DialogActions>
-                    <MuiButton onClick={handleClose}>Cancel</MuiButton>
-                    <MuiButton onClick={handleSubmit}>Submit</MuiButton>
+                <DialogActions sx={{ justifyContent: isRTL ? 'flex-start' : 'flex-end' }}>
+                    <MuiButton onClick={handleClose}>{translate('resources.agents.actions.cancel')}</MuiButton>
+                    <MuiButton onClick={handleSubmit} variant="contained">{translate('resources.agents.actions.submit')}</MuiButton>
                 </DialogActions>
             </Dialog>
         </>
@@ -161,6 +182,9 @@ const TopupButton = () => {
 const EditButton = () => {
     const record = useRecordContext();
     const navigate = useNavigate();
+    const translate = useTranslate();
+    const locale = useLocale();
+    const isRTL = locale === 'ar';
 
     const handleClick = (e: React.MouseEvent) => {
         e.stopPropagation();
@@ -170,16 +194,16 @@ const EditButton = () => {
     };
 
     return (
-        <Tooltip title="Edit">
+        <Tooltip title={translate('resources.agents.actions.edit')}>
             <MuiButton 
                 size="small" 
                 variant="outlined"
                 color="info"
                 onClick={handleClick}
                 startIcon={<EditIcon />}
-                sx={{ textTransform: 'none', minWidth: 0, px: 1 }}
+                sx={{ textTransform: 'none', minWidth: 0, px: 1, ml: isRTL ? 0 : 0.5, mr: isRTL ? 0.5 : 0 }}
             >
-                Edit
+                {translate('ra.action.edit')}
             </MuiButton>
         </Tooltip>
     );
@@ -195,6 +219,10 @@ const HierarchyButton = () => {
     const [loadingAgents, setLoadingAgents] = useState(false);
     const notify = useNotify();
     const refresh = useRefresh();
+
+    const translate = useTranslate();
+    const locale = useLocale();
+    const isRTL = locale === 'ar';
 
     const handleOpen = async () => {
         if (!record) return;
@@ -239,42 +267,44 @@ const HierarchyButton = () => {
                     territory: territory,
                 }),
             });
-            notify('Hierarchy updated successfully', { type: 'success' });
+            notify('resources.agents.hierarchy.success', { type: 'success' });
             handleClose();
             refresh();
         } catch (error: any) {
-            notify(error.message || 'Failed to update hierarchy', { type: 'error' });
+            notify(error.message || 'resources.agents.hierarchy.error', { type: 'error' });
         }
     };
 
     return (
         <>
-            <Tooltip title="Hierarchy">
+            <Tooltip title={translate('resources.agents.actions.hierarchy')}>
                 <MuiButton 
                     size="small" 
                     variant="contained"
                     color="primary"
                     onClick={(e) => { e.stopPropagation(); handleOpen(); }}
                     startIcon={<AccountTreeIcon />}
-                    sx={{ textTransform: 'none', minWidth: 0, px: 1 }}
+                    sx={{ textTransform: 'none', minWidth: 0, px: 1, ml: isRTL ? 0 : 0.5, mr: isRTL ? 0.5 : 0 }}
                 >
-                    Hierarchy
+                    {translate('resources.agents.actions.hierarchy')}
                 </MuiButton>
             </Tooltip>
-            <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth>
-                <DialogTitle>Manage Agent Hierarchy</DialogTitle>
+            <Dialog open={open} onClose={handleClose} maxWidth="sm" fullWidth dir={isRTL ? 'rtl' : 'ltr'}>
+                <DialogTitle>{translate('resources.agents.hierarchy.manage')}</DialogTitle>
                 <DialogContent>
                     <MuiTextField
                         select
                         margin="dense"
-                        label="Parent Agent"
+                        label={translate('resources.agents.fields.parent')}
                         fullWidth
                         value={parentId}
                         onChange={(e) => setParentId(e.target.value)}
                         SelectProps={{ native: true }}
                         disabled={loadingAgents}
+                        dir={isRTL ? 'rtl' : 'ltr'}
+                        sx={{ textAlign: isRTL ? 'right' : 'left' }}
                     >
-                        <option value="">Root Agent (No Parent)</option>
+                        <option value="">{translate('resources.agents.hierarchy.no_parent')}</option>
                         {availableAgents.map((agent) => (
                             <option key={String(agent.id)} value={String(agent.id)}>
                                 {agent.realname || agent.username} ({String(agent.id).slice(-8)})
@@ -283,25 +313,29 @@ const HierarchyButton = () => {
                     </MuiTextField>
                     <MuiTextField
                         margin="dense"
-                        label="Commission Rate (%)"
+                        label={translate('resources.agents.fields.commission_rate')}
                         type="number"
                         fullWidth
                         value={commissionRate}
                         onChange={(e) => setCommissionRate(e.target.value)}
                         inputProps={{ min: 0, max: 100, step: 0.01 }}
+                        dir={isRTL ? 'rtl' : 'ltr'}
+                        sx={{ textAlign: isRTL ? 'right' : 'left' }}
                     />
                     <MuiTextField
                         margin="dense"
-                        label="Territory"
+                        label={translate('resources.agents.fields.territory')}
                         fullWidth
                         value={territory}
                         onChange={(e) => setTerritory(e.target.value)}
-                        placeholder="e.g., North Region, City Center"
+                        placeholder={translate('resources.agents.hierarchy.territory_placeholder')}
+                        dir={isRTL ? 'rtl' : 'ltr'}
+                        sx={{ textAlign: isRTL ? 'right' : 'left' }}
                     />
                 </DialogContent>
-                <DialogActions>
-                    <MuiButton onClick={handleClose}>Cancel</MuiButton>
-                    <MuiButton onClick={handleSubmit} variant="contained">Save</MuiButton>
+                <DialogActions sx={{ justifyContent: isRTL ? 'flex-start' : 'flex-end' }}>
+                    <MuiButton onClick={handleClose}>{translate('resources.agents.actions.cancel')}</MuiButton>
+                    <MuiButton onClick={handleSubmit} variant="contained">{translate('resources.agents.actions.save')}</MuiButton>
                 </DialogActions>
             </Dialog>
         </>
@@ -311,6 +345,9 @@ const HierarchyButton = () => {
 
 const AgentGrid = () => {
     const { data, isLoading } = useListContext();
+    const translate = useTranslate();
+    const locale = useLocale();
+    const isRTL = locale === 'ar';
 
     if (isLoading || !data) return null;
 
@@ -320,6 +357,7 @@ const AgentGrid = () => {
             gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)' }}
             gap={3}
             p={3}
+            dir={isRTL ? 'rtl' : 'ltr'}
             sx={{ bgcolor: theme => theme.palette.mode === 'dark' ? 'transparent' : 'rgba(0,0,0,0.02)' }}
         >
             {data.map(record => (
@@ -373,7 +411,7 @@ const AgentGrid = () => {
                                     </Box>
                                 </Box>
                                 <Chip
-                                    label={record.status === 'enabled' ? 'Active' : 'Inactive'}
+                                    label={record.status === 'enabled' ? translate('resources.agents.status.active') : translate('resources.agents.status.inactive')}
                                     size="medium"
                                     color={record.status === 'enabled' ? 'success' : 'default'}
                                     variant="filled"
@@ -395,24 +433,24 @@ const AgentGrid = () => {
                                 }}
                             >
                                 <Box display="flex" alignItems="center" gap={1} mb={1.5}>
-                                    <Typography variant="caption" color="text.secondary" sx={{ minWidth: 50 }}>
-                                        Name:
+                                    <Typography variant="caption" color="text.secondary" sx={{ minWidth: 60 }}>
+                                        {translate('resources.agents.fields.realname')}:
                                     </Typography>
                                     <Typography variant="body2" fontWeight="bold">
                                         {record.realname || 'N/A'}
                                     </Typography>
                                 </Box>
                                 <Box display="flex" alignItems="center" gap={1} mb={1.5}>
-                                    <Typography variant="caption" color="text.secondary" sx={{ minWidth: 50 }}>
-                                        Contact:
+                                    <Typography variant="caption" color="text.secondary" sx={{ minWidth: 60 }}>
+                                        {translate('resources.agents.fields.contact')}:
                                     </Typography>
                                     <Typography variant="body2">
                                         {record.mobile || record.email || 'N/A'}
                                     </Typography>
                                 </Box>
                                 <Box display="flex" alignItems="center" gap={1}>
-                                    <Typography variant="caption" color="text.secondary" sx={{ minWidth: 50 }}>
-                                        Balance:
+                                    <Typography variant="caption" color="text.secondary" sx={{ minWidth: 60 }}>
+                                        {translate('resources.agents.fields.balance')}:
                                     </Typography>
                                     <Typography
                                         variant="body1"
@@ -440,15 +478,16 @@ const AgentGrid = () => {
                                         display: 'block',
                                         mb: 1.5,
                                         fontWeight: 600,
-                                        letterSpacing: 0.5
+                                        letterSpacing: 0.5,
+                                        textAlign: isRTL ? 'right' : 'left'
                                     }}
                                 >
-                                    STATISTICS
+                                    {translate('resources.agents.sections.statistics')}
                                 </Typography>
                                 <Box display="flex" justifyContent="space-between" gap={2}>
                                     <Box textAlign="center" flex={1}>
                                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-                                            Level
+                                            {translate('resources.agents.fields.level')}
                                         </Typography>
                                         <Typography variant="body1" fontWeight="bold" sx={{ fontSize: '1.1rem' }}>
                                             {record.level !== undefined ? record.level : '-'}
@@ -456,15 +495,15 @@ const AgentGrid = () => {
                                     </Box>
                                     <Box textAlign="center" flex={1}>
                                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-                                            Tier
+                                            {translate('resources.agents.fields.tier')}
                                         </Typography>
                                         <Typography variant="body1" fontWeight="bold" sx={{ fontSize: '1.1rem' }}>
-                                            {record.level === 0 ? 'Root' : record.level === 1 ? 'Level 1' : `L${record.level || 0}`}
+                                            {record.level === 0 ? translate('resources.agents.hierarchy.no_parent') : record.level === 1 ? 'Level 1' : `L${record.level || 0}`}
                                         </Typography>
                                     </Box>
                                     <Box textAlign="center" flex={1}>
                                         <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-                                            Status
+                                            {translate('resources.agents.fields.status')}
                                         </Typography>
                                         <Typography
                                             variant="body1"
@@ -472,7 +511,7 @@ const AgentGrid = () => {
                                             color={record.status === 'enabled' ? 'success.main' : 'error.main'}
                                             sx={{ fontSize: '1.1rem' }}
                                         >
-                                            {record.status === 'enabled' ? 'Active' : 'Off'}
+                                            {record.status === 'enabled' ? translate('resources.agents.status.active') : translate('resources.agents.status.off')}
                                         </Typography>
                                     </Box>
                                 </Box>
@@ -488,7 +527,7 @@ const AgentGrid = () => {
                             gap: 0.5,
                             bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)'
                         }}>
-                            <Tooltip title="View Details">
+                            <Tooltip title={translate('resources.agents.actions.show')}>
                                 <IconButton
                                     component={Link}
                                     to={`/agents/${record.id}/show`}
@@ -498,7 +537,9 @@ const AgentGrid = () => {
                                         color: 'white',
                                         '&:hover': { bgcolor: 'primary.dark' },
                                         width: 36,
-                                        height: 36
+                                        height: 36,
+                                        ml: isRTL ? 0.5 : 0,
+                                        mr: isRTL ? 0 : 0.5
                                     }}
                                 >
                                     <VisibilityIcon sx={{ fontSize: 20 }} />
@@ -514,21 +555,22 @@ const AgentGrid = () => {
 };
 export const AgentList = (props: ListProps) => {
     const isSmall = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
+    const translate = useTranslate();
     return (
         <List {...props} actions={<AgentListActions />} filters={<AgentFilter />}>
             {isSmall ? (
                 <AgentGrid />
             ) : (
                 <Datagrid rowClick={false}>
-                    <TextField source="id" />
-                    <TextField source="username" />
-                    <TextField source="realname" />
-                    <EmailField source="mobile" />
+                    <TextField source="id" label={translate('resources.agents.fields.id')} />
+                    <TextField source="username" label={translate('resources.agents.fields.username')} />
+                    <TextField source="realname" label={translate('resources.agents.fields.realname')} />
+                    <EmailField source="mobile" label={translate('resources.agents.fields.mobile')} />
                     <FunctionField
-                        label="Balance"
+                        label={translate('resources.agents.fields.balance')}
                         render={(record: any) => (record.balance || 0).toFixed(2)}
                     />
-                    <TextField source="status" />
+                    <TextField source="status" label={translate('resources.agents.fields.status')} />
                     <ShowIconButton />
                     <EditButton />
                     <TopupButton />
@@ -539,93 +581,118 @@ export const AgentList = (props: ListProps) => {
     );
 };
 
-export const AgentCreate = (props: CreateProps) => (
-    <Create {...props}>
-        <SimpleForm sx={formLayoutSx}>
-            <FormSection
-                title="Basic Information"
-                description="Agent account credentials and basic details"
-            >
-                <FieldGrid columns={{ xs: 1, sm: 2 }}>
-                    <FieldGridItem>
-                        <TextInput
-                            source="username"
-                            label="Username"
-                            validate={[required()]}
-                            fullWidth
-                            size="small"
-                            helperText="3-30 characters, letters, numbers and underscores"
-                        />
-                    </FieldGridItem>
-                    <FieldGridItem>
-                        <PasswordInput
-                            source="password"
-                            label="Password"
-                            validate={[required()]}
-                            fullWidth
-                            size="small"
-                        />
-                    </FieldGridItem>
-                    <FieldGridItem>
-                        <TextInput
-                            source="realname"
-                            label="Real Name"
-                            validate={[required()]}
-                            fullWidth
-                            size="small"
-                        />
-                    </FieldGridItem>
-                </FieldGrid>
-            </FormSection>
+export const AgentCreate = (props: CreateProps) => {
+    const translate = useTranslate();
+    const locale = useLocale();
+    const isRTL = locale === 'ar';
 
-            <FormSection
-                title="Contact Information"
-                description="Agent contact details"
-            >
-                <FieldGrid columns={{ xs: 1, sm: 2 }}>
-                    <FieldGridItem>
-                        <TextInput
-                            source="mobile"
-                            label="Mobile"
-                            fullWidth
-                            size="small"
-                            helperText="China mobile number"
-                        />
-                    </FieldGridItem>
-                    <FieldGridItem>
-                        <TextInput
-                            source="email"
-                            label="Email"
-                            type="email"
-                            fullWidth
-                            size="small"
-                            helperText="For system notifications"
-                        />
-                    </FieldGridItem>
-                </FieldGrid>
-            </FormSection>
+    const inputLabelProps = {
+        sx: {
+            transformOrigin: isRTL ? 'top right' : 'top left',
+            left: isRTL ? 'auto' : 0,
+            right: isRTL ? 24 : 'auto',
+        }
+    };
 
-            <FormSection
-                title="Additional Information"
-                description="Other optional details"
-            >
-                <FieldGrid columns={{ xs: 1, sm: 2 }}>
-                    <FieldGridItem span={{ xs: 1, sm: 2 }}>
-                        <TextInput
-                            source="remark"
-                            label="Remark"
-                            multiline
-                            fullWidth
-                            size="small"
-                        />
-                    </FieldGridItem>
-                </FieldGrid>
-            </FormSection>
-            <TextInput source="level" defaultValue="agent" style={{ display: 'none' }} />
-            <TextInput source="status" defaultValue="enabled" style={{ display: 'none' }} />
-        </SimpleForm>
-    </Create>
-);
+    const textInputProps = {
+        style: { textAlign: (isRTL ? 'right' : 'left') as any },
+        dir: isRTL ? 'rtl' : 'ltr'
+    };
+
+    return (
+        <Create {...props}>
+            <SimpleForm sx={{ ...formLayoutSx, direction: isRTL ? 'rtl' : 'ltr' }}>
+                <FormSection
+                    title={translate('resources.agents.sections.basic')}
+                    description={translate('resources.agents.sections.basic_desc')}
+                >
+                    <FieldGrid columns={{ xs: 1, sm: 2 }}>
+                        <FieldGridItem>
+                            <TextInput
+                                source="username"
+                                label={translate('resources.agents.fields.username')}
+                                validate={[required()]}
+                                fullWidth
+                                size="small"
+                                inputProps={textInputProps}
+                                InputLabelProps={inputLabelProps}
+                            />
+                        </FieldGridItem>
+                        <FieldGridItem>
+                            <PasswordInput
+                                source="password"
+                                label={translate('resources.agents.fields.password')}
+                                validate={[required()]}
+                                fullWidth
+                                size="small"
+                                inputProps={textInputProps}
+                                InputLabelProps={inputLabelProps}
+                            />
+                        </FieldGridItem>
+                        <FieldGridItem>
+                            <TextInput
+                                source="realname"
+                                label={translate('resources.agents.fields.realname')}
+                                validate={[required()]}
+                                fullWidth
+                                size="small"
+                                inputProps={textInputProps}
+                                InputLabelProps={inputLabelProps}
+                            />
+                        </FieldGridItem>
+                    </FieldGrid>
+                </FormSection>
+
+                <FormSection
+                    title={translate('resources.agents.sections.contact')}
+                    description={translate('resources.agents.sections.contact_desc')}
+                >
+                    <FieldGrid columns={{ xs: 1, sm: 2 }}>
+                        <FieldGridItem>
+                            <TextInput
+                                source="mobile"
+                                label={translate('resources.agents.fields.mobile')}
+                                fullWidth
+                                size="small"
+                                inputProps={textInputProps}
+                                InputLabelProps={inputLabelProps}
+                            />
+                        </FieldGridItem>
+                        <FieldGridItem>
+                            <TextInput
+                                source="email"
+                                label={translate('resources.agents.fields.email')}
+                                type="email"
+                                fullWidth
+                                size="small"
+                                inputProps={textInputProps}
+                                InputLabelProps={inputLabelProps}
+                            />
+                        </FieldGridItem>
+                    </FieldGrid>
+                </FormSection>
+
+                <FormSection
+                    title={translate('resources.agents.sections.additional')}
+                    description={translate('resources.agents.sections.additional_desc')}
+                >
+                    <TextInput
+                        source="remark"
+                        label={translate('resources.agents.fields.remark')}
+                        multiline
+                        rows={3}
+                        fullWidth
+                        size="small"
+                        inputProps={textInputProps}
+                        InputLabelProps={inputLabelProps}
+                    />
+                </FormSection>
+                <TextInput source="level" defaultValue="agent" style={{ display: 'none' }} />
+                <TextInput source="status" defaultValue="enabled" style={{ display: 'none' }} />
+            </SimpleForm>
+        </Create>
+    );
+};
 
 const AgentFormToolbar = (props: any) => (
     <Toolbar {...props}>
@@ -635,116 +702,134 @@ const AgentFormToolbar = (props: any) => (
 );
 
 export const AgentEdit = (props: EditProps) => {
+    const translate = useTranslate();
+    const locale = useLocale();
+    const isRTL = locale === 'ar';
+
+    const inputLabelProps = {
+        sx: {
+            transformOrigin: isRTL ? 'top right' : 'top left',
+            left: isRTL ? 'auto' : 0,
+            right: isRTL ? 24 : 'auto',
+        }
+    };
+
+    const textInputProps = {
+        style: { textAlign: (isRTL ? 'right' : 'left') as any },
+        dir: isRTL ? 'rtl' : 'ltr'
+    };
+
     return (
         <Edit {...props}>
-            <SimpleForm toolbar={<AgentFormToolbar />} sx={formLayoutSx}>
+            <SimpleForm toolbar={<AgentFormToolbar />} sx={{ ...formLayoutSx, direction: isRTL ? 'rtl' : 'ltr' }}>
                 <FormSection
-                    title="Basic Information"
-                    description="Agent account credentials and basic details"
+                    title={translate('resources.agents.sections.basic')}
+                    description={translate('resources.agents.sections.basic_desc')}
                 >
                     <FieldGrid columns={{ xs: 1, sm: 2 }}>
                         <FieldGridItem>
                             <TextInput
                                 source="id"
-                                label="ID"
+                                label={translate('resources.agents.fields.id')}
                                 disabled
                                 fullWidth
                                 size="small"
+                                inputProps={textInputProps}
+                                InputLabelProps={inputLabelProps}
                             />
                         </FieldGridItem>
                         <FieldGridItem>
                             <TextInput
                                 source="username"
-                                label="Username"
+                                label={translate('resources.agents.fields.username')}
                                 validate={[required()]}
                                 fullWidth
                                 size="small"
-                                helperText="3-30 characters, letters, numbers and underscores"
+                                inputProps={textInputProps}
+                                InputLabelProps={inputLabelProps}
                             />
                         </FieldGridItem>
                         <FieldGridItem>
                             <PasswordInput
                                 source="password"
-                                label="New Password"
+                                label={translate('resources.agents.fields.password')}
                                 fullWidth
                                 size="small"
-                                helperText="Leave blank to keep current password"
+                                inputProps={textInputProps}
+                                InputLabelProps={inputLabelProps}
+                            />
+                        </FieldGridItem>
+                        <FieldGridItem>
+                            <SelectInput
+                                source="status"
+                                label={translate('resources.agents.fields.status')}
+                                choices={[
+                                    { id: 'enabled', name: translate('resources.agents.status.enabled') },
+                                    { id: 'disabled', name: translate('resources.agents.status.disabled') }
+                                ]}
+                                fullWidth
+                                size="small"
+                                dir={isRTL ? 'rtl' : 'ltr'}
+                                InputLabelProps={inputLabelProps}
                             />
                         </FieldGridItem>
                         <FieldGridItem>
                             <TextInput
                                 source="realname"
-                                label="Real Name"
+                                label={translate('resources.agents.fields.realname')}
                                 validate={[required()]}
                                 fullWidth
                                 size="small"
+                                inputProps={textInputProps}
+                                InputLabelProps={inputLabelProps}
                             />
                         </FieldGridItem>
                     </FieldGrid>
                 </FormSection>
 
                 <FormSection
-                    title="Contact Information"
-                    description="Agent contact details"
+                    title={translate('resources.agents.sections.contact')}
+                    description={translate('resources.agents.sections.contact_desc')}
                 >
                     <FieldGrid columns={{ xs: 1, sm: 2 }}>
                         <FieldGridItem>
                             <TextInput
                                 source="mobile"
-                                label="Mobile"
+                                label={translate('resources.agents.fields.mobile')}
                                 fullWidth
                                 size="small"
-                                helperText="China mobile number"
+                                inputProps={textInputProps}
+                                InputLabelProps={inputLabelProps}
                             />
                         </FieldGridItem>
                         <FieldGridItem>
                             <TextInput
                                 source="email"
-                                label="Email"
+                                label={translate('resources.agents.fields.email')}
                                 type="email"
                                 fullWidth
                                 size="small"
-                                helperText="For system notifications"
+                                inputProps={textInputProps}
+                                InputLabelProps={inputLabelProps}
                             />
                         </FieldGridItem>
                     </FieldGrid>
                 </FormSection>
 
                 <FormSection
-                    title="Status"
-                    description="Agent account status"
+                    title={translate('resources.agents.sections.additional')}
+                    description={translate('resources.agents.sections.additional_desc')}
                 >
-                    <FieldGrid columns={{ xs: 1, sm: 2 }}>
-                        <FieldGridItem>
-                            <SelectInput
-                                source="status"
-                                label="Status"
-                                choices={[
-                                    { id: 'enabled', name: 'Enabled' },
-                                    { id: 'disabled', name: 'Disabled' }
-                                ]}
-                                fullWidth
-                                size="small"
-                            />
-                        </FieldGridItem>
-                    </FieldGrid>
-                </FormSection>
-
-                <FormSection
-                    title="Additional Information"
-                    description="Other optional details"
-                >
-                    <FieldGrid columns={{ xs: 1, sm: 2 }}>
-                        <FieldGridItem span={{ xs: 1, sm: 2 }}>
-                            <TextInput
-                                source="remark"
-                                label="Remark"
-                                multiline
-                                fullWidth
-                                size="small"
-                            />
-                        </FieldGridItem>
-                    </FieldGrid>
+                    <TextInput
+                        source="remark"
+                        label={translate('resources.agents.fields.remark')}
+                        multiline
+                        rows={3}
+                        fullWidth
+                        size="small"
+                        inputProps={textInputProps}
+                        InputLabelProps={inputLabelProps}
+                    />
                 </FormSection>
             </SimpleForm>
         </Edit>
@@ -759,26 +844,32 @@ const AgentHierarchySection = () => {
     return record ? <AgentHierarchyForm agentId={String(record.id)} /> : null;
 };
 
-export const AgentShow = (props: any) => (
-    <Show {...props}>
-        <SimpleShowLayout>
-            <Box sx={{ mb: 2 }}>
-                <Typography variant="h5" gutterBottom>
-                    Agent Details
-                </Typography>
-            </Box>
-            <TextField source="id" label="ID" />
-            <TextField source="username" label="Username" />
-            <TextField source="realname" label="Name" />
-            <EmailField source="email" label="Email" />
-            <TextField source="mobile" label="Mobile" />
-            <TextField source="status" label="Status" />
-            <FunctionField
-                label="Wallet Balance"
-                render={(record: any) => `${(record.balance || 0).toFixed(2)}`}
-            />
-            <AgentHierarchyTree />
-            <AgentHierarchySection />
-        </SimpleShowLayout>
-    </Show>
-);
+export const AgentShow = (props: any) => {
+    const translate = useTranslate();
+    const locale = useLocale();
+    const isRTL = locale === 'ar';
+
+    return (
+        <Show {...props}>
+            <SimpleShowLayout sx={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+                <Box sx={{ mb: 2 }}>
+                    <Typography variant="h5" gutterBottom>
+                        {translate('resources.agents.sections.details')}
+                    </Typography>
+                </Box>
+                <TextField source="id" label={translate('resources.agents.fields.id')} />
+                <TextField source="username" label={translate('resources.agents.fields.username')} />
+                <TextField source="realname" label={translate('resources.agents.fields.realname')} />
+                <EmailField source="email" label={translate('resources.agents.fields.email')} />
+                <TextField source="mobile" label={translate('resources.agents.fields.mobile')} />
+                <TextField source="status" label={translate('resources.agents.fields.status')} />
+                <FunctionField
+                    label={translate('resources.agents.fields.balance')}
+                    render={(record: any) => `${(record.balance || 0).toFixed(2)}`}
+                />
+                <AgentHierarchyTree />
+                <AgentHierarchySection />
+            </SimpleShowLayout>
+        </Show>
+    );
+};

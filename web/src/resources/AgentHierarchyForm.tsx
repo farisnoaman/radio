@@ -15,8 +15,7 @@ import {
     InputAdornment,
 } from '@mui/material';
 import SaveIcon from '@mui/icons-material/Save';
-import { useTranslate } from 'react-admin';
-import { useAssignParent, useAgentHierarchy } from '../hooks/useAgentHierarchy';
+import { useTranslate, useLocale, useNotify, useRefresh } from 'react-admin';
 import { httpClient } from '../utils/apiClient';
 
 interface AgentHierarchyFormProps {
@@ -35,191 +34,173 @@ export const AgentHierarchyForm: React.FC<AgentHierarchyFormProps> = ({
     onSuccess,
 }) => {
     const translate = useTranslate();
+    const locale = useLocale();
+    const isRTL = locale === 'ar';
+    const notify = useNotify();
+    const refresh = useRefresh();
+
     const [parentId, setParentId] = useState<string>('');
-    const [commissionRate, setCommissionRate] = useState<string>('0');
+    const [commissionRate, setCommissionRate] = useState<string>('');
     const [territory, setTerritory] = useState<string>('');
     const [availableAgents, setAvailableAgents] = useState<AgentOption[]>([]);
-    const [loadingAgents, setLoadingAgents] = useState<boolean>(true);
+    
+    const [loading, setLoading] = useState<boolean>(true);
+    const [submitting, setSubmitting] = useState<boolean>(false);
+    const [error, setError] = useState<string | null>(null);
 
-    // Fetch current hierarchy data
-    const { data: hierarchy, isLoading: loadingHierarchy, refetch: refetchHierarchy } = useAgentHierarchy(agentId);
-
-    // Assign parent mutation
-    const assignParent = useAssignParent();
-
-    // Load available agents for parent selection
+    // Load initial data
     useEffect(() => {
-        const fetchAgents = async () => {
+        const loadData = async () => {
             try {
-                setLoadingAgents(true);
-                // Fetch all agents excluding current agent
-                const response = await httpClient(`/agents?filter={"level":"agent"}&perPage=1000`, {
-                    method: 'GET',
-                });
-                const data = response.json as Promise<{ data: AgentOption[] }>;
-                const result = await data;
-                // Filter out the current agent
-                const filtered = (result.data || []).filter((a: AgentOption) => a.id !== agentId);
+                setLoading(true);
+                // Fetch current hierarchy
+                const hierarchyRes = await httpClient(`/agents/${agentId}/hierarchy`, { method: 'GET' });
+                const hierarchy = hierarchyRes.json as any;
+                if (hierarchy) {
+                    if (hierarchy.parent_id) setParentId(String(hierarchy.parent_id));
+                    setCommissionRate(String((hierarchy.commission_rate || 0) * 100));
+                    setTerritory(hierarchy.territory || '');
+                }
+
+                // Fetch available parent agents
+                const agentsRes = await httpClient(`/agents?filter={"level":"agent"}&perPage=1000`, { method: 'GET' });
+                const agentsData = agentsRes.json as any;
+                const filtered = (agentsData.data || []).filter((a: any) => String(a.id) !== String(agentId));
                 setAvailableAgents(filtered);
-            } catch (error) {
-                console.error('Failed to fetch agents:', error);
+            } catch (err: any) {
+                console.error('Failed to load hierarchy data:', err);
+                setError(translate('resources.agents.hierarchy.error_loading'));
             } finally {
-                setLoadingAgents(false);
+                setLoading(false);
             }
         };
-        fetchAgents();
-    }, [agentId]);
 
-    // Set form values when hierarchy data loads
-    useEffect(() => {
-        if (hierarchy) {
-            if (hierarchy.parent_id) {
-                setParentId(String(hierarchy.parent_id));
-            }
-            setCommissionRate(String(hierarchy.commission_rate * 100));
-            setTerritory(hierarchy.territory || '');
+        if (agentId) {
+            loadData();
         }
-    }, [hierarchy]);
+    }, [agentId, translate]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
-
-        // Validate agentId before submitting - now uses string for URL
-        const agentIdStr = String(agentId);
-        if (!agentIdStr || agentIdStr === '0' || agentIdStr === '') {
-            console.error('Invalid agent ID:', agentId);
-            return;
-        }
-
-        // Keep parentId as string to preserve precision - backend will parse it
-        const parentIdValue = parentId && parentId !== '' ? parentId : null;
-        const commissionRateNum = parseFloat(commissionRate) / 100; // Convert from percentage
-
+        setSubmitting(true);
         try {
-            await assignParent.mutateAsync({
-                agent_id: agentIdStr,
-                parent_id: parentIdValue,
-                commission_rate: commissionRateNum,
-                territory: territory,
+            const parentIdValue = parentId && parentId !== '' ? parentId : null;
+            await httpClient(`/agents/${agentId}/assign-parent`, {
+                method: 'POST',
+                body: JSON.stringify({
+                    parent_id: parentIdValue,
+                    commission_rate: parseFloat(commissionRate) / 100,
+                    territory: territory,
+                }),
             });
-
-            // Refresh hierarchy data
-            refetchHierarchy();
-
-            // Call success callback
-            if (onSuccess) {
-                onSuccess();
-            }
-        } catch (error) {
-            console.error('Failed to assign parent:', error);
+            notify('resources.agents.hierarchy.success', { type: 'success' });
+            refresh();
+            if (onSuccess) onSuccess();
+        } catch (err: any) {
+            notify(err.message || 'resources.agents.hierarchy.error', { type: 'error' });
+        } finally {
+            setSubmitting(false);
         }
     };
 
-    const isLoading = loadingHierarchy || loadingAgents || assignParent.isPending;
+    if (loading) {
+        return (
+            <Box display="flex" justifyContent="center" py={4}>
+                <CircularProgress size={24} />
+            </Box>
+        );
+    }
+
+    const inputLabelSx = isRTL ? {
+        transformOrigin: 'top right',
+        left: 'auto',
+        right: 28,
+        textAlign: 'right',
+        '&.MuiInputLabel-shrink': {
+            transform: 'translate(14px, -6px) scale(0.75)',
+            right: 24,
+        }
+    } : {};
+
+    const inputSx = { textAlign: (isRTL ? 'right' : 'left') as any };
 
     return (
-        <Card variant="outlined" sx={{ mt: 2 }}>
+        <Card variant="outlined" sx={{ mt: 2 }} dir={isRTL ? 'rtl' : 'ltr'}>
             <CardContent>
-                <Typography variant="h6" gutterBottom>
-                    {translate('resources.agents.hierarchy.manage', { _: 'Manage Hierarchy' })}
+                <Typography variant="h6" gutterBottom sx={{ textAlign: isRTL ? 'right' : 'left' }}>
+                    {translate('resources.agents.hierarchy.manage')}
                 </Typography>
-                <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-                    {translate('resources.agents.hierarchy.description', {
-                        _: 'Assign a parent agent and set commission rate for this agent'
-                    })}
+                <Typography variant="body2" color="text.secondary" sx={{ mb: 2, textAlign: isRTL ? 'right' : 'left' }}>
+                    {translate('resources.agents.hierarchy.description')}
                 </Typography>
 
-                <form onSubmit={handleSubmit}>
-                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                        {/* Parent Agent Selection */}
-                        <FormControl fullWidth disabled={isLoading}>
-                            <InputLabel id="parent-agent-label">
-                                {translate('resources.agents.fields.parent', { _: 'Parent Agent' })}
-                            </InputLabel>
-                            <Select
-                                labelId="parent-agent-label"
-                                value={parentId}
-                                label={translate('resources.agents.fields.parent', { _: 'Parent Agent' })}
-                                onChange={(e) => setParentId(e.target.value)}
-                            >
-                                <MenuItem value="">
-                                    <em>{translate('resources.agents.hierarchy.no_parent', { _: 'Root Agent (No Parent)' })}</em>
+                <Box component="form" onSubmit={handleSubmit} sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
+                    {error && <Alert severity="error">{error}</Alert>}
+
+                    <FormControl fullWidth size="small" variant="outlined">
+                        <InputLabel id="parent-id-label" sx={inputLabelSx}>
+                            {translate('resources.agents.fields.parent')}
+                        </InputLabel>
+                        <Select
+                            labelId="parent-id-label"
+                            value={parentId}
+                            label={translate('resources.agents.fields.parent')}
+                            onChange={(e) => setParentId(e.target.value)}
+                            sx={inputSx}
+                        >
+                            <MenuItem value="" sx={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}>
+                                <em>{translate('resources.agents.hierarchy.no_parent')}</em>
+                            </MenuItem>
+                            {availableAgents.map((agent) => (
+                                <MenuItem key={String(agent.id)} value={String(agent.id)} sx={{ direction: isRTL ? 'rtl' : 'ltr', textAlign: isRTL ? 'right' : 'left' }}>
+                                    {agent.realname || agent.username} ({String(agent.id).slice(-8)})
                                 </MenuItem>
-                                {availableAgents.map((agent) => (
-                                    <MenuItem key={String(agent.id)} value={String(agent.id)}>
-                                        {agent.realname || agent.username} ({String(agent.id)})
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
+                            ))}
+                        </Select>
+                    </FormControl>
 
-                        {/* Commission Rate */}
-                        <TextField
-                            fullWidth
-                            label={translate('resources.agents.fields.commission_rate', { _: 'Commission Rate (%)' })}
-                            type="number"
-                            value={commissionRate}
-                            onChange={(e) => setCommissionRate(e.target.value)}
-                            disabled={isLoading}
-                            inputProps={{
-                                min: 0,
-                                max: 100,
-                                step: 0.01,
-                            }}
-                            InputProps={{
-                                endAdornment: <InputAdornment position="end">%</InputAdornment>,
-                            }}
-                        />
+                    <TextField
+                        label={translate('resources.agents.fields.commission_rate')}
+                        type="number"
+                        fullWidth
+                        size="small"
+                        value={commissionRate}
+                        placeholder="0"
+                        onChange={(e) => setCommissionRate(e.target.value)}
+                        InputProps={{
+                            endAdornment: <InputAdornment position="end">%</InputAdornment>,
+                            sx: inputSx
+                        }}
+                        inputProps={{ min: 0, max: 100, step: 0.01, style: inputSx }}
+                        InputLabelProps={{ sx: inputLabelSx }}
+                    />
 
-                        {/* Territory */}
-                        <TextField
-                            fullWidth
-                            label={translate('resources.agents.fields.territory', { _: 'Territory' })}
-                            value={territory}
-                            onChange={(e) => setTerritory(e.target.value)}
-                            disabled={isLoading}
-                            placeholder={translate('resources.agents.hierarchy.territory_placeholder', { _: 'e.g., North Region, City Center' })}
-                        />
+                    <TextField
+                        label={translate('resources.agents.fields.territory')}
+                        fullWidth
+                        size="small"
+                        value={territory}
+                        onChange={(e) => setTerritory(e.target.value)}
+                        placeholder={translate('resources.agents.hierarchy.territory_placeholder')}
+                        InputProps={{ sx: inputSx }}
+                        inputProps={{ style: inputSx }}
+                        InputLabelProps={{ sx: inputLabelSx }}
+                    />
 
-                        {/* Current Hierarchy Info */}
-                        {hierarchy && hierarchy.level !== undefined && (
-                            <Alert severity="info">
-                                <Typography variant="body2">
-                                    <strong>{translate('resources.agents.hierarchy.current_level', { _: 'Current Level' })}:</strong> {hierarchy.level}
-                                    {hierarchy.parent_id && (
-                                        <> • <strong>{translate('resources.agents.fields.parent', { _: 'Parent' })}:</strong> ID {hierarchy.parent_id}</>
-                                    )}
-                                </Typography>
-                            </Alert>
-                        )}
-
-                        {/* Error Message */}
-                        {assignParent.isError && (
-                            <Alert severity="error">
-                                {translate('resources.agents.hierarchy.error', { _: 'Failed to update hierarchy' })}
-                            </Alert>
-                        )}
-
-                        {/* Success Message */}
-                        {assignParent.isSuccess && (
-                            <Alert severity="success">
-                                {translate('resources.agents.hierarchy.success', { _: 'Hierarchy updated successfully' })}
-                            </Alert>
-                        )}
-
-                        {/* Submit Button */}
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', mt: 1 }}>
-                            <Button
-                                type="submit"
-                                variant="contained"
-                                disabled={isLoading}
-                                startIcon={isLoading ? <CircularProgress size={20} /> : <SaveIcon />}
-                            >
-                                {translate('resources.agents.hierarchy.save', { _: 'Save Hierarchy' })}
-                            </Button>
-                        </Box>
+                    <Box sx={{ display: 'flex', justifyContent: isRTL ? 'flex-start' : 'flex-end', mt: 1 }}>
+                        <Button
+                            type="submit"
+                            variant="contained"
+                            disabled={submitting}
+                            startIcon={submitting ? <CircularProgress size={20} /> : <SaveIcon />}
+                        >
+                            {submitting ? translate('resources.agents.actions.saving') : translate('resources.agents.actions.save')}
+                        </Button>
+                        <Button onClick={onSuccess} sx={{ ml: isRTL ? 0 : 1, mr: isRTL ? 1 : 0 }}>
+                            {translate('resources.agents.actions.cancel')}
+                        </Button>
                     </Box>
-                </form>
+                </Box>
             </CardContent>
         </Card>
     );

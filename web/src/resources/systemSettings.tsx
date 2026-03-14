@@ -15,6 +15,8 @@ import {
   TopToolbar,
   CreateButton,
   ExportButton,
+  useTranslate,
+  useLocale,
 } from 'react-admin';
 
 // 系统设置列表操作栏
@@ -49,56 +51,99 @@ const settingsFilters = [
 ];
 
 // 系统设置编辑
-export const SystemSettingsEdit = () => (
-  <Edit>
-    <SimpleForm>
-      <TextInput source="id" disabled />
-      <SelectInput
-        source="type"
-        label="类型"
-        required
-        choices={[
-          { id: 'system', name: '系统配置' },
-          { id: 'radius', name: 'RADIUS配置' },
-          { id: 'security', name: '安全配置' },
-          { id: 'network', name: '网络配置' },
-          { id: 'email', name: '邮件配置' },
-          { id: 'other', name: '其他配置' },
-        ]}
-      />
-      <TextInput source="name" label="配置名称" required />
-      <TextInput source="value" label="配置值" required multiline rows={3} />
-      <NumberInput source="sort" label="排序" defaultValue={0} />
-      <TextInput source="remark" label="备注" multiline rows={2} />
-    </SimpleForm>
-  </Edit>
-);
+export const SystemSettingsEdit = () => {
+  const translate = useTranslate();
+  const locale = useLocale();
+  const isRTL = locale === 'ar';
+
+  const inputLabelProps = {
+    sx: {
+      transformOrigin: isRTL ? 'top right' : 'top left',
+      left: isRTL ? 'auto' : 0,
+      right: isRTL ? 24 : 'auto',
+    }
+  };
+
+  const textInputProps = {
+    style: { textAlign: (isRTL ? 'right' : 'left') as any },
+    dir: isRTL ? 'rtl' : 'ltr'
+  };
+
+  return (
+    <Edit>
+      <SimpleForm sx={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+        <TextInput source="id" disabled fullWidth size="small" inputProps={textInputProps} InputLabelProps={inputLabelProps} />
+        <SelectInput
+          source="type"
+          label="类型"
+          required
+          fullWidth
+          size="small"
+          InputLabelProps={inputLabelProps}
+          choices={[
+            { id: 'system', name: '系统配置' },
+            { id: 'radius', name: 'RADIUS配置' },
+            { id: 'security', name: '安全配置' },
+            { id: 'network', name: '网络配置' },
+            { id: 'email', name: '邮件配置' },
+            { id: 'other', name: '其他配置' },
+          ]}
+        />
+        <TextInput source="name" label="配置名称" required fullWidth size="small" inputProps={textInputProps} InputLabelProps={inputLabelProps} />
+        <TextInput source="value" label="配置值" required multiline rows={3} fullWidth size="small" inputProps={textInputProps} InputLabelProps={inputLabelProps} />
+        <NumberInput source="sort" label="排序" placeholder="0" fullWidth size="small" inputProps={textInputProps} InputLabelProps={inputLabelProps} />
+        <TextInput source="remark" label="备注" multiline rows={2} fullWidth size="small" inputProps={textInputProps} InputLabelProps={inputLabelProps} />
+      </SimpleForm>
+    </Edit>
+  );
+};
 
 // 系统设置创建
-export const SystemSettingsCreate = () => (
-  <Create>
-    <SimpleForm>
-      <SelectInput
-        source="type"
-        label="类型"
-        required
-        defaultValue="system"
-        choices={[
-          { id: 'system', name: '系统配置' },
-          { id: 'radius', name: 'RADIUS配置' },
-          { id: 'security', name: '安全配置' },
-          { id: 'network', name: '网络配置' },
-          { id: 'email', name: '邮件配置' },
-          { id: 'other', name: '其他配置' },
-        ]}
-      />
-      <TextInput source="name" label="配置名称" required />
-      <TextInput source="value" label="配置值" required multiline rows={3} />
-      <NumberInput source="sort" label="排序" defaultValue={0} />
-      <TextInput source="remark" label="备注" multiline rows={2} />
-    </SimpleForm>
-  </Create>
-);
+export const SystemSettingsCreate = () => {
+  const locale = useLocale();
+  const isRTL = locale === 'ar';
+
+  const inputLabelProps = {
+    sx: {
+      transformOrigin: isRTL ? 'top right' : 'top left',
+      left: isRTL ? 'auto' : 0,
+      right: isRTL ? 24 : 'auto',
+    }
+  };
+
+  const textInputProps = {
+    style: { textAlign: (isRTL ? 'right' : 'left') as any },
+    dir: isRTL ? 'rtl' : 'ltr'
+  };
+
+  return (
+    <Create>
+      <SimpleForm sx={{ direction: isRTL ? 'rtl' : 'ltr' }}>
+        <SelectInput
+          source="type"
+          label="类型"
+          required
+          defaultValue="system"
+          fullWidth
+          size="small"
+          InputLabelProps={inputLabelProps}
+          choices={[
+            { id: 'system', name: '系统配置' },
+            { id: 'radius', name: 'RADIUS配置' },
+            { id: 'security', name: '安全配置' },
+            { id: 'network', name: '网络配置' },
+            { id: 'email', name: '邮件配置' },
+            { id: 'other', name: '其他配置' },
+          ]}
+        />
+        <TextInput source="name" label="配置名称" required fullWidth size="small" inputProps={textInputProps} InputLabelProps={inputLabelProps} />
+        <TextInput source="value" label="配置值" required multiline rows={3} fullWidth size="small" inputProps={textInputProps} InputLabelProps={inputLabelProps} />
+        <NumberInput source="sort" label="排序" placeholder="0" fullWidth size="small" inputProps={textInputProps} InputLabelProps={inputLabelProps} />
+        <TextInput source="remark" label="备注" multiline rows={2} fullWidth size="small" inputProps={textInputProps} InputLabelProps={inputLabelProps} />
+      </SimpleForm>
+    </Create>
+  );
+};
 
 // 系统设置详情
 export const SystemSettingsShow = () => (

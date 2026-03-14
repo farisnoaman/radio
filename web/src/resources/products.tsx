@@ -27,10 +27,10 @@ import {
   useNotify,
   useRefresh,
   useListContext,
-  RecordContextProvider
+  RecordContextProvider,
+  useLocale
 } from 'react-admin';
-import { useFormContext } from 'react-hook-form';
-import React from 'react';
+import { useWatch } from 'react-hook-form';
 import { useMediaQuery, Theme, CardActions, Box, Card, CardContent, Stack, Avatar, Typography, Tooltip, IconButton, Chip, alpha } from '@mui/material';
 import {
   Speed as SpeedIcon,
@@ -59,11 +59,13 @@ const ProductTitle = () => {
 };
 
 
-const ProductGrid = () => {
+export const ProductGrid = () => {
   const { data, isLoading } = useListContext();
+  const { isRtl, translate, formatRate, formatQuota } = useFormatters();
+
   if (isLoading || !data) return null;
   return (
-    <Box display="grid" gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)' }} gap={2} p={0} sx={{ bgcolor: theme => theme.palette.mode === 'dark' ? 'transparent' : 'rgba(0,0,0,0.02)' }}>
+    <Box display="grid" dir={isRtl ? 'rtl' : 'ltr'} gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)' }} gap={2} p={0} sx={{ bgcolor: theme => theme.palette.mode === 'dark' ? 'transparent' : 'rgba(0,0,0,0.02)' }}>
       {data.map(record => (
         <RecordContextProvider value={record} key={record.id}>
           <Card
@@ -119,9 +121,9 @@ const ProductGrid = () => {
               </Box>
             </CardContent>
             <CardActions sx={{ justifyContent: 'flex-end', borderTop: theme => `1px solid ${theme.palette.divider}`, px: 2, py: 1.5, gap: 1 }}>
-              <EditButton label="" size="small" />
-              <DeleteButton label="" size="small" />
-              <ShowButton label="" size="small" />
+              <EditButton label={translate('ra.action.edit', { _: 'Edit' })} size="small" />
+              <DeleteButton label={translate('ra.action.delete', { _: 'Delete' })} size="small" />
+              <ShowButton label={translate('ra.action.show', { _: 'Show' })} size="small" />
             </CardActions>
           </Card>
         </RecordContextProvider>
@@ -131,29 +133,68 @@ const ProductGrid = () => {
 };
 export const ProductList = (props: ListProps) => {
   const isSmall = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
+  const { isRtl, translate } = useFormatters();
+  
   return (
     <List {...props} sort={{ field: 'id', order: 'DESC' }}>
       {isSmall ? (
         <ProductGrid />
       ) : (
-        <Datagrid rowClick="show">
-          <TextField source="id" />
-          <TextField source="name" />
-          <ReferenceField source="radius_profile_id" reference="radius-profiles">
+        <Datagrid rowClick="show" sx={{ direction: isRtl ? 'rtl' : 'ltr' }}>
+          <TextField source="id" label={translate('resources.products.fields.id')} />
+          <TextField source="name" label={translate('resources.products.fields.name')} />
+          <ReferenceField source="radius_profile_id" reference="radius-profiles" label={translate('resources.products.fields.radius_profile_id')}>
             <TextField source="name" />
           </ReferenceField>
-          <NumberField source="price" options={{ style: 'currency', currency: 'USD' }} />
-          <NumberField source="up_rate" label="Up Rate (Kbps)" />
-          <NumberField source="down_rate" label="Down Rate (Kbps)" />
-          <NumberField source="data_quota" label="Quota (MB)" />
-          <TextField source="status" />
-          <DateField source="updated_at" showTime />
-          <EditButton />
-          <DeleteButton />
+          <NumberField source="price" options={{ style: 'currency', currency: 'USD' }} label={translate('resources.products.fields.price')} />
+          <NumberField source="up_rate" label={`${translate('resources.products.fields.up_rate')} (${translate('resources.products.units.kbps')})`} />
+          <NumberField source="down_rate" label={`${translate('resources.products.fields.down_rate')} (${translate('resources.products.units.kbps')})`} />
+          <NumberField source="data_quota" label={`${translate('resources.products.fields.data_quota')} (${translate('resources.products.units.mb')})`} />
+          <TextField source="status" label={translate('resources.products.fields.status')} />
+          <DateField source="updated_at" showTime label={translate('resources.products.fields.updated_at')} />
+          <EditButton label={translate('ra.action.edit', { _: 'Edit' })} />
+          <DeleteButton label={translate('ra.action.delete', { _: 'Delete' })} />
         </Datagrid>
       )}
     </List>
   );
+};
+
+const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
+
+// Helper to translate units
+const useFormatters = () => {
+  const translate = useTranslate();
+  const locale = useLocale();
+  const isRtl = RTL_LANGUAGES.includes(locale || '');
+
+  const formatRate = (rate?: number): string => {
+    if (rate === undefined || rate === null) return '-';
+    if (rate === 0) return translate('resources.products.units.unlimited', { _: 'Unlimited' });
+    if (rate >= 1024) {
+      return `${(rate / 1024).toFixed(1)} ${translate('resources.products.units.mbps', { _: 'Mbps' })}`;
+    }
+    return `${rate} ${translate('resources.products.units.kbps', { _: 'Kbps' })}`;
+  };
+
+  const formatQuota = (quota?: number): string => {
+    if (quota === undefined || quota === null) return '-';
+    if (quota === 0) return translate('resources.products.units.unlimited', { _: 'Unlimited' });
+    if (quota >= 1024) {
+      return `${(quota / 1024).toFixed(1)} ${translate('resources.products.units.gb', { _: 'GB' })}`;
+    }
+    return `${quota} ${translate('resources.products.units.mb', { _: 'MB' })}`;
+  };
+
+  const formatValidity = (seconds?: number): string => {
+    if (seconds === undefined || seconds === null) return '-';
+    if (seconds === 0) return translate('resources.products.units.unlimited', { _: 'Unlimited' });
+    if (seconds >= 86400 && seconds % 86400 === 0) return `${seconds / 86400} ${translate('resources.products.units.days', { _: 'Days' })}`;
+    if (seconds >= 3600 && seconds % 3600 === 0) return `${seconds / 3600} ${translate('resources.products.units.hours', { _: 'Hours' })}`;
+    return `${seconds / 60} ${translate('resources.products.units.minutes', { _: 'Minutes' })}`;
+  };
+
+  return { formatRate, formatQuota, formatValidity, isRtl, translate };
 };
 
 const formatTimestamp = (value?: string | number): string => {
@@ -165,24 +206,6 @@ const formatTimestamp = (value?: string | number): string => {
     return '-';
   }
   return date.toLocaleString();
-};
-
-const formatRate = (rate?: number): string => {
-  if (rate === undefined || rate === null) return '-';
-  if (rate === 0) return 'Unlimited';
-  if (rate >= 1024) {
-    return `${(rate / 1024).toFixed(1)} Mbps`;
-  }
-  return `${rate} Kbps`;
-};
-
-const formatQuota = (quota?: number): string => {
-  if (quota === undefined || quota === null) return '-';
-  if (quota === 0) return 'Unlimited';
-  if (quota >= 1024) {
-    return `${(quota / 1024).toFixed(1)} GB`;
-  }
-  return `${quota} MB`;
 };
 
 const StatusIndicator = ({ isEnabled }: { isEnabled: boolean }) => {
@@ -220,8 +243,80 @@ const printStyles = `
   }
 `;
 
+const ProductFormBanner = () => {
+  const name = useWatch({ name: 'name' });
+  const color = useWatch({ name: 'color', defaultValue: '#1976d2' });
+  const status = useWatch({ name: 'status', defaultValue: 'enabled' });
+  const translate = useTranslate();
+  
+  const isEnabled = status === 'enabled';
+
+  return (
+    <Card
+      elevation={0}
+      sx={{
+        borderRadius: 4,
+        background: theme =>
+          theme.palette.mode === 'dark'
+            ? isEnabled
+              ? `linear-gradient(135deg, ${alpha(color || theme.palette.primary.dark, 0.4)} 0%, ${alpha(theme.palette.info.dark, 0.3)} 100%)`
+              : `linear-gradient(135deg, ${alpha(theme.palette.grey[800], 0.5)} 0%, ${alpha(theme.palette.grey[700], 0.3)} 100%)`
+            : isEnabled
+              ? `linear-gradient(135deg, ${alpha(color || theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.info.main, 0.08)} 100%)`
+              : `linear-gradient(135deg, ${alpha(theme.palette.grey[400], 0.15)} 0%, ${alpha(theme.palette.grey[300], 0.1)} 100%)`,
+        border: theme => `1px solid ${alpha(isEnabled ? color || theme.palette.primary.main : theme.palette.grey[500], 0.2)}`,
+        overflow: 'hidden',
+        position: 'relative',
+        mb: 2,
+      }}
+    >
+      <Box
+        sx={{
+          position: 'absolute',
+          top: -50,
+          right: -50,
+          width: 200,
+          height: 200,
+          borderRadius: '50%',
+          background: theme => alpha(isEnabled ? color || theme.palette.primary.main : theme.palette.grey[500], 0.1),
+          pointerEvents: 'none',
+        }}
+      />
+
+      <CardContent sx={{ p: 3, position: 'relative', zIndex: 1 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+          <Avatar
+            sx={{
+              width: 56,
+              height: 56,
+              bgcolor: color || (isEnabled ? 'primary.main' : 'grey.500'),
+              fontSize: '1.25rem',
+              fontWeight: 700,
+              boxShadow: theme => `0 4px 14px ${alpha(isEnabled ? color || theme.palette.primary.main : theme.palette.grey[500], 0.4)}`,
+            }}
+          >
+            {name ? name.charAt(0).toUpperCase() : 'P'}
+          </Avatar>
+          <Box>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                {name || translate('resources.products.fields.name', { _: 'Product Name' })}
+              </Typography>
+              <StatusIndicator isEnabled={isEnabled} />
+            </Box>
+            <Typography variant="body2" color="text.secondary">
+              {translate('common.message.editing', { _: 'Editing' })}
+            </Typography>
+          </Box>
+        </Box>
+      </CardContent>
+    </Card>
+  );
+};
+
 const ProductHeaderCard = () => {
   const record = useRecordContext();
+  const { formatRate, formatQuota } = useFormatters();
   const translate = useTranslate();
   const notify = useNotify();
   const refresh = useRefresh();
@@ -447,27 +542,25 @@ const ProductHeaderCard = () => {
 
 const ProductDetails = () => {
   const record = useRecordContext();
+  const { formatRate, formatQuota, formatValidity, translate, isRtl } = useFormatters();
 
   if (!record) {
     return null;
   }
 
   const validitySeconds = record.validity_seconds || 0;
-  const validityDisplay = validitySeconds === 0 ? 'Unlimited' :
-    validitySeconds >= 86400 && validitySeconds % 86400 === 0 ? `${validitySeconds / 86400} Days` :
-      validitySeconds >= 3600 && validitySeconds % 3600 === 0 ? `${validitySeconds / 3600} Hours` :
-        `${validitySeconds / 60} Minutes`;
+  const validityDisplay = formatValidity(validitySeconds);
 
   return (
     <>
       <style>{printStyles}</style>
-      <Box className="printable-content" sx={{ width: '100%', p: { xs: 2, sm: 3, md: 4 } }}>
+      <Box className="printable-content" sx={{ width: '100%', p: { xs: 2, sm: 3, md: 4 }, direction: isRtl ? 'rtl' : 'ltr' }}>
         <Stack spacing={3}>
           <ProductHeaderCard />
 
           <DetailSectionCard
-            title="Pricing"
-            description="Product pricing details"
+            title={translate('resources.products.section.pricing', { _: 'Pricing' })}
+            description={translate('resources.products.details.pricing', { _: 'Product pricing details' })}
             icon={<MoneyIcon />}
             color="success"
           >
@@ -482,19 +575,19 @@ const ProductDetails = () => {
               }}
             >
               <DetailItem
-                label="Price"
+                label={translate('resources.products.fields.price', { _: 'Price' })}
                 value={`$${record.price?.toFixed(2) || '0.00'}`}
               />
               <DetailItem
-                label="Cost Price"
+                label={translate('resources.products.fields.cost_price', { _: 'Cost Price' })}
                 value={`$${record.cost_price?.toFixed(2) || '0.00'}`}
               />
             </Box>
           </DetailSectionCard>
 
           <DetailSectionCard
-            title="Bandwidth & Quota"
-            description="Limits configured for this product"
+            title={translate('resources.products.section.bandwidth', { _: 'Bandwidth & Quota' })}
+            description={translate('resources.products.details.bandwidth_desc', { _: 'Limits configured for this product' })}
             icon={<SpeedIcon />}
             color="warning"
           >
@@ -509,27 +602,27 @@ const ProductDetails = () => {
               }}
             >
               <DetailItem
-                label="Upload Rate"
+                label={translate('resources.products.fields.up_rate', { _: 'Upload Rate' })}
                 value={formatRate(record.up_rate)}
               />
               <DetailItem
-                label="Download Rate"
+                label={translate('resources.products.fields.down_rate', { _: 'Download Rate' })}
                 value={formatRate(record.down_rate)}
               />
               <DetailItem
-                label="Data Quota"
+                label={translate('resources.products.fields.data_quota', { _: 'Data Quota' })}
                 value={formatQuota(record.data_quota)}
               />
               <DetailItem
-                label="Validity"
+                label={translate('resources.products.fields.validity', { _: 'Validity' })}
                 value={validityDisplay}
               />
             </Box>
           </DetailSectionCard>
 
           <DetailSectionCard
-            title="Linked Profile"
-            description="The technical RADIUS profile attached to this product"
+            title={translate('resources.products.details.linked_profile', { _: 'Linked Profile' })}
+            description={translate('resources.products.details.profile_desc', { _: 'The technical RADIUS profile attached to this product' })}
             icon={<DataIcon />}
             color="info"
           >
@@ -544,7 +637,7 @@ const ProductDetails = () => {
               }}
             >
               <DetailItem
-                label="Radius Profile"
+                label={translate('resources.products.fields.radius_profile_id', { _: 'Radius Profile' })}
                 value={
                   <ReferenceField source="radius_profile_id" reference="radius-profiles">
                     <TextField source="name" />
@@ -555,8 +648,8 @@ const ProductDetails = () => {
           </DetailSectionCard>
 
           <DetailSectionCard
-            title="Time Information"
-            description="Creation and modification dates"
+            title={translate('resources.products.details.time_info', { _: 'Time Information' })}
+            description={translate('resources.products.details.time_desc', { _: 'Creation and modification dates' })}
             icon={<TimeIcon />}
             color="info"
           >
@@ -571,19 +664,19 @@ const ProductDetails = () => {
               }}
             >
               <DetailItem
-                label="Created At"
+                label={translate('resources.products.fields.created_at', { _: 'Created At' })}
                 value={formatTimestamp(record.created_at)}
               />
               <DetailItem
-                label="Updated At"
+                label={translate('resources.products.fields.updated_at', { _: 'Updated At' })}
                 value={formatTimestamp(record.updated_at)}
               />
             </Box>
           </DetailSectionCard>
 
           <DetailSectionCard
-            title="Remarks"
-            description="Additional notes or descriptions"
+            title={translate('resources.products.section.remark', { _: 'Remarks' })}
+            description={translate('resources.products.details.remarks_desc', { _: 'Additional notes or descriptions' })}
             icon={<NoteIcon />}
             color="primary"
           >
@@ -624,285 +717,477 @@ export const ProductShow = (props: ShowProps) => (
   </Show>
 );
 
+
 const ValidityInput = () => {
   const record = useRecordContext();
-  const { setValue } = useFormContext();
+  const { translate, isRtl } = useFormatters();
+  
+  // Set default values if record is present (for Edit).
+  // React-admin will initialize the form with these defaultValues.
+  let initUnit = 'days';
+  let initVal: number | undefined = 30;
 
-  // Get initial value from record (for Edit) or default (for Create)
-  const initialSeconds = record?.validity_seconds || 0;
-
-  // Calculate unit and value from seconds
-  const getUnitAndValue = (seconds: number) => {
-    if (seconds > 0 && seconds % 86400 === 0) {
-      return { unit: 'days', value: seconds / 86400 };
+  if (record && record.validity_seconds !== undefined) {
+    const seconds = record.validity_seconds;
+    if (seconds === 0) {
+      initUnit = 'days';
+      initVal = undefined;
+    } else if (seconds % 86400 === 0) {
+      initUnit = 'days';
+      initVal = seconds / 86400;
+    } else if (seconds % 3600 === 0) {
+      initUnit = 'hours';
+      initVal = seconds / 3600;
+    } else if (seconds % 60 === 0) {
+      initUnit = 'minutes';
+      initVal = seconds / 60;
     }
-    if (seconds > 0 && seconds % 3600 === 0) {
-      return { unit: 'hours', value: seconds / 3600 };
-    }
-    if (seconds > 0 && seconds % 60 === 0) {
-      return { unit: 'minutes', value: seconds / 60 };
-    }
-    return { unit: 'days', value: seconds > 0 ? seconds : 30 };
-  };
-
-  const { unit, value } = getUnitAndValue(initialSeconds);
-
-  // Update validity_seconds when unit or value changes
-  React.useEffect(() => {
-    let multiplier = 60;
-    if (unit === 'hours') multiplier = 3600;
-    if (unit === 'days') multiplier = 86400;
-    setValue('validity_seconds', value * multiplier);
-  }, [unit, value, setValue]);
+  }
 
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%' }}>
+    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%', direction: isRtl ? 'rtl' : 'ltr' }}>
       <Box>
         <NumberInput
           source="validity_value_virtual"
-          label="Validity Duration"
-          defaultValue={value}
+          label={translate('resources.products.fields.validity', { _: 'Validity Duration' })}
+          placeholder="0"
+          defaultValue={initVal}
           fullWidth
+          size="small"
+          inputProps={{ style: { textAlign: isRtl ? 'right' : 'left', direction: isRtl ? 'rtl' : 'ltr' } }}
+          InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
         />
       </Box>
       <Box>
         <SelectInput
           source="validity_unit_virtual"
-          label="Unit"
+          label={translate('common.unit', { _: 'Unit' })}
+          defaultValue={initUnit}
           choices={[
-            { id: 'minutes', name: 'Minutes' },
-            { id: 'hours', name: 'Hours' },
-            { id: 'days', name: 'Days' },
+            { id: 'minutes', name: translate('resources.products.units.minutes', { _: 'Minutes' }) },
+            { id: 'hours', name: translate('resources.products.units.hours', { _: 'Hours' }) },
+            { id: 'days', name: translate('resources.products.units.days', { _: 'Days' }) },
           ]}
-          defaultValue={unit}
           fullWidth
+          size="small"
+          InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
         />
       </Box>
-      <NumberInput source="validity_seconds" style={{ display: 'none' }} />
     </Box>
   );
 };
 
 const DataQuotaInput = () => {
   const record = useRecordContext();
-  const { setValue } = useFormContext();
+  const { translate, isRtl } = useFormatters();
 
-  // Get initial value from record (for Edit) or default (for Create)
-  const initialMB = record?.data_quota || 0;
+  let initUnit = 'MB';
+  let initVal: number | undefined = undefined;
 
-  // Calculate unit and value from MB
-  const getUnitAndValue = (mb: number) => {
+  if (record && record.data_quota !== undefined) {
+    const mb = record.data_quota;
     if (mb > 0 && mb % 1024 === 0) {
-      return { unit: 'GB', value: mb / 1024 };
+      initUnit = 'GB';
+      initVal = mb / 1024;
+    } else {
+      initUnit = 'MB';
+      initVal = mb;
     }
-    return { unit: 'MB', value: mb > 0 ? mb : 0 };
-  };
-
-  const { unit, value } = getUnitAndValue(initialMB);
-
-  // Update data_quota when unit or value changes
-  React.useEffect(() => {
-    const multiplier = unit === 'GB' ? 1024 : 1;
-    setValue('data_quota', value * multiplier);
-  }, [unit, value, setValue]);
+  }
 
   return (
-    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%' }}>
+    <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%', direction: isRtl ? 'rtl' : 'ltr' }}>
       <Box>
         <NumberInput
           source="data_quota_virtual"
-          label="Data Quota"
-          defaultValue={value}
+          label={translate('resources.products.fields.data_quota', { _: 'Data Quota' })}
+          placeholder="0"
+          defaultValue={initVal}
           fullWidth
+          size="small"
+          inputProps={{ style: { textAlign: isRtl ? 'right' : 'left', direction: isRtl ? 'rtl' : 'ltr' } }}
+          InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
         />
       </Box>
       <Box>
         <SelectInput
           source="data_quota_unit_virtual"
-          label="Unit"
+          label={translate('common.unit', { _: 'Unit' })}
+          defaultValue={initUnit}
           choices={[
-            { id: 'MB', name: 'MB' },
-            { id: 'GB', name: 'GB' },
+            { id: 'MB', name: translate('resources.products.units.mb', { _: 'MB' }) },
+            { id: 'GB', name: translate('resources.products.units.gb', { _: 'GB' }) },
           ]}
-          defaultValue={unit}
           fullWidth
+          size="small"
+          InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
         />
       </Box>
-      <NumberInput source="data_quota" style={{ display: 'none' }} />
     </Box>
   );
 };
 
+// Form transformations to compute validity_seconds and data_quota before saving
+const transformProduct = (data: any) => {
+  const transformed = { ...data };
+
+  // Calculate Validity
+  if (data.validity_value_virtual !== undefined && data.validity_unit_virtual !== undefined) {
+    let multiplier = 60;
+    if (data.validity_unit_virtual === 'hours') multiplier = 3600;
+    if (data.validity_unit_virtual === 'days') multiplier = 86400;
+    transformed.validity_seconds = data.validity_value_virtual * multiplier;
+  }
+
+  // Calculate Data Quota
+  if (data.data_quota_virtual !== undefined && data.data_quota_unit_virtual !== undefined) {
+    const multiplier = data.data_quota_unit_virtual === 'GB' ? 1024 : 1;
+    transformed.data_quota = data.data_quota_virtual * multiplier;
+  }
+
+  // Clean up virtual fields
+  delete transformed.validity_value_virtual;
+  delete transformed.validity_unit_virtual;
+  delete transformed.data_quota_virtual;
+  delete transformed.data_quota_unit_virtual;
+
+  return transformed;
+};
+
 export const ProductCreate = (props: CreateProps) => {
-  const translate = useTranslate();
+  const { translate, isRtl } = useFormatters();
+  
+  const textInputProps = { style: { textAlign: isRtl ? 'right' : 'left', direction: isRtl ? 'rtl' : 'ltr' } } as const;
+  const numInputProps = { style: { textAlign: isRtl ? 'right' : 'left', direction: isRtl ? 'rtl' : 'ltr' } } as const;
+
   return (
-    <Create {...props}>
+    <Create {...props} transform={transformProduct}>
       <SimpleForm sx={formLayoutSx}>
-        {/* Row 1: Basic Info */}
+        <ProductFormBanner />
+        
+        {/* Row 1: Basic Information */}
+        <FormSection
+          title={translate('resources.products.section.basic', { _: 'Basic Information' })}
+        >
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%', direction: isRtl ? 'rtl' : 'ltr' }}>
+            <Box>
+              <TextInput 
+                source="name" 
+                validate={[required()]} 
+                fullWidth 
+                size="small"
+                label={translate('resources.products.fields.name', { _: 'Product Name' })} 
+                inputProps={textInputProps} 
+                InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+              />
+            </Box>
+            <Box>
+              <ReferenceInput source="radius_profile_id" reference="radius-profiles">
+                <SelectInput 
+                  optionText="name" 
+                  validate={[required()]} 
+                  fullWidth 
+                  size="small"
+                  label={translate('resources.products.fields.radius_profile_id', { _: 'RADIUS Profile' })} 
+                  InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+                />
+              </ReferenceInput>
+            </Box>
+            <Box>
+              <TextInput 
+                source="color" 
+                type="color" 
+                fullWidth 
+                size="small"
+                label={translate('resources.products.fields.color', { _: 'Product Color' })} 
+                defaultValue="#1976d2" 
+                InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+              />
+            </Box>
+            <Box>
+              <SelectInput 
+                source="status" 
+                label={translate('resources.products.fields.status', { _: 'Status' })} 
+                choices={[
+                  { id: 'enabled', name: translate('resources.products.status.enabled', { _: 'Enabled' }) },
+                  { id: 'disabled', name: translate('resources.products.status.disabled', { _: 'Disabled' }) },
+                ]} 
+                defaultValue="enabled" 
+                fullWidth 
+                size="small"
+                InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+              />
+            </Box>
+          </Box>
+        </FormSection>
+
+        {/* Row 2: Pricing & Bandwidth */}
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, width: '100%' }}>
           <FormSection
-            title={translate('resources.products.section.basic', { _: 'Basic Information' })}
+            title={translate('resources.products.section.pricing', { _: 'Pricing' })}
           >
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%' }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%', direction: isRtl ? 'rtl' : 'ltr' }}>
               <Box>
-                <TextInput source="name" validate={[required()]} fullWidth />
+                <NumberInput 
+                  source="price" 
+                  validate={[required()]} 
+                  fullWidth 
+                  size="small"
+                  label={translate('resources.products.fields.price', { _: 'Price' })} 
+                  inputProps={numInputProps} 
+                  InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+                />
               </Box>
               <Box>
-                <ReferenceInput source="radius_profile_id" reference="radius-profiles">
-                  <SelectInput optionText="name" validate={[required()]} fullWidth />
-                </ReferenceInput>
-              </Box>
-              <Box>
-                <TextInput source="color" type="color" fullWidth label="Product Color" defaultValue="#1976d2" />
-              </Box>
-              <Box>
-                <SelectInput source="status" choices={[
-                  { id: 'enabled', name: 'Enabled' },
-                  { id: 'disabled', name: 'Disabled' },
-                ]} defaultValue="enabled" fullWidth />
+                <NumberInput 
+                  source="cost_price" 
+                  validate={[required()]} 
+                  fullWidth 
+                  size="small"
+                  label={translate('resources.products.fields.cost_price', { _: 'Cost Price' })} 
+                  inputProps={numInputProps} 
+                  InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+                />
               </Box>
             </Box>
           </FormSection>
 
           <FormSection
-            title={translate('resources.products.section.pricing', { _: 'Pricing' })}
+            title={translate('resources.products.section.bandwidth', { _: 'Bandwidth Limit' })}
           >
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%' }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%', direction: isRtl ? 'rtl' : 'ltr' }}>
               <Box>
-                <NumberInput source="price" validate={[required()]} fullWidth />
+                <NumberInput 
+                  source="up_rate" 
+                  label={translate('resources.products.fields.up_rate', { _: 'Upload Rate' })} 
+                  placeholder="0" 
+                  fullWidth 
+                  size="small"
+                  helperText={`0 = ${translate('resources.products.units.unlimited')}`} 
+                  inputProps={numInputProps} 
+                  InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+                />
               </Box>
               <Box>
-                <NumberInput source="cost_price" validate={[required()]} fullWidth />
+                <NumberInput 
+                  source="down_rate" 
+                  label={translate('resources.products.fields.down_rate', { _: 'Download Rate' })} 
+                  placeholder="0" 
+                  fullWidth 
+                  size="small"
+                  helperText={`0 = ${translate('resources.products.units.unlimited')}`} 
+                  inputProps={numInputProps} 
+                  InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+                />
               </Box>
             </Box>
           </FormSection>
         </Box>
 
-        {/* Row 2: Bandwidth + Data Quota */}
+        {/* Row 3: Quota & Validity Leveled */}
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, width: '100%' }}>
-          <FormSection
-            title={translate('resources.products.section.bandwidth', { _: 'Bandwidth Limit' })}
-          >
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%' }}>
-              <Box>
-                <NumberInput source="up_rate" label="Upload Rate (Kbps)" defaultValue={0} fullWidth helperText="0 = Unlimited" />
-              </Box>
-              <Box>
-                <NumberInput source="down_rate" label="Download Rate (Kbps)" defaultValue={0} fullWidth helperText="0 = Unlimited" />
-              </Box>
-            </Box>
-          </FormSection>
-
           <FormSection
             title={translate('resources.products.section.data_quota', { _: 'Data Quota' })}
           >
             <DataQuotaInput />
           </FormSection>
-        </Box>
 
-        {/* Row 3: Validity + Remark */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, width: '100%' }}>
           <FormSection
             title={translate('resources.products.section.validity', { _: 'Validity Limit' })}
           >
             <ValidityInput />
           </FormSection>
-
-          <FormSection
-            title={translate('resources.products.section.remark', { _: 'Remark' })}
-          >
-            <TextInput source="remark" multiline fullWidth minRows={2} />
-          </FormSection>
         </Box>
+
+        {/* Row 4: Remark */}
+        <FormSection
+          title={translate('resources.products.section.remark', { _: 'Remark' })}
+        >
+          <TextInput 
+            source="remark" 
+            label={translate('resources.products.fields.remark', { _: 'Remark' })} 
+            multiline 
+            fullWidth 
+            size="small"
+            minRows={2} 
+            inputProps={textInputProps} 
+            InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+          />
+        </FormSection>
       </SimpleForm>
     </Create>
   );
 };
 
 export const ProductEdit = (props: EditProps) => {
-  const translate = useTranslate();
+  const { translate, isRtl } = useFormatters();
+
+  const textInputProps = { style: { textAlign: isRtl ? 'right' : 'left', direction: isRtl ? 'rtl' : 'ltr' } } as const;
+  const numInputProps = { style: { textAlign: isRtl ? 'right' : 'left', direction: isRtl ? 'rtl' : 'ltr' } } as const;
+
   return (
-    <Edit {...props} title={<ProductTitle />}>
+    <Edit {...props} title={<ProductTitle />} transform={transformProduct}>
       <SimpleForm sx={formLayoutSx}>
-        {/* Row 1: Basic Info + Pricing */}
+        <ProductFormBanner />
+        
+        {/* Row 1: Basic Information */}
+        <FormSection
+          title={translate('resources.products.section.basic', { _: 'Basic Information' })}
+        >
+          <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%', direction: isRtl ? 'rtl' : 'ltr' }}>
+            <Box>
+              <TextInput 
+                source="id" 
+                disabled 
+                fullWidth 
+                size="small"
+                label={translate('resources.products.fields.id', { _: 'ID' })} 
+                inputProps={textInputProps} 
+                InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+              />
+            </Box>
+            <Box>
+              <TextInput 
+                source="name" 
+                validate={[required()]} 
+                fullWidth 
+                size="small"
+                label={translate('resources.products.fields.name', { _: 'Product Name' })} 
+                inputProps={textInputProps} 
+                InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+              />
+            </Box>
+            <Box>
+              <ReferenceInput source="radius_profile_id" reference="radius-profiles">
+                <SelectInput 
+                  optionText="name" 
+                  validate={[required()]} 
+                  fullWidth 
+                  size="small"
+                  label={translate('resources.products.fields.radius_profile_id', { _: 'RADIUS Profile' })} 
+                  InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+                />
+              </ReferenceInput>
+            </Box>
+            <Box>
+              <TextInput 
+                source="color" 
+                type="color" 
+                fullWidth 
+                size="small"
+                label={translate('resources.products.fields.color', { _: 'Product Color' })} 
+                InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+              />
+            </Box>
+            <Box sx={{ gridColumn: '1 / -1' }}>
+              <SelectInput 
+                source="status" 
+                label={translate('resources.products.fields.status', { _: 'Status' })} 
+                choices={[
+                  { id: 'enabled', name: translate('resources.products.status.enabled', { _: 'Enabled' }) },
+                  { id: 'disabled', name: translate('resources.products.status.disabled', { _: 'Disabled' }) },
+                ]} 
+                fullWidth 
+                size="small"
+                InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+              />
+            </Box>
+          </Box>
+        </FormSection>
+
+        {/* Row 2: Pricing & Bandwidth */}
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, width: '100%' }}>
           <FormSection
-            title={translate('resources.products.section.basic', { _: 'Basic Information' })}
+            title={translate('resources.products.section.pricing', { _: 'Pricing' })}
           >
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%' }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%', direction: isRtl ? 'rtl' : 'ltr' }}>
               <Box>
-                <TextInput source="id" disabled fullWidth />
+                <NumberInput 
+                  source="price" 
+                  validate={[required()]} 
+                  fullWidth 
+                  size="small"
+                  label={translate('resources.products.fields.price', { _: 'Price' })} 
+                  inputProps={numInputProps} 
+                  InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+                />
               </Box>
               <Box>
-                <TextInput source="name" validate={[required()]} fullWidth />
-              </Box>
-              <Box>
-                <ReferenceInput source="radius_profile_id" reference="radius-profiles">
-                  <SelectInput optionText="name" validate={[required()]} fullWidth />
-                </ReferenceInput>
-              </Box>
-              <Box>
-                <TextInput source="color" type="color" fullWidth label="Product Color" />
-              </Box>
-              <Box sx={{ gridColumn: '1 / -1' }}>
-                <SelectInput source="status" choices={[
-                  { id: 'enabled', name: 'Enabled' },
-                  { id: 'disabled', name: 'Disabled' },
-                ]} fullWidth />
+                <NumberInput 
+                  source="cost_price" 
+                  validate={[required()]} 
+                  fullWidth 
+                  size="small"
+                  label={translate('resources.products.fields.cost_price', { _: 'Cost Price' })} 
+                  inputProps={numInputProps} 
+                  InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+                />
               </Box>
             </Box>
           </FormSection>
 
           <FormSection
-            title={translate('resources.products.section.pricing', { _: 'Pricing' })}
+            title={translate('resources.products.section.bandwidth', { _: 'Bandwidth Limit' })}
           >
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%' }}>
+            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%', direction: isRtl ? 'rtl' : 'ltr' }}>
               <Box>
-                <NumberInput source="price" validate={[required()]} fullWidth />
+                <NumberInput 
+                  source="up_rate" 
+                  label={translate('resources.products.fields.up_rate', { _: 'Upload Rate' })} 
+                  placeholder="0" 
+                  fullWidth 
+                  size="small"
+                  helperText={`0 = ${translate('resources.products.units.unlimited')}`} 
+                  inputProps={numInputProps} 
+                  InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+                />
               </Box>
               <Box>
-                <NumberInput source="cost_price" validate={[required()]} fullWidth />
+                <NumberInput 
+                  source="down_rate" 
+                  label={translate('resources.products.fields.down_rate', { _: 'Download Rate' })} 
+                  placeholder="0" 
+                  fullWidth 
+                  size="small"
+                  helperText={`0 = ${translate('resources.products.units.unlimited')}`} 
+                  inputProps={numInputProps} 
+                  InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+                />
               </Box>
             </Box>
           </FormSection>
         </Box>
 
-        {/* Row 2: Bandwidth + Data Quota */}
+        {/* Row 3: Quota & Validity Leveled */}
         <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, width: '100%' }}>
-          <FormSection
-            title={translate('resources.products.section.bandwidth', { _: 'Bandwidth Limit' })}
-          >
-            <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%' }}>
-              <Box>
-                <NumberInput source="up_rate" label="Upload Rate (Kbps)" fullWidth helperText="0 = Unlimited" />
-              </Box>
-              <Box>
-                <NumberInput source="down_rate" label="Download Rate (Kbps)" fullWidth helperText="0 = Unlimited" />
-              </Box>
-            </Box>
-          </FormSection>
-
           <FormSection
             title={translate('resources.products.section.data_quota', { _: 'Data Quota' })}
           >
             <DataQuotaInput />
           </FormSection>
-        </Box>
 
-        {/* Row 3: Validity + Remark */}
-        <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' }, gap: 2, width: '100%' }}>
           <FormSection
             title={translate('resources.products.section.validity', { _: 'Validity Limit' })}
           >
             <ValidityInput />
           </FormSection>
-
-          <FormSection
-            title={translate('resources.products.section.remark', { _: 'Remark' })}
-          >
-            <TextInput source="remark" multiline fullWidth minRows={2} />
-          </FormSection>
         </Box>
+
+        {/* Row 4: Remark */}
+        <FormSection
+          title={translate('resources.products.section.remark', { _: 'Remark' })}
+        >
+          <TextInput 
+            source="remark" 
+            label={translate('resources.products.fields.remark', { _: 'Remark' })} 
+            multiline 
+            fullWidth 
+            size="small"
+            minRows={2} 
+            inputProps={textInputProps} 
+            InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+          />
+        </FormSection>
       </SimpleForm>
     </Edit>
   );

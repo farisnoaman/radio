@@ -24,6 +24,7 @@ var Tables = []interface{}{
 	&VoucherSubscription{},
 	&VoucherBundle{},
 	&VoucherBundleItem{},
+	&VoucherTemplate{},
 	// Agent Hierarchy & Commissions
 	&AgentHierarchy{},
 	&CommissionLog{},

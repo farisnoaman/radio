@@ -28,6 +28,7 @@ import {
   useRefresh,
   useNotify,
   useListContext,
+  useLocale,
   RaRecord,
   FunctionField,
   RecordContextProvider
@@ -801,10 +802,29 @@ export const RadiusProfileList = () => {
 
 export const RadiusProfileEdit = () => {
   const translate = useTranslate();
+  const locale = useLocale();
+  const isRTL = locale === 'ar';
+
+  const inputLabelProps = {
+    sx: {
+      transformOrigin: isRTL ? 'top right' : 'top left',
+      left: isRTL ? 'auto' : 0,
+      right: isRTL ? 24 : 'auto',
+    }
+  };
+
+  const textInputProps = {
+    style: { textAlign: (isRTL ? 'right' : 'left') as any },
+    dir: isRTL ? 'rtl' : 'ltr'
+  };
+
+  const numInputProps = {
+    style: { textAlign: (isRTL ? 'right' : 'left') as any, direction: isRTL ? 'rtl' : 'ltr' as any }
+  };
 
   return (
     <Edit>
-      <SimpleForm toolbar={<ProfileFormToolbar />} sx={formLayoutSx}>
+      <SimpleForm toolbar={<ProfileFormToolbar />} sx={{ ...formLayoutSx, direction: isRTL ? 'rtl' : 'ltr' }}>
         <FormSection
           title={translate('resources.radius/profiles.sections.basic.title', { _: '基本信息' })}
           description={translate('resources.radius/profiles.sections.basic.description', { _: '策略的基本配置' })}
@@ -818,6 +838,8 @@ export const RadiusProfileEdit = () => {
                 helperText={translate('resources.radius/profiles.helpers.id', { _: '系统自动生成的唯一标识' })}
                 fullWidth
                 size="small"
+                inputProps={textInputProps}
+                InputLabelProps={inputLabelProps}
               />
             </FieldGridItem>
             <FieldGridItem>
@@ -828,6 +850,8 @@ export const RadiusProfileEdit = () => {
                 helperText={translate('resources.radius/profiles.helpers.name', { _: '2-50个字符的策略名称' })}
                 fullWidth
                 size="small"
+                inputProps={textInputProps}
+                InputLabelProps={inputLabelProps}
               />
             </FieldGridItem>
             <FieldGridItem span={{ xs: 1, sm: 2 }}>
@@ -852,9 +876,12 @@ export const RadiusProfileEdit = () => {
                 source="active_num"
                 label={translate('resources.radius/profiles.fields.active_num', { _: '并发数' })}
                 min={0}
+                placeholder="1"
                 helperText={translate('resources.radius/profiles.helpers.active_num', { _: '允许同时在线的会话数' })}
                 fullWidth
                 size="small"
+                inputProps={numInputProps}
+                InputLabelProps={inputLabelProps}
               />
             </FieldGridItem>
             <FieldGridItem>
@@ -862,9 +889,12 @@ export const RadiusProfileEdit = () => {
                 source="up_rate"
                 label={translate('resources.radius/profiles.fields.up_rate', { _: '上行速率 (Kbps)' })}
                 min={0}
+                placeholder="1024"
                 helperText={translate('resources.radius/profiles.helpers.up_rate', { _: '上行带宽限制，单位 Kbps' })}
                 fullWidth
                 size="small"
+                inputProps={numInputProps}
+                InputLabelProps={inputLabelProps}
               />
             </FieldGridItem>
             <FieldGridItem>
@@ -872,9 +902,12 @@ export const RadiusProfileEdit = () => {
                 source="down_rate"
                 label={translate('resources.radius/profiles.fields.down_rate', { _: '下行速率 (Kbps)' })}
                 min={0}
+                placeholder="1024"
                 helperText={translate('resources.radius/profiles.helpers.down_rate', { _: '下行带宽限制，单位 Kbps (0为不限制)' })}
                 fullWidth
                 size="small"
+                inputProps={numInputProps}
+                InputLabelProps={inputLabelProps}
               />
             </FieldGridItem>
 
@@ -883,9 +916,12 @@ export const RadiusProfileEdit = () => {
                 source="data_quota"
                 label={translate('resources.radius/profiles.fields.data_quota', { _: '数据配额 (MB)' })}
                 min={0}
+                placeholder="0"
                 helperText={translate('resources.radius/profiles.helpers.data_quota', { _: '总数据流量限制，单位 MB (0为不限制)' })}
                 fullWidth
                 size="small"
+                inputProps={numInputProps}
+                InputLabelProps={inputLabelProps}
               />
             </FieldGridItem>
           </FieldGrid>
@@ -903,6 +939,8 @@ export const RadiusProfileEdit = () => {
                 helperText={translate('resources.radius/profiles.helpers.addr_pool', { _: 'RADIUS地址池名称' })}
                 fullWidth
                 size="small"
+                inputProps={textInputProps}
+                InputLabelProps={inputLabelProps}
               />
             </FieldGridItem>
             <FieldGridItem>
@@ -912,6 +950,8 @@ export const RadiusProfileEdit = () => {
                 helperText={translate('resources.radius/profiles.helpers.ipv6_prefix', { _: 'IPv6前缀委派' })}
                 fullWidth
                 size="small"
+                inputProps={textInputProps}
+                InputLabelProps={inputLabelProps}
               />
             </FieldGridItem>
             <FieldGridItem span={{ xs: 1, sm: 2 }}>
@@ -921,6 +961,8 @@ export const RadiusProfileEdit = () => {
                 helperText={translate('resources.radius/profiles.helpers.domain', { _: '用户认证域名' })}
                 fullWidth
                 size="small"
+                inputProps={textInputProps}
+                InputLabelProps={inputLabelProps}
               />
             </FieldGridItem>
           </FieldGrid>
@@ -965,6 +1007,8 @@ export const RadiusProfileEdit = () => {
                 minRows={3}
                 fullWidth
                 size="small"
+                inputProps={textInputProps}
+                InputLabelProps={inputLabelProps}
                 helperText={translate('resources.radius/profiles.helpers.remark', { _: '可选的备注信息' })}
               />
             </FieldGridItem>
@@ -979,10 +1023,29 @@ export const RadiusProfileEdit = () => {
 
 export const RadiusProfileCreate = () => {
   const translate = useTranslate();
+  const locale = useLocale();
+  const isRTL = locale === 'ar';
+
+  const inputLabelProps = {
+    sx: {
+      transformOrigin: isRTL ? 'top right' : 'top left',
+      left: isRTL ? 'auto' : 0,
+      right: isRTL ? 24 : 'auto',
+    }
+  };
+
+  const textInputProps = {
+    style: { textAlign: (isRTL ? 'right' : 'left') as any },
+    dir: isRTL ? 'rtl' : 'ltr'
+  };
+
+  const numInputProps = {
+    style: { textAlign: (isRTL ? 'right' : 'left') as any, direction: isRTL ? 'rtl' : 'ltr' as any }
+  };
 
   return (
     <Create>
-      <SimpleForm sx={formLayoutSx}>
+      <SimpleForm sx={{ ...formLayoutSx, direction: isRTL ? 'rtl' : 'ltr' }}>
         <FormSection
           title={translate('resources.radius/profiles.sections.basic.title', { _: '基本信息' })}
           description={translate('resources.radius/profiles.sections.basic.description', { _: '策略的基本配置' })}
@@ -996,6 +1059,8 @@ export const RadiusProfileCreate = () => {
                 helperText={translate('resources.radius/profiles.helpers.name', { _: '2-50个字符的策略名称' })}
                 fullWidth
                 size="small"
+                inputProps={textInputProps}
+                InputLabelProps={inputLabelProps}
               />
             </FieldGridItem>
             <FieldGridItem>
@@ -1021,10 +1086,12 @@ export const RadiusProfileCreate = () => {
                 source="active_num"
                 label={translate('resources.radius/profiles.fields.active_num', { _: '并发数' })}
                 min={0}
-                defaultValue={1}
+                placeholder="1"
                 helperText={translate('resources.radius/profiles.helpers.active_num', { _: '允许同时在线的会话数' })}
                 fullWidth
                 size="small"
+                inputProps={numInputProps}
+                InputLabelProps={inputLabelProps}
               />
             </FieldGridItem>
             <FieldGridItem>
@@ -1032,10 +1099,12 @@ export const RadiusProfileCreate = () => {
                 source="up_rate"
                 label={translate('resources.radius/profiles.fields.up_rate', { _: '上行速率 (Kbps)' })}
                 min={0}
-                defaultValue={1024}
+                placeholder="1024"
                 helperText={translate('resources.radius/profiles.helpers.up_rate', { _: '上行带宽限制，单位 Kbps' })}
                 fullWidth
                 size="small"
+                inputProps={numInputProps}
+                InputLabelProps={inputLabelProps}
               />
             </FieldGridItem>
             <FieldGridItem>
@@ -1043,10 +1112,12 @@ export const RadiusProfileCreate = () => {
                 source="down_rate"
                 label={translate('resources.radius/profiles.fields.down_rate', { _: '下行速率 (Kbps)' })}
                 min={0}
-                defaultValue={1024}
+                placeholder="1024"
                 helperText={translate('resources.radius/profiles.helpers.down_rate', { _: '下行带宽限制，单位 Kbps (0为不限制)' })}
                 fullWidth
                 size="small"
+                inputProps={numInputProps}
+                InputLabelProps={inputLabelProps}
               />
             </FieldGridItem>
 
@@ -1055,10 +1126,12 @@ export const RadiusProfileCreate = () => {
                 source="data_quota"
                 label={translate('resources.radius/profiles.fields.data_quota', { _: '数据配额 (MB)' })}
                 min={0}
-                defaultValue={0}
+                placeholder="0"
                 helperText={translate('resources.radius/profiles.helpers.data_quota', { _: '总数据流量限制，单位 MB (0为不限制)' })}
                 fullWidth
                 size="small"
+                inputProps={numInputProps}
+                InputLabelProps={inputLabelProps}
               />
             </FieldGridItem>
           </FieldGrid>
@@ -1076,6 +1149,8 @@ export const RadiusProfileCreate = () => {
                 helperText={translate('resources.radius/profiles.helpers.addr_pool', { _: 'RADIUS地址池名称' })}
                 fullWidth
                 size="small"
+                inputProps={textInputProps}
+                InputLabelProps={inputLabelProps}
               />
             </FieldGridItem>
             <FieldGridItem>
@@ -1085,6 +1160,8 @@ export const RadiusProfileCreate = () => {
                 helperText={translate('resources.radius/profiles.helpers.ipv6_prefix', { _: 'IPv6前缀委派' })}
                 fullWidth
                 size="small"
+                inputProps={textInputProps}
+                InputLabelProps={inputLabelProps}
               />
             </FieldGridItem>
             <FieldGridItem span={{ xs: 1, sm: 2 }}>
@@ -1094,6 +1171,8 @@ export const RadiusProfileCreate = () => {
                 helperText={translate('resources.radius/profiles.helpers.domain', { _: '用户认证域名' })}
                 fullWidth
                 size="small"
+                inputProps={textInputProps}
+                InputLabelProps={inputLabelProps}
               />
             </FieldGridItem>
           </FieldGrid>
@@ -1140,6 +1219,8 @@ export const RadiusProfileCreate = () => {
                 minRows={3}
                 fullWidth
                 size="small"
+                inputProps={textInputProps}
+                InputLabelProps={inputLabelProps}
                 helperText={translate('resources.radius/profiles.helpers.remark', { _: '可选的备注信息' })}
               />
             </FieldGridItem>

@@ -41,8 +41,8 @@ func ListVoucherBatches(c echo.Context) error {
 	if page < 1 {
 		page = 1
 	}
-	if perPage < 1 || perPage > 100 {
-		perPage = 10
+	if perPage < 1 || perPage > 10000 {
+		perPage = 100
 	}
 
 	sortField := c.QueryParam("sort")
@@ -107,8 +107,8 @@ func ListVouchers(c echo.Context) error {
 	if page < 1 {
 		page = 1
 	}
-	if perPage < 1 || perPage > 1000 {
-		perPage = 50
+	if perPage < 1 || perPage > 10000 {
+		perPage = 100
 	}
 
 	var total int64

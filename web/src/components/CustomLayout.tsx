@@ -1,5 +1,5 @@
 import type { SxProps, Theme } from '@mui/material';
-import { Layout, LayoutProps, TitlePortal, useLocale } from 'react-admin';
+import { Layout, LayoutProps, Sidebar, TitlePortal, useLocale } from 'react-admin';
 import { Box, Typography, useMediaQuery } from '@mui/material';
 
 import { CustomAppBar } from './CustomAppBar';
@@ -8,6 +8,28 @@ import { CustomMenu } from './CustomMenu';
 type CustomLayoutProps = LayoutProps & { sx?: SxProps<Theme> };
 
 const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
+
+const CustomSidebar = (props: any) => {
+  const locale = useLocale();
+  const isRTL = RTL_LANGUAGES.includes(locale || '');
+
+  return (
+    <Sidebar
+      {...props}
+      sx={{
+        // Position sidebar on the correct side depending on locale
+        ...(isRTL
+          ? {
+              '& .MuiDrawer-paper': {
+                right: 0,
+                left: 'auto',
+              },
+            }
+          : {}),
+      }}
+    />
+  );
+};
 
 export const CustomLayout = ({ sx, children, ...rest }: CustomLayoutProps & { children?: React.ReactNode }) => {
   const isSmall = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
@@ -19,9 +41,10 @@ export const CustomLayout = ({ sx, children, ...rest }: CustomLayoutProps & { ch
       {...rest}
       appBar={CustomAppBar}
       menu={CustomMenu}
+      sidebar={CustomSidebar}
       sx={[
         {
-          // 固定顶部 AppBar（滚动时不隐藏）
+          // Fixed top AppBar
           '& .MuiAppBar-root': {
             position: 'fixed',
             top: 0,
@@ -29,44 +52,39 @@ export const CustomLayout = ({ sx, children, ...rest }: CustomLayoutProps & { ch
             right: 0,
             zIndex: 1200,
           },
-          // 为固定的 AppBar 留出空间
+          // App frame: flex container for sidebar + content
           '& .RaLayout-appFrame': {
             marginTop: '48px',
+            direction: isRTL ? 'rtl' : 'ltr',
           },
-          // 固定左侧菜单（滚动时不跟随移动）
+          // Fixed sidebar wrapper
           '& .RaSidebar-fixed': {
             position: 'fixed',
             top: '48px',
             height: 'calc(100vh - 48px)',
             overflowY: 'auto',
+            ...(isRTL
+              ? { right: 0, left: 'auto' }
+              : { left: 0, right: 'auto' }),
           },
-          // 内容区域样式
+          // Content area
           '& .RaLayout-content': {
             position: 'relative',
             padding: { xs: 2, md: 3, lg: 4 },
             minHeight: 'calc(100vh - 48px)',
             transition: 'background-color 0.3s ease',
+            direction: isRTL ? 'rtl' : 'ltr',
           },
         },
         ...(Array.isArray(sx) ? sx : sx ? [sx] : []),
       ]}
     >
-      <Box dir={isRTL ? 'rtl' : 'ltr'} sx={{ 
-        minHeight: '100vh',
-        '& .MuiDrawer-paper': isRTL ? { 
-          position: 'fixed', 
-          height: 'calc(100vh - 48px)', 
-          top: '48px',
-          right: 0,
-          left: 'auto',
-          transform: isRTL ? 'translateX(0)' : 'none'
-        } : {}
-      }}>
+      <Box dir={isRTL ? 'rtl' : 'ltr'} sx={{ minHeight: '100vh' }}>
         {isSmall && (
           <Box sx={{
             position: 'absolute',
             top: 16,
-            left: 16,
+            ...(isRTL ? { right: 16 } : { left: 16 }),
             zIndex: 10,
             maxWidth: 'calc(100% - 130px)',
             pointerEvents: 'none'
