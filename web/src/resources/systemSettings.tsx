@@ -15,7 +15,6 @@ import {
   TopToolbar,
   CreateButton,
   ExportButton,
-  useTranslate,
   useLocale,
 } from 'react-admin';
 
@@ -52,7 +51,6 @@ const settingsFilters = [
 
 // 系统设置编辑
 export const SystemSettingsEdit = () => {
-  const translate = useTranslate();
   const locale = useLocale();
   const isRTL = locale === 'ar';
 

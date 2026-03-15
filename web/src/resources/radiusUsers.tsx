@@ -1592,8 +1592,28 @@ export const RadiusUserEdit = () => {
 // RADIUS 用户创建
 export const RadiusUserCreate = () => {
   const translate = useTranslate();
+
+  const transformData = (data: any) => {
+    const transformed = { ...data };
+    // Convert string number fields to actual numbers for the backend
+    if (transformed.monthly_fee !== undefined) {
+      transformed.monthly_fee = transformed.monthly_fee === '' ? 0 : parseFloat(transformed.monthly_fee) || 0;
+    }
+    if (transformed.price_per_gb !== undefined) {
+      transformed.price_per_gb = transformed.price_per_gb === '' ? 0 : parseFloat(transformed.price_per_gb) || 0;
+    }
+    // Convert vlanid fields to numbers
+    if (transformed.vlanid1 !== undefined) {
+      transformed.vlanid1 = transformed.vlanid1 === '' ? 0 : parseInt(transformed.vlanid1, 10) || 0;
+    }
+    if (transformed.vlanid2 !== undefined) {
+      transformed.vlanid2 = transformed.vlanid2 === '' ? 0 : parseInt(transformed.vlanid2, 10) || 0;
+    }
+    return transformed;
+  };
+
   return (
-    <Create>
+    <Create transform={transformData}>
       <SimpleForm sx={formLayoutSx}>
         <FormSection
           title={translate('resources.radius/users.sections.authentication')}

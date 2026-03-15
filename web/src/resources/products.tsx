@@ -28,7 +28,8 @@ import {
   useRefresh,
   useListContext,
   RecordContextProvider,
-  useLocale
+  useLocale,
+  FunctionField,
 } from 'react-admin';
 import { useWatch } from 'react-hook-form';
 import { useMediaQuery, Theme, CardActions, Box, Card, CardContent, Stack, Avatar, Typography, Tooltip, IconButton, Chip, alpha } from '@mui/material';
@@ -121,9 +122,9 @@ export const ProductGrid = () => {
               </Box>
             </CardContent>
             <CardActions sx={{ justifyContent: 'flex-end', borderTop: theme => `1px solid ${theme.palette.divider}`, px: 2, py: 1.5, gap: 1 }}>
-              <EditButton label={translate('ra.action.edit', { _: 'Edit' })} size="small" />
-              <DeleteButton label={translate('ra.action.delete', { _: 'Delete' })} size="small" />
-              <ShowButton label={translate('ra.action.show', { _: 'Show' })} size="small" />
+              <EditButton label={translate('ra.action.edit', { _: 'Edit' })} size="small" variant="outlined" />
+              <DeleteButton label={translate('ra.action.delete', { _: 'Delete' })} size="small" variant="outlined" />
+              <ShowButton label={translate('ra.action.show', { _: 'Show' })} size="small" variant="outlined" />
             </CardActions>
           </Card>
         </RecordContextProvider>
@@ -150,10 +151,22 @@ export const ProductList = (props: ListProps) => {
           <NumberField source="up_rate" label={`${translate('resources.products.fields.up_rate')} (${translate('resources.products.units.kbps')})`} />
           <NumberField source="down_rate" label={`${translate('resources.products.fields.down_rate')} (${translate('resources.products.units.kbps')})`} />
           <NumberField source="data_quota" label={`${translate('resources.products.fields.data_quota')} (${translate('resources.products.units.mb')})`} />
-          <TextField source="status" label={translate('resources.products.fields.status')} />
+          <FunctionField
+            source="status"
+            label={translate('resources.products.fields.status')}
+            render={(record: any) => (
+              <Chip
+                label={record.status === 'enabled' ? translate('resources.products.status.enabled', { _: 'Enabled' }) : translate('resources.products.status.disabled', { _: 'Disabled' })}
+                size="small"
+                color={record.status === 'enabled' ? 'success' : 'default'}
+                variant={record.status === 'enabled' ? 'filled' : 'outlined'}
+                sx={{ fontWeight: 600, fontSize: '0.75rem' }}
+              />
+            )}
+          />
           <DateField source="updated_at" showTime label={translate('resources.products.fields.updated_at')} />
-          <EditButton label={translate('ra.action.edit', { _: 'Edit' })} />
-          <DeleteButton label={translate('ra.action.delete', { _: 'Delete' })} />
+          <EditButton label={translate('ra.action.edit', { _: 'Edit' })} variant="outlined" size="small" />
+          <DeleteButton label={translate('ra.action.delete', { _: 'Delete' })} variant="outlined" size="small" />
         </Datagrid>
       )}
     </List>

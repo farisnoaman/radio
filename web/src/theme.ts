@@ -174,6 +174,15 @@ export const createAppTheme = (mode: PaletteMode) => {
             paddingRight: '14px !important',
             paddingLeft: '32px !important',
           },
+          // RTL fixes for button icons
+          '[dir="rtl"] .MuiButton-startIcon': {
+            marginLeft: '8px !important',
+            marginRight: '-4px !important',
+          },
+          '[dir="rtl"] .MuiButton-endIcon': {
+            marginRight: '8px !important',
+            marginLeft: '-4px !important',
+          },
           '*::-webkit-scrollbar': {
             width: '8px',
             height: '8px',

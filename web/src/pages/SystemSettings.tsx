@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNotify, useTranslate } from 'react-admin';
+import { useNotify, useTranslate, useLocale } from 'react-admin';
 import {
     Box,
     Button,
@@ -57,6 +57,8 @@ export const SystemSettings = () => {
     const translate = useTranslate();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const locale = useLocale();
+    const isRtl = locale === 'ar';
 
     const [archiving, setArchiving] = useState(false);
     const [toggling, setToggling] = useState(false);
@@ -231,7 +233,7 @@ export const SystemSettings = () => {
     };
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
+        <Box sx={{ p: { xs: 2, sm: 3 }, direction: isRtl ? 'rtl' : 'ltr' }}>
             <Box sx={{ mb: 3 }}>
                 <Typography variant={isMobile ? 'h5' : 'h4'} gutterBottom>
                     {translate('pages.maintenance.title', { _: 'System Maintenance & Backup' })}
@@ -415,7 +417,17 @@ export const SystemSettings = () => {
                                     type="number"
                                     value={days}
                                     onChange={(e) => setDays(Number(e.target.value))}
-                                    sx={{ width: isMobile ? '100%' : 150 }}
+                                    sx={{ 
+                                        width: isMobile ? '100%' : 150,
+                                        '& legend': isRtl ? { textAlign: 'right' } : {}
+                                    }}
+                                    InputLabelProps={{
+                                        sx: isRtl ? {
+                                            transformOrigin: 'top right',
+                                            left: 'unset',
+                                            right: '1.75rem',
+                                        } : {}
+                                    }}
                                     helperText={isMobile ? translate('pages.maintenance.log_archival.retention_help', { _: 'Logs older than this will be compressed.' }) : undefined}
                                 />
                                 <Button
@@ -507,7 +519,14 @@ export const SystemSettings = () => {
                                 onChange={(e) => setConfig({ ...config, retention_days: Number(e.target.value) })}
                                 fullWidth
                                 helperText={translate('pages.backup.general.retention_help', { _: 'How many days to keep backup files.' })}
-                                sx={{ mb: 2 }}
+                                sx={{ mb: 2, '& legend': isRtl ? { textAlign: 'right' } : {} }}
+                                InputLabelProps={{
+                                    sx: isRtl ? {
+                                        transformOrigin: 'top right',
+                                        left: 'unset',
+                                        right: '1.75rem',
+                                    } : {}
+                                }}
                             />
 
                             <TextField
@@ -516,6 +535,14 @@ export const SystemSettings = () => {
                                 onChange={(e) => setConfig({ ...config, schedule: e.target.value })}
                                 fullWidth
                                 helperText={translate('pages.backup.general.schedule_help', { _: 'Cron expression for automated backups (e.g. 0 0 2 * * *)' })}
+                                sx={{ '& legend': isRtl ? { textAlign: 'right' } : {} }}
+                                InputLabelProps={{
+                                    sx: isRtl ? {
+                                        transformOrigin: 'top right',
+                                        left: 'unset',
+                                        right: '1.75rem',
+                                    } : {}
+                                }}
                             />
                         </Box>
                     </Box>
@@ -567,7 +594,14 @@ export const SystemSettings = () => {
                                     value={config.gdrive_client_id || ''}
                                     onChange={(e) => setConfig({ ...config, gdrive_client_id: e.target.value })}
                                     fullWidth
-                                    sx={{ mb: 2 }}
+                                    sx={{ mb: 2, '& legend': isRtl ? { textAlign: 'right' } : {} }}
+                                    InputLabelProps={{
+                                        sx: isRtl ? {
+                                            transformOrigin: 'top right',
+                                            left: 'unset',
+                                            right: '1.75rem',
+                                        } : {}
+                                    }}
                                 />
 
                                 <TextField
@@ -576,7 +610,14 @@ export const SystemSettings = () => {
                                     value={config.gdrive_client_secret || ''}
                                     onChange={(e) => setConfig({ ...config, gdrive_client_secret: e.target.value })}
                                     fullWidth
-                                    sx={{ mb: 2 }}
+                                    sx={{ mb: 2, '& legend': isRtl ? { textAlign: 'right' } : {} }}
+                                    InputLabelProps={{
+                                        sx: isRtl ? {
+                                            transformOrigin: 'top right',
+                                            left: 'unset',
+                                            right: '1.75rem',
+                                        } : {}
+                                    }}
                                 />
 
                                 <TextField
@@ -585,6 +626,14 @@ export const SystemSettings = () => {
                                     onChange={(e) => setConfig({ ...config, gdrive_folder_id: e.target.value })}
                                     fullWidth
                                     helperText={translate('pages.backup.gdrive.folder_id_help', { _: 'ID of the Google Drive folder to upload to.' })}
+                                    sx={{ '& legend': isRtl ? { textAlign: 'right' } : {} }}
+                                    InputLabelProps={{
+                                        sx: isRtl ? {
+                                            transformOrigin: 'top right',
+                                            left: 'unset',
+                                            right: '1.75rem',
+                                        } : {}
+                                    }}
                                 />
                             </Box>
                         </Box>

@@ -157,13 +157,10 @@ func (e *BillingEngine) calculateUsageStats(username string, start, end time.Tim
 
 
 // generateInvoiceForUser handles invoice creation for a single user within a transaction.
+// IMPORTANT: Usage stats are calculated BEFORE starting the transaction to avoid
+// SQLite deadlock (SQLite allows only 1 connection, so Begin() + separate query = deadlock).
 func (e *BillingEngine) generateInvoiceForUser(user domain.RadiusUser, now time.Time) error {
-	tx := e.db.Begin()
-	defer func() {
-		if r := recover(); r != nil {
-			tx.Rollback()
-		}
-	}()
+	zap.S().Infof("Starting invoice generation for user %s, next billing date: %v", user.Username, user.NextBillingDate)
 
 	periodStart := user.NextBillingDate.AddDate(0, -1, 0)
 	periodEnd := user.NextBillingDate
@@ -173,7 +170,11 @@ func (e *BillingEngine) generateInvoiceForUser(user domain.RadiusUser, now time.
 		periodEnd = now
 	}
 
-	// Calculate stats: Monthly Fee + (Usage GB * Price per GB)
+	zap.S().Debugf("User %s billing period: %v to %v", user.Username, periodStart, periodEnd)
+
+	// Calculate stats BEFORE starting the transaction to avoid SQLite deadlock.
+	// SQLite has MaxOpenConns=1, so Begin() holds the only connection and
+	// calculateUsageStats would block forever waiting for a second connection.
 	usageGB, sessionCount, err := e.calculateUsageStats(user.Username, periodStart, periodEnd)
 	if err != nil {
 		zap.S().Errorf("failed to calculate usage stats for user %s: %v", user.Username, err)
@@ -183,6 +184,17 @@ func (e *BillingEngine) generateInvoiceForUser(user domain.RadiusUser, now time.
 	if user.PricePerGb > 0 {
 		amount += usageGB * user.PricePerGb
 	}
+
+	zap.S().Infof("User %s invoice amount: %.2f (Usage: %.2f GB, MonthlyFee: %.2f)", user.Username, amount, usageGB, user.MonthlyFee)
+
+	// Now start the transaction for the write operations only
+	tx := e.db.Begin()
+	defer func() {
+		if r := recover(); r != nil {
+			zap.S().Errorf("Panic in generateInvoiceForUser: %v", r)
+			tx.Rollback()
+		}
+	}()
 
 	invoice := domain.Invoice{
 		ID:                 common.UUIDint64(),
@@ -205,20 +217,30 @@ func (e *BillingEngine) generateInvoiceForUser(user domain.RadiusUser, now time.
 	}
 
 	if err := tx.Create(&invoice).Error; err != nil {
+		zap.S().Errorf("Failed to create invoice for user %s: %v", user.Username, err)
 		tx.Rollback()
 		return fmt.Errorf("failed to create invoice: %w", err)
 	}
 
 	// Advance the next billing date by one calendar month
 	newNextBilling := user.NextBillingDate.AddDate(0, 1, 0)
+	zap.S().Infof("Advancing next billing date for user %s from %v to %v", user.Username, user.NextBillingDate, newNextBilling)
 	if err := tx.Model(&domain.RadiusUser{}).Where("id = ?", user.ID).
 		Update("next_billing_date", newNextBilling).Error; err != nil {
+		zap.S().Errorf("Failed to update next billing date for user %s: %v", user.Username, err)
 		tx.Rollback()
 		return fmt.Errorf("failed to advance next_billing_date: %w", err)
 	}
 
-	return tx.Commit().Error
+	err = tx.Commit().Error
+	if err != nil {
+		zap.S().Errorf("Failed to commit invoice transaction for user %s: %v", user.Username, err)
+		return err
+	}
+	zap.S().Infof("Invoice generated and committed successfully for user %s", user.Username)
+	return nil
 }
+
 
 // EnforceOverdueSuspensions finds unpaid invoices past their DueDate, marks them
 // as "overdue", and suspends the corresponding user's subscription.

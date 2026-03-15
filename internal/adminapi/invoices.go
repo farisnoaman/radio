@@ -9,6 +9,8 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/app/billing"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
+	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 // ListInvoices retrieves the invoice list
@@ -58,7 +60,9 @@ func ListInvoices(c echo.Context) error {
 		query = query.Where("status = ?", status)
 	}
 
-	query.Count(&total)
+	// Count total using a cloned session to avoid corrupting the query for Find
+	countQuery := query.Session(&gorm.Session{NewDB: true}).Model(&domain.Invoice{})
+	countQuery.Count(&total)
 
 	offset := (page - 1) * perPage
 	query.Order(sortField + " " + order).Limit(perPage).Offset(offset).Find(&invoices)
@@ -120,15 +124,19 @@ func GenerateUserInvoice(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_USERNAME", "Username is required", nil)
 	}
 
-	engine := billing.NewBillingEngine(GetDB(c), 7)
+	zap.S().Infof("Admin triggering manual invoice generation for user: %s", username)
+	engine := billing.NewBillingEngine(GetDB(c).Debug(), 7)
 	if err := engine.GenerateEarlyInvoice(username); err != nil {
+		zap.S().Errorf("Manual invoice generation failed for user %s: %v", username, err)
 		return fail(c, http.StatusInternalServerError, "BILLING_FAILED", "Failed to generate invoice", err.Error())
 	}
 
+	zap.S().Infof("Manual invoice generation succeeded for user: %s", username)
 	return ok(c, map[string]interface{}{
 		"message": "Invoice generated successfully and next billing date advanced",
 	})
 }
+
 
 
 func registerInvoiceRoutes() {

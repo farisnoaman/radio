@@ -283,3 +283,33 @@ func TestNewBillingEngine_ClampMinimumValues(t *testing.T) {
 		t.Errorf("expected dueDateDays clamped to 7, got %d", engine.dueDateDays)
 	}
 }
+
+func TestGenerateEarlyInvoice(t *testing.T) {
+	db := setupTestDB(t)
+	engine := NewBillingEngine(db, 7)
+
+	// Create user with future billing date
+	futureBilling := time.Now().AddDate(0, 1, 0)
+	createTestPostpaidUser(t, db, "ali", 50.00, futureBilling)
+
+	err := engine.GenerateEarlyInvoice("ali")
+	if err != nil {
+		t.Fatalf("GenerateEarlyInvoice failed: %v", err)
+	}
+
+	// Verify invoice
+	var invoices []domain.Invoice
+	db.Where("username = ?", "ali").Find(&invoices)
+	if len(invoices) != 1 {
+		t.Fatalf("expected 1 invoice, got %d", len(invoices))
+	}
+
+	// Verify date adjustment
+	var user domain.RadiusUser
+	db.Where("username = ?", "ali").First(&user)
+	expectedDate := futureBilling.AddDate(0, 1, 0)
+	if !user.NextBillingDate.Equal(expectedDate) {
+		t.Errorf("expected date %v, got %v", expectedDate, user.NextBillingDate)
+	}
+}
+

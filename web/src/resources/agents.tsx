@@ -570,7 +570,19 @@ export const AgentList = (props: ListProps) => {
                         label={translate('resources.agents.fields.balance')}
                         render={(record: any) => (record.balance || 0).toFixed(2)}
                     />
-                    <TextField source="status" label={translate('resources.agents.fields.status')} />
+                    <FunctionField
+                        source="status"
+                        label={translate('resources.agents.fields.status')}
+                        render={(record: any) => (
+                            <Chip
+                                label={record.status === 'enabled' ? translate('resources.agents.status.enabled', { _: 'Enabled' }) : translate('resources.agents.status.disabled', { _: 'Disabled' })}
+                                size="small"
+                                color={record.status === 'enabled' ? 'success' : 'default'}
+                                variant={record.status === 'enabled' ? 'filled' : 'outlined'}
+                                sx={{ fontWeight: 600, fontSize: '0.75rem' }}
+                            />
+                        )}
+                    />
                     <ShowIconButton />
                     <EditButton />
                     <TopupButton />

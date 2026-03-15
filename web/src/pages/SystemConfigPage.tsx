@@ -35,7 +35,7 @@ import {
   Router as RouterIcon,
   AutoFixHigh as CleanupIcon,
 } from '@mui/icons-material';
-import { useDataProvider, useNotify, useTranslate } from 'react-admin';
+import { useDataProvider, useNotify, useTranslate, useLocale } from 'react-admin';
 import { useApiQuery } from '../hooks/useApiQuery';
 
 // 配置项类型定义
@@ -74,6 +74,8 @@ export const SystemConfigPage: React.FC = () => {
   const notify = useNotify();
   const translate = useTranslate();
   const queryClient = useQueryClient();
+  const locale = useLocale();
+  const isRtl = locale === 'ar';
 
   const schemaQuery = useApiQuery<ConfigSchema[]>({
     path: '/system/config/schemas',
@@ -137,6 +139,12 @@ export const SystemConfigPage: React.FC = () => {
       description: translate('pages.system_config.groups.voucher.description', { _: 'Configure automatic cleanup of expired vouchers.' }),
       icon: <CleanupIcon />,
       color: '#2196f3',
+    },
+    billing: {
+      title: translate('pages.system_config.groups.billing.title', { _: 'Billing' }),
+      description: translate('pages.system_config.groups.billing.description', { _: 'Default billing and pricing configuration.' }),
+      icon: <SettingsIcon />,
+      color: '#ff9800',
     },
   }), [translate]);
 
@@ -212,8 +220,8 @@ export const SystemConfigPage: React.FC = () => {
       case 'string':
         if (schema.enum) {
           return (
-            <FormControl fullWidth>
-              <InputLabel>{label}</InputLabel>
+            <FormControl fullWidth sx={{ '& legend': isRtl ? { textAlign: 'right' } : {} }}>
+              <InputLabel sx={isRtl ? { transformOrigin: 'top right', left: 'unset', right: '1.75rem' } : {}}>{label}</InputLabel>
               <Select
                 value={value}
                 label={label}
@@ -238,6 +246,14 @@ export const SystemConfigPage: React.FC = () => {
             value={value}
             onChange={(e) => updateConfigValue(schema.key, e.target.value)}
             helperText={description || undefined}
+            sx={{ '& legend': isRtl ? { textAlign: 'right' } : {} }}
+            InputLabelProps={{
+              sx: isRtl ? {
+                transformOrigin: 'top right',
+                left: 'unset',
+                right: '1.75rem',
+              } : {}
+            }}
           />
         );
       case 'int':
@@ -249,6 +265,14 @@ export const SystemConfigPage: React.FC = () => {
             value={value}
             onChange={(e) => updateConfigValue(schema.key, e.target.value)}
             helperText={description || undefined}
+            sx={{ '& legend': isRtl ? { textAlign: 'right' } : {} }}
+            InputLabelProps={{
+              sx: isRtl ? {
+                transformOrigin: 'top right',
+                left: 'unset',
+                right: '1.75rem',
+              } : {}
+            }}
             InputProps={{
               inputProps: {
                 min: schema.min,
@@ -265,6 +289,14 @@ export const SystemConfigPage: React.FC = () => {
             value={value}
             onChange={(e) => updateConfigValue(schema.key, e.target.value)}
             helperText={description || undefined}
+            sx={{ '& legend': isRtl ? { textAlign: 'right' } : {} }}
+            InputLabelProps={{
+              sx: isRtl ? {
+                transformOrigin: 'top right',
+                left: 'unset',
+                right: '1.75rem',
+              } : {}
+            }}
           />
         );
     }
@@ -355,7 +387,7 @@ export const SystemConfigPage: React.FC = () => {
   };
 
   return (
-    <Box sx={{ p: 3 }}>
+    <Box sx={{ p: 3 }} dir={isRtl ? 'rtl' : 'ltr'}>
       {/* 页面标题 */}
       <Box sx={{ mb: 3 }}>
         <Typography variant="h4" sx={{ fontSize: { xs: '1.5rem', sm: '2.125rem' }, fontWeight: { xs: 600, sm: 400 } }} gutterBottom>
@@ -404,7 +436,7 @@ export const SystemConfigPage: React.FC = () => {
           {Object.entries(groupedSchemas).map(([groupKey, groupSchemas]) => {
             const groupConfig = configGroups[groupKey as keyof typeof configGroups] || {
               title: groupKey,
-              description: `${groupKey} 相关配置`,
+              description: translate('pages.system_config.groups.default_description', { _: `${groupKey} related configuration`, groupKey }),
               icon: <SettingsIcon />,
               color: '#666',
             };
@@ -498,16 +530,6 @@ export const SystemConfigPage: React.FC = () => {
       {!isLoading && (schemaQuery.data?.length ?? 0) === 0 && (
         <Alert severity="warning">
           {translate('pages.system_config.no_config_warning')}
-          <br />
-          <strong>调试信息：</strong>
-          <br />
-          - 配置schema数量：{schemaQuery.data?.length ?? 0}
-          <br />
-          - 配置值数量：{Object.keys(configs).length}
-          <br />
-          - API地址：/api/v1/system/config/schemas
-          <br />
-          请打开浏览器控制台查看详细日志。
         </Alert>
       )}
 
@@ -531,15 +553,6 @@ export const SystemConfigPage: React.FC = () => {
           <DialogContentText id="reset-dialog-description">
             {translate('pages.system_config.reset_warning')}
             <br />
-            <br />
-            <strong>注意：</strong>此操作将清除您对以下配置项的自定义设置：
-            <br />
-            {schemaQuery.data?.map(schema => (
-              <span key={schema.key}>
-                • {schema.key.split('.')[1]} ({schema.description})
-                <br />
-              </span>
-            ))}
             <br />
             {translate('pages.system_config.reset_notice')}
           </DialogContentText>
