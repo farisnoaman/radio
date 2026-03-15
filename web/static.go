@@ -24,9 +24,14 @@ func GetFileSystem() (http.FileSystem, error) {
 	return getSubFS("dist")
 }
 
-// GetAdminFileSystem returns the dist/admin directory
+// GetAdminFileSystem returns the root dist directory
 func GetAdminFileSystem() (http.FileSystem, error) {
-	return getSubFS("dist/admin")
+	return GetFileSystem()
+}
+
+// GetPortalFileSystem returns the root dist directory
+func GetPortalFileSystem() (http.FileSystem, error) {
+	return GetFileSystem()
 }
 
 // RegisterStaticRoutes registers static file routes

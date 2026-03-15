@@ -5,6 +5,7 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/labstack/echo/v4"
 	"github.com/talkincode/toughradius/v9/internal/app/billing"
 	"github.com/talkincode/toughradius/v9/internal/domain"
@@ -50,12 +51,26 @@ func ListInvoices(c echo.Context) error {
 
 	query := db.Model(&domain.Invoice{})
 
-	// Filter by username
-	if username := strings.TrimSpace(c.QueryParam("username")); username != "" {
-		query = query.Where("username = ?", username)
+	// Authentication context check
+	if userVal := c.Get("user"); userVal != nil {
+		if token, ok := userVal.(*jwt.Token); ok {
+			if claims, ok := token.Claims.(jwt.MapClaims); ok {
+				role, _ := claims["role"].(string)
+				tokenUsername, _ := claims["username"].(string)
+				if role == "user" {
+					// Enforce filtering by own username for portal users
+					query = query.Where("username = ?", tokenUsername)
+				} else {
+					// Admin/Operator can filter by any username
+					if username := strings.TrimSpace(c.QueryParam("username")); username != "" {
+						query = query.Where("username = ?", username)
+					}
+				}
+			}
+		}
 	}
 
-	// Filter by status
+	// Filter by status (available for everyone)
 	if status := strings.TrimSpace(c.QueryParam("status")); status != "" {
 		query = query.Where("status = ?", status)
 	}
@@ -87,6 +102,19 @@ func GetInvoice(c echo.Context) error {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "Invoice not found", nil)
 	}
 
+	// Security: Verify ownership for RADIUS users
+	if userVal := c.Get("user"); userVal != nil {
+		if token, ok := userVal.(*jwt.Token); ok {
+			if claims, ok := token.Claims.(jwt.MapClaims); ok {
+				role, _ := claims["role"].(string)
+				tokenUsername, _ := claims["username"].(string)
+				if role == "user" && invoice.Username != tokenUsername {
+					return fail(c, http.StatusForbidden, "FORBIDDEN", "You do not have permission to view this invoice", nil)
+				}
+			}
+		}
+	}
+
 	return ok(c, invoice)
 }
 
@@ -100,6 +128,18 @@ func PayInvoice(c echo.Context) error {
 	id, err := strconv.ParseInt(c.Param("id"), 10, 64)
 	if err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid invoice ID", nil)
+	}
+
+	// Security: RADIUS users cannot manually record payments
+	if userVal := c.Get("user"); userVal != nil {
+		if token, ok := userVal.(*jwt.Token); ok {
+			if claims, ok := token.Claims.(jwt.MapClaims); ok {
+				role, _ := claims["role"].(string)
+				if role == "user" {
+					return fail(c, http.StatusForbidden, "FORBIDDEN", "Portal users cannot record manual payments", nil)
+				}
+			}
+		}
 	}
 
 	// Billing Engine config - using defaults as there is no specific config lookup needed just for marking paid

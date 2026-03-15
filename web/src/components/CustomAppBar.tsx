@@ -1,6 +1,5 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import SettingsOutlinedIcon from '@mui/icons-material/SettingsOutlined';
-import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import LanguageIcon from '@mui/icons-material/Language';
 import MenuIcon from '@mui/icons-material/Menu';
 import MenuOpenIcon from '@mui/icons-material/MenuOpen';
@@ -254,25 +253,6 @@ export const CustomAppBar = (props: AppBarProps) => {
             </Tooltip>
           ) : null}
 
-          {/* 账号设置按钮 - 所有用户都可见 */}
-          <Tooltip title={translate('appbar.account_settings')}>
-            <IconButton
-              size="large"
-              onClick={() => redirect('/account/settings')}
-              sx={{
-                color: isDark ? '#f1f5f9' : '#6b7280',
-                transition: 'all 0.2s ease',
-                '&:hover': {
-                  transform: 'scale(1.05)',
-                  backgroundColor: isDark
-                    ? 'rgba(255, 255, 255, 0.1)'
-                    : 'rgba(0, 0, 0, 0.05)',
-                },
-              }}
-            >
-              <AccountCircleOutlinedIcon />
-            </IconButton>
-          </Tooltip>
         </Stack>
       </Box>
     </AppBar>

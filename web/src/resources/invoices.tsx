@@ -15,6 +15,7 @@ import {
     FunctionField,
     useListContext,
     RecordContextProvider,
+    useTranslate,
 } from "react-admin";
 import { useMediaQuery, Theme } from "@mui/material";
 import {
@@ -149,8 +150,15 @@ const generatePdfUrl = async (): Promise<string> => {
 /* -------------------------------------------------------------------------- */
 /*  Small reusable UI components                                             */
 /* -------------------------------------------------------------------------- */
-const StatusChip = ({ label }: { label?: string }) => {
+const StatusChip = ({
+    label: _label,
+    source: _source,
+}: {
+    label?: string;
+    source?: string;
+}) => {
     const record = useRecordContext();
+    const translate = useTranslate();
     if (!record) return null;
 
     let color: "success" | "error" | "warning" | "default" = "default";
@@ -169,7 +177,7 @@ const StatusChip = ({ label }: { label?: string }) => {
 
     return (
         <Chip
-            label={label || status.toUpperCase()}
+            label={translate(`resources.radius/invoices.status.${status}`)}
             color={color}
             size="small"
             sx={{ fontWeight: 600 }}
@@ -190,6 +198,7 @@ const PayButton = ({
     const record = useRecordContext();
     const notify = useNotify();
     const refresh = useRefresh();
+    const translate = useTranslate();
 
     if (!record || record.status !== "unpaid") return null;
 
@@ -225,7 +234,7 @@ const PayButton = ({
                 "&:hover": { boxShadow: 4 },
             }}
         >
-            Pay
+            {translate("resources.radius/invoices.actions.pay")}
         </MuiButton>
     );
 };
@@ -237,6 +246,7 @@ const PayIconButton = () => {
     const record = useRecordContext();
     const notify = useNotify();
     const refresh = useRefresh();
+    const translate = useTranslate();
 
     if (!record || record.status !== "unpaid") return null;
 
@@ -259,7 +269,7 @@ const PayIconButton = () => {
     };
 
     return (
-        <Tooltip title="Pay">
+        <Tooltip title={translate("resources.radius/invoices.actions.pay")}>
             <IconButton
                 onClick={handlePay}
                 size="small"
@@ -287,21 +297,61 @@ const WhatsAppShareButton = ({
     fullWidth?: boolean;
 }) => {
     const record = useRecordContext();
+    const translate = useTranslate();
     if (!record) return null;
 
     const handleShare = async () => {
         try {
             const pdfUrl = await generatePdfUrl();
             const message = encodeURIComponent(
-                `*Invoice #${record.id}*\n\n` +
-                `User: ${record.username}\n` +
-                `Amount: $${Number(record.amount).toFixed(2)}\n` +
-                `Base Fee: $${Number(record.base_amount || 0).toFixed(2)}\n` +
-                `Usage: ${Number(record.usage_gb || 0).toFixed(2)} GB\n` +
-                `Status: ${record.status?.toUpperCase()}\n` +
-                `Due Date: ${new Date(record.due_date).toLocaleDateString()}\n\n` +
-                `PDF: ${pdfUrl}\n\n` +
-                `_Please make payment before the due date._`
+                translate("resources.radius/invoices.whatsapp.invoice_label", {
+                    id: record.id,
+                }) +
+                    "\n\n" +
+                    translate("resources.radius/invoices.whatsapp.user_label", {
+                        username: record.username,
+                    }) +
+                    "\n" +
+                    translate(
+                        "resources.radius/invoices.whatsapp.amount_label",
+                        { amount: Number(record.amount).toFixed(2) }
+                    ) +
+                    "\n" +
+                    translate(
+                        "resources.radius/invoices.whatsapp.base_fee_label",
+                        { baseFee: Number(record.base_amount || 0).toFixed(2) }
+                    ) +
+                    "\n" +
+                    translate(
+                        "resources.radius/invoices.whatsapp.usage_label",
+                        { usage: Number(record.usage_gb || 0).toFixed(2) }
+                    ) +
+                    "\n" +
+                    translate(
+                        "resources.radius/invoices.whatsapp.status_label",
+                        {
+                            status: translate(
+                                `resources.radius/invoices.status.${record.status}`
+                            ).toUpperCase(),
+                        }
+                    ) +
+                    "\n" +
+                    translate(
+                        "resources.radius/invoices.whatsapp.due_date_label",
+                        {
+                            dueDate: new Date(
+                                record.due_date
+                            ).toLocaleDateString(),
+                        }
+                    ) +
+                    "\n\n" +
+                    translate("resources.radius/invoices.whatsapp.pdf_label", {
+                        pdfUrl,
+                    }) +
+                    "\n\n" +
+                    translate(
+                        "resources.radius/invoices.whatsapp.payment_reminder"
+                    )
             );
             window.open(`https://wa.me/?text=${message}`, "_blank");
         } catch (e) {
@@ -333,6 +383,7 @@ const WhatsAppShareButton = ({
 /* ---------------------------------------------------- */
 const WhatsAppListButton = () => {
     const record = useRecordContext();
+    const translate = useTranslate();
     if (!record) return null;
 
     const handleShare = async (e: React.MouseEvent) => {
@@ -340,13 +391,44 @@ const WhatsAppListButton = () => {
         try {
             const pdfUrl = await generatePdfUrl();
             const message = encodeURIComponent(
-                `*Invoice #${record.id}*\n\n` +
-                `User: ${record.username}\n` +
-                `Amount: $${Number(record.amount).toFixed(2)}\n` +
-                `Status: ${record.status?.toUpperCase()}\n` +
-                `Due: ${new Date(record.due_date).toLocaleDateString()}\n\n` +
-                `PDF: ${pdfUrl}\n\n` +
-                `_Please make payment before the due date._`
+                translate("resources.radius/invoices.whatsapp.invoice_label", {
+                    id: record.id,
+                }) +
+                    "\n\n" +
+                    translate("resources.radius/invoices.whatsapp.user_label", {
+                        username: record.username,
+                    }) +
+                    "\n" +
+                    translate(
+                        "resources.radius/invoices.whatsapp.amount_label",
+                        { amount: Number(record.amount).toFixed(2) }
+                    ) +
+                    "\n" +
+                    translate(
+                        "resources.radius/invoices.whatsapp.status_label",
+                        {
+                            status: translate(
+                                `resources.radius/invoices.status.${record.status}`
+                            ).toUpperCase(),
+                        }
+                    ) +
+                    "\n" +
+                    translate(
+                        "resources.radius/invoices.whatsapp.due_date_label",
+                        {
+                            dueDate: new Date(
+                                record.due_date
+                            ).toLocaleDateString(),
+                        }
+                    ) +
+                    "\n\n" +
+                    translate("resources.radius/invoices.whatsapp.pdf_label", {
+                        pdfUrl,
+                    }) +
+                    "\n\n" +
+                    translate(
+                        "resources.radius/invoices.whatsapp.payment_reminder"
+                    )
             );
             window.open(`https://wa.me/?text=${message}`, "_blank");
         } catch (e) {
@@ -355,7 +437,7 @@ const WhatsAppListButton = () => {
     };
 
     return (
-        <Tooltip title="Share on WhatsApp">
+        <Tooltip title={translate("appbar.language.whatsapp") || "WhatsApp"}>
             <IconButton
                 onClick={handleShare}
                 size="small"
@@ -379,6 +461,7 @@ const WhatsAppListButton = () => {
 /* ---------------------------------------------------- */
 const InvoiceGrid = () => {
     const { data, isLoading } = useListContext();
+    const translate = useTranslate();
     if (isLoading || !data) return null;
 
     return (
@@ -431,14 +514,20 @@ const InvoiceGrid = () => {
                                             lineHeight: 1.2,
                                         }}
                                     >
-                                        Invoice #{record.id}
+                                        {translate(
+                                            "resources.radius/invoices.list.invoice_id",
+                                            { id: record.id }
+                                        )}
                                     </Typography>
                                     <Typography
                                         variant="caption"
                                         color="text.secondary"
                                         sx={{ fontFamily: "monospace" }}
                                     >
-                                        User: {record.username}
+                                        {translate(
+                                            "resources.radius/invoices.list.user_label",
+                                            { username: record.username }
+                                        )}
                                     </Typography>
                                 </Box>
                                 <StatusChip />
@@ -466,7 +555,9 @@ const InvoiceGrid = () => {
                                         variant="body2"
                                         color="text.secondary"
                                     >
-                                        Usage:
+                                        {translate(
+                                            "resources.radius/invoices.list.usage_label"
+                                        )}
                                     </Typography>
                                     <Typography
                                         variant="body2"
@@ -484,7 +575,9 @@ const InvoiceGrid = () => {
                                         variant="body2"
                                         color="text.secondary"
                                     >
-                                        Amount:
+                                        {translate(
+                                            "resources.radius/invoices.list.amount_label"
+                                        )}
                                     </Typography>
                                     <Typography
                                         variant="body2"
@@ -504,7 +597,9 @@ const InvoiceGrid = () => {
                                         variant="body2"
                                         color="text.secondary"
                                     >
-                                        Issued:
+                                        {translate(
+                                            "resources.radius/invoices.list.issued_label"
+                                        )}
                                     </Typography>
                                     <Typography
                                         variant="body2"
@@ -568,7 +663,7 @@ export const InvoiceList = () => {
                         source="amount"
                         options={{ style: "currency", currency: "USD" }}
                     />
-                    <StatusChip label="Status" />
+                    <StatusChip source="status" />
                     <DateField source="issue_date" />
                     <PayButton />
                     <WhatsAppListButton />
@@ -612,6 +707,7 @@ export const InvoiceShow = () => {
     const isMobile = useMediaQuery(
         (theme: Theme) => theme.breakpoints.down("sm")
     );
+    const translate = useTranslate();
 
     return (
         <Show actions={<InvoiceShowActions />}>
@@ -648,13 +744,18 @@ export const InvoiceShow = () => {
                                             variant={isMobile ? "h6" : "h5"}
                                             fontWeight={700}
                                         >
-                                            INVOICE
+                                            {translate(
+                                                "resources.radius/invoices.show.invoice_title"
+                                            )}
                                         </Typography>
                                         <Typography
                                             variant="body2"
                                             sx={{ opacity: 0.9, mt: 0.5 }}
                                         >
-                                            User:{" "}
+                                            {translate(
+                                                "resources.radius/invoices.show.user_label"
+                                            )}
+                                            :{" "}
                                             <TextField
                                                 source="username"
                                                 sx={{
@@ -687,7 +788,9 @@ export const InvoiceShow = () => {
                                                 display: "block",
                                             }}
                                         >
-                                            Total Due
+                                            {translate(
+                                                "resources.radius/invoices.show.total_due"
+                                            )}
                                         </Typography>
                                     </Box>
                                 </Box>
@@ -727,7 +830,9 @@ export const InvoiceShow = () => {
                                             }}
                                         >
                                             <ReceiptIcon color="primary" />
-                                            Billing Breakdown
+                                            {translate(
+                                                "resources.radius/invoices.show.billing_breakdown"
+                                            )}
                                         </Typography>
 
                                         <Box>
@@ -736,10 +841,12 @@ export const InvoiceShow = () => {
                                                 display="flex"
                                                 justifyContent="space-between"
                                                 py={1}
-                                                borderBottom="1px solid #f0f0f0"
+                                                borderBottom={(theme) => `1px solid ${theme.palette.divider}`}
                                             >
                                                 <Typography color="textSecondary">
-                                                    Base Monthly Fee
+                                                    {translate(
+                                                        "resources.radius/invoices.show.base_monthly_fee"
+                                                    )}
                                                 </Typography>
                                                 <Typography fontWeight={600}>
                                                     <NumberField
@@ -757,10 +864,12 @@ export const InvoiceShow = () => {
                                                 display="flex"
                                                 justifyContent="space-between"
                                                 py={1}
-                                                borderBottom="1px solid #f0f0f0"
+                                                borderBottom={(theme) => `1px solid ${theme.palette.divider}`}
                                             >
                                                 <Typography color="textSecondary">
-                                                    Data Usage
+                                                    {translate(
+                                                        "resources.radius/invoices.show.data_usage"
+                                                    )}
                                                 </Typography>
                                                 <Typography fontWeight={600}>
                                                     <NumberField
@@ -769,7 +878,9 @@ export const InvoiceShow = () => {
                                                             maximumFractionDigits: 2,
                                                         }}
                                                     />{" "}
-                                                    GB
+                                                    {translate(
+                                                        "resources.radius/invoices.gb"
+                                                    )}
                                                 </Typography>
                                             </Box>
 
@@ -778,10 +889,12 @@ export const InvoiceShow = () => {
                                                 display="flex"
                                                 justifyContent="space-between"
                                                 py={1}
-                                                borderBottom="1px solid #f0f0f0"
+                                                borderBottom={(theme) => `1px solid ${theme.palette.divider}`}
                                             >
                                                 <Typography color="textSecondary">
-                                                    Price per GB
+                                                    {translate(
+                                                        "resources.radius/invoices.show.price_per_gb"
+                                                    )}
                                                 </Typography>
                                                 <Typography fontWeight={600}>
                                                     <NumberField
@@ -799,15 +912,17 @@ export const InvoiceShow = () => {
                                                 display="flex"
                                                 justifyContent="space-between"
                                                 py={1}
-                                                borderBottom="1px solid #f0f0f0"
-                                                bgcolor="rgba(59, 130, 246, 0.04)"
+                                                borderBottom={(theme) => `1px solid ${theme.palette.divider}`}
+                                                bgcolor={(theme) => alpha(theme.palette.primary.main, 0.04)}
                                                 px={1}
                                             >
                                                 <Typography
                                                     fontWeight={600}
                                                     color="primary"
                                                 >
-                                                    Usage Charge
+                                                    {translate(
+                                                        "resources.radius/invoices.show.usage_charge"
+                                                    )}
                                                 </Typography>
                                                 <FunctionField
                                                     render={(record) => {
@@ -845,7 +960,9 @@ export const InvoiceShow = () => {
                                                     variant="h6"
                                                     fontWeight={700}
                                                 >
-                                                    Total Amount
+                                                    {translate(
+                                                        "resources.radius/invoices.show.total_amount"
+                                                    )}
                                                 </Typography>
                                                 <Typography
                                                     variant="h6"
@@ -880,7 +997,9 @@ export const InvoiceShow = () => {
                                             }}
                                         >
                                             <PaymentsIcon color="primary" />
-                                            Usage Statistics
+                                            {translate(
+                                                "resources.radius/invoices.show.usage_statistics"
+                                            )}
                                         </Typography>
 
                                         <Box
@@ -890,14 +1009,16 @@ export const InvoiceShow = () => {
                                         >
                                             <Box
                                                 p={2}
-                                                bgcolor="#f8fafc"
+                                                bgcolor={(theme) => alpha(theme.palette.action.hover, 0.5)}
                                                 borderRadius={2}
                                             >
                                                 <Typography
                                                     variant="body2"
                                                     color="textSecondary"
                                                 >
-                                                    Total Sessions
+                                                    {translate(
+                                                        "resources.radius/invoices.show.total_sessions"
+                                                    )}
                                                 </Typography>
                                                 <Typography
                                                     variant="h5"
@@ -911,14 +1032,16 @@ export const InvoiceShow = () => {
 
                                             <Box
                                                 p={2}
-                                                bgcolor="#f8fafc"
+                                                bgcolor={(theme) => alpha(theme.palette.action.hover, 0.5)}
                                                 borderRadius={2}
                                             >
                                                 <Typography
                                                     variant="body2"
                                                     color="textSecondary"
                                                 >
-                                                    Data Consumed
+                                                    {translate(
+                                                        "resources.radius/invoices.show.data_consumed"
+                                                    )}
                                                 </Typography>
                                                 <Typography
                                                     variant="h5"
@@ -930,7 +1053,9 @@ export const InvoiceShow = () => {
                                                             maximumFractionDigits: 2,
                                                         }}
                                                     />{" "}
-                                                    GB
+                                                    {translate(
+                                                        "resources.radius/invoices.gb"
+                                                    )}
                                                 </Typography>
                                             </Box>
                                         </Box>
@@ -948,7 +1073,9 @@ export const InvoiceShow = () => {
                                             color="textSecondary"
                                             gutterBottom
                                         >
-                                            Invoice Reference
+                                            {translate(
+                                                "resources.radius/invoices.show.invoice_reference"
+                                            )}
                                         </Typography>
                                         <Typography
                                             variant="h6"
@@ -965,7 +1092,9 @@ export const InvoiceShow = () => {
                                                 color="textSecondary"
                                                 display="block"
                                             >
-                                                Issue Date
+                                                {translate(
+                                                    "resources.radius/invoices.show.issue_date"
+                                                )}
                                             </Typography>
                                             <Typography fontWeight={500}>
                                                 <DateField
@@ -992,7 +1121,9 @@ export const InvoiceShow = () => {
                                                 display="block"
                                                 fontWeight={600}
                                             >
-                                                Due Date
+                                                {translate(
+                                                    "resources.radius/invoices.show.due_date"
+                                                )}
                                             </Typography>
                                             <Typography
                                                 variant="h6"
@@ -1010,7 +1141,9 @@ export const InvoiceShow = () => {
                                                 color="textSecondary"
                                                 display="block"
                                             >
-                                                Billing Period
+                                                {translate(
+                                                    "resources.radius/invoices.show.billing_period"
+                                                )}
                                             </Typography>
                                             <Typography fontWeight={500}>
                                                 <DateField
@@ -1041,7 +1174,9 @@ export const InvoiceShow = () => {
                                                     display="block"
                                                     fontWeight={600}
                                                 >
-                                                    Paid On
+                                                    {translate(
+                                                        "resources.radius/invoices.show.paid_on"
+                                                    )}
                                                 </Typography>
                                                 <Typography
                                                     variant="h6"
@@ -1063,9 +1198,9 @@ export const InvoiceShow = () => {
                                     elevation={3}
                                     sx={{
                                         borderRadius: 2,
-                                        bgcolor: "#ffffff",
+                                        bgcolor: "background.paper",
                                         border: "1px solid",
-                                        borderColor: "grey.200",
+                                        borderColor: "divider",
                                     }}
                                     className="no-print"
                                 >
@@ -1080,7 +1215,9 @@ export const InvoiceShow = () => {
                                                 mb: 2,
                                             }}
                                         >
-                                            Quick Actions
+                                            {translate(
+                                                "resources.radius/invoices.show.quick_actions"
+                                            )}
                                         </Typography>
 
                                         <Box
@@ -1111,8 +1248,8 @@ export const InvoiceShow = () => {
                             elevation={1}
                             sx={{
                                 borderRadius: 2,
-                                bgcolor: "#ffffff",
-                                border: "1px dashed #cbd5e1",
+                                bgcolor: "background.paper",
+                                border: (theme) => `1px dashed ${theme.palette.divider}`,
                                 flexShrink: 0,
                                 mx: isMobile ? 0 : 2,
                                 mb: isMobile ? 0 : 2,
@@ -1132,12 +1269,16 @@ export const InvoiceShow = () => {
                                             mr: 0.5,
                                         }}
                                     />{" "}
-                                    Internal Remarks
+                                    {translate(
+                                        "resources.radius/invoices.show.internal_remarks"
+                                    )}
                                 </Typography>
                                 <Typography variant="body1">
                                     <TextField
                                         source="remark"
-                                        emptyText="No additional remarks"
+                                        emptyText={translate(
+                                            "resources.radius/invoices.show.no_remarks"
+                                        )}
                                     />
                                 </Typography>
                             </CardContent>

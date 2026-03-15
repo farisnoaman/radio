@@ -37,6 +37,7 @@ var JwtSkipPrefix = []string{
 	"/ready",
 	"/realip",
 	apiBasePath + "/auth/login",
+	apiBasePath + "/auth/portal/login",
 	apiBasePath + "/auth/refresh",
 	apiBasePath + "/dashboard/ws",
 	"/dashboard/ws",
@@ -77,49 +78,41 @@ func NewAdminServer(appCtx app.AppContext) *AdminServer {
 
 	// Failure recovery middleware
 	s.root.Use(ServerRecover(appconfig.System.Debug))
-	// Logging middleware
-	s.root.Use(middleware.RequestLoggerWithConfig(middleware.RequestLoggerConfig{
-		LogLatency:   true,
-		LogMethod:    true,
-		LogURI:       true,
-		LogUserAgent: true,
-		LogStatus:    true,
-		LogError:     true,
-		LogRemoteIP:  true,
-		LogRequestID: true,
-		HandleError:  true,
-		LogValuesFunc: func(c echo.Context, v middleware.RequestLoggerValues) error {
-			if v.Error != nil {
-				zap.S().Errorw("request error",
-					"id", v.RequestID,
-					"remote_ip", v.RemoteIP,
-					"method", v.Method,
-					"uri", v.URI,
-					"status", v.Status,
-					"latency", v.Latency,
-					"user_agent", v.UserAgent,
-					"error", v.Error,
-				)
-			} else {
-				zap.S().Infow("request",
-					"id", v.RequestID,
-					"remote_ip", v.RemoteIP,
-					"method", v.Method,
-					"uri", v.URI,
-					"status", v.Status,
-					"latency", v.Latency,
-					"user_agent", v.UserAgent,
-				)
-			}
-			return nil
+
+	// Initializing JWT and API Group
+	s.jwtConfig = echojwt.Config{
+		SigningKey:    []byte(appconfig.Web.Secret),
+		SigningMethod: echojwt.AlgorithmHS256,
+		Skipper:       jwtSkipFunc(),
+		ErrorHandler: func(c echo.Context, err error) error {
+			zap.S().Warnf("JWT validation failed: %v, Path: %s, Auth Header: %s",
+				err, c.Path(), c.Request().Header.Get("Authorization"))
+			return c.JSON(http.StatusUnauthorized, web.RestError("Authentication failed: "+err.Error()))
 		},
-	}))
-	// p := prometheus.NewPrometheus("toughradius", nil)
-	// p.Use(s.root)
+	}
 
-	// Serve React Admin web UI static files
+	s.api = s.root.Group(apiBasePath)
+	s.api.Use(echojwt.WithConfig(s.jwtConfig))
+	s.api.Use(MaintenanceMiddleware(s.appCtx))
+
+	// Add middleware to inject appCtx into each request context
+	s.root.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
+		return func(c echo.Context) error {
+			c.Set("appCtx", s.appCtx)
+			return next(c)
+		}
+	})
+
+	// Serve Static files
 	s.setupReactAdminStatic()
+	s.setupPortalStatic()
 
+	return s
+}
+
+// setupReactAdminStatic sets up React Admin static file serving
+func (s *AdminServer) setupReactAdminStatic() {
+	appconfig := s.appCtx.Config()
 	s.root.HideBanner = true
 	// Set the log level
 	s.root.Logger.SetLevel(common.If(appconfig.System.Debug, elog.DEBUG, elog.INFO).(elog.Lvl)) //nolint:errcheck // type assertion is safe
@@ -138,8 +131,6 @@ func NewAdminServer(appCtx app.AppContext) *AdminServer {
 		return c.String(200, c.RealIP())
 	})
 
-	s.root.GET("/.well-known/appspecific/com.chrome.devtools.json", chromeDevtoolsManifest)
-
 	// Chrome DevTools config filerequestHandle
 	s.root.GET("/.well-known/appspecific/com.chrome.devtools.json", func(c echo.Context) error {
 		return c.JSON(200, map[string]interface{}{
@@ -153,92 +144,94 @@ func NewAdminServer(appCtx app.AppContext) *AdminServer {
 		})
 	})
 
-	// JWT middleware
-	s.jwtConfig = echojwt.Config{
-		SigningKey:    []byte(appconfig.Web.Secret),
-		SigningMethod: echojwt.AlgorithmHS256,
-		Skipper:       jwtSkipFunc(),
-		ErrorHandler: func(c echo.Context, err error) error {
-			zap.S().Warnf("JWT validation failed: %v, Path: %s, Auth Header: %s",
-				err, c.Path(), c.Request().Header.Get("Authorization"))
-			return c.JSON(http.StatusUnauthorized, web.RestError("Authentication failed: "+err.Error()))
-		},
-	}
-
-	// init api -------------------------------
-	s.api = s.root.Group(apiBasePath)
-	s.api.Use(echojwt.WithConfig(s.jwtConfig))
-	s.api.Use(MaintenanceMiddleware(s.appCtx))
-
-	// Add middleware to inject appCtx into each request context
-	s.root.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
-		return func(c echo.Context) error {
-			c.Set("appCtx", s.appCtx)
-			return next(c)
-		}
-	})
-
-	return s
-}
-
-// setupReactAdminStatic sets up React Admin static file serving
-func (s *AdminServer) setupReactAdminStatic() {
 	// Try loading from the embedded filesystem
 	webStaticFS, err := getWebStaticFS()
 	if err != nil {
-		zap.S().Warnf("Failed to load embedded web static files: %v, using development mode", err)
-		// Development mode: read from the local filesystem
-		s.root.Static("/admin", "web/dist/admin")
+		zap.S().Warnf("Failed to load embedded admin web static files: %v, using development mode", err)
+		s.root.Static("/admin", "web/dist")
+		s.root.Static("/assets", "web/dist/assets")
+		// SPA fallback for dev mode
+		s.root.GET("/admin/*", func(c echo.Context) error {
+			path := strings.TrimPrefix(c.Request().URL.Path, "/admin")
+			if path == "" || path == "/" || !strings.Contains(path, ".") {
+				return c.File("web/dist/index.html")
+			}
+			return c.File("web/dist/" + path)
+		})
 		return
 	}
 
-	// Production mode: read from the embedded filesystem
-	// Serve static assets under the /admin path
 	staticHandler := http.FileServer(webStaticFS)
-
 	renderIndex := func(c echo.Context) error {
 		indexFile, err := webStaticFS.Open("/index.html")
 		if err != nil {
 			return c.String(http.StatusNotFound, "Web UI not found")
 		}
-		defer func() { _ = indexFile.Close() }() //nolint:errcheck
-
+		defer func() { _ = indexFile.Close() }()
 		c.Response().Header().Set("Content-Type", "text/html; charset=utf-8")
 		return c.Stream(http.StatusOK, "text/html", indexFile)
 	}
 
-	// Register /admin/assets/* for static assets
 	s.root.GET("/admin/assets/*", echo.WrapHandler(http.StripPrefix("/admin", staticHandler)))
-
-	// Handle the exact /admin path (without trailing slash)
+	s.root.GET("/assets/*", echo.WrapHandler(staticHandler))
 	s.root.GET("/admin", renderIndex)
-
-	// Register /admin/* for the SPA; all routes return index.html
 	s.root.GET("/admin/*", func(c echo.Context) error {
-		// Try to fetch the requested file
 		path := strings.TrimPrefix(c.Request().URL.Path, "/admin")
-		if path == "" || path == "/" {
-			path = "/index.html"
+		if path == "" || path == "/" || !strings.Contains(path, ".") {
+			return renderIndex(c)
 		}
-
 		file, err := webStaticFS.Open(path)
 		if err == nil {
-			_ = file.Close() //nolint:errcheck
+			_ = file.Close()
 			return echo.WrapHandler(http.StripPrefix("/admin", staticHandler))(c)
 		}
+		return renderIndex(c)
+	})
+}
 
-		// e.g., if the file is missing, return index.html (for SPA routing)
-		indexFile, err := webStaticFS.Open("/index.html")
+// setupPortalStatic sets up Customer Portal static file serving
+func (s *AdminServer) setupPortalStatic() {
+	// Try loading from the embedded filesystem
+	webStaticFS, err := webui.GetPortalFileSystem()
+	if err != nil {
+		zap.S().Warnf("Failed to load embedded portal static files: %v, using development mode", err)
+		s.root.Static("/portal", "web/dist")
+		// SPA fallback for dev mode
+		s.root.GET("/portal/*", func(c echo.Context) error {
+			path := strings.TrimPrefix(c.Request().URL.Path, "/portal")
+			if path == "" || path == "/" || !strings.Contains(path, ".") {
+				return c.File("web/dist/portal.html")
+			}
+			return c.File("web/dist/" + path)
+		})
+		return
+	}
+
+	staticHandler := http.FileServer(webStaticFS)
+	renderPortalIndex := func(c echo.Context) error {
+		indexFile, err := webStaticFS.Open("/portal.html")
 		if err != nil {
-			return c.String(http.StatusNotFound, "Web UI not found")
+			return c.String(http.StatusNotFound, "Portal UI not found")
 		}
-		defer func() { _ = indexFile.Close() }() //nolint:errcheck
-
+		defer func() { _ = indexFile.Close() }()
 		c.Response().Header().Set("Content-Type", "text/html; charset=utf-8")
 		return c.Stream(http.StatusOK, "text/html", indexFile)
-	})
+	}
 
-	zap.S().Info("React Admin static files loaded successfully")
+	s.root.GET("/portal/assets/*", echo.WrapHandler(http.StripPrefix("/portal", staticHandler)))
+	s.root.GET("/portal", renderPortalIndex)
+	s.root.GET("/portal/*", func(c echo.Context) error {
+		path := strings.TrimPrefix(c.Request().URL.Path, "/portal")
+		if path == "" || path == "/" || !strings.Contains(path, ".") {
+			return renderPortalIndex(c)
+		}
+		file, err := webStaticFS.Open(path)
+		if err == nil {
+			_ = file.Close()
+			return echo.WrapHandler(http.StripPrefix("/portal", staticHandler))(c)
+		}
+		return renderPortalIndex(c)
+	})
 }
 
 // getWebStaticFS returns the embedded web static filesystem

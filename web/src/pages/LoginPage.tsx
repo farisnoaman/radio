@@ -135,7 +135,7 @@ export const LoginPage = () => {
 
           <Box sx={{ mt: 3, textAlign: 'center' }}>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              ToughRADIUS v9 © {new Date().getFullYear()}
+              ToughRADIUS v9 © {new Date().getFullYear()} {translate('app.rights')}
             </Typography>
           </Box>
         </CardContent>

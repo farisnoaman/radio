@@ -16,13 +16,15 @@ import VpnKeyOutlinedIcon from '@mui/icons-material/VpnKeyOutlined';
 import ConstructionIcon from '@mui/icons-material/Construction';
 import PrintIcon from '@mui/icons-material/Print';
 import StorageOutlinedIcon from '@mui/icons-material/StorageOutlined';
+import DevicesIcon from '@mui/icons-material/Devices';
+
 import { Box, useTheme } from '@mui/material';
 import { MenuItemLink, MenuProps, useGetIdentity, useTranslate, useLocale } from 'react-admin';
 
 const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
 
 const menuItems = [
-  { to: '/', labelKey: 'menu.dashboard', icon: <DashboardOutlinedIcon /> }, // Everyone
+  { to: '/', labelKey: 'menu.dashboard', icon: <DashboardOutlinedIcon />, permissions: ['super', 'admin', 'user'] },
   { to: '/network/servers', labelKey: 'menu.servers', icon: <StorageOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/network/nodes', labelKey: 'menu.network_nodes', icon: <AccountTreeOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/network/nas', labelKey: 'menu.nas_devices', icon: <RouterOutlinedIcon />, permissions: ['super', 'admin'] },
@@ -31,7 +33,7 @@ const menuItems = [
   { to: '/radius/profiles', labelKey: 'menu.radius_profiles', icon: <SettingsSuggestOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/radius/online', labelKey: 'menu.online_sessions', icon: <SensorsOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/radius/accounting', labelKey: 'menu.accounting', icon: <ReceiptLongOutlinedIcon />, permissions: ['super', 'admin'] },
-  { to: '/radius/invoices', labelKey: 'menu.invoices', icon: <ReceiptLongOutlinedIcon />, permissions: ['super', 'admin'] },
+  { to: '/radius/invoices', labelKey: 'menu.invoices', icon: <ReceiptLongOutlinedIcon />, permissions: ['super', 'admin', 'user'] },
   { to: '/system/config', labelKey: 'menu.system_config', icon: <SettingsOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/system/operators', labelKey: 'menu.operators', icon: <AdminPanelSettingsOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/system/logs', labelKey: 'menu.system_logs', icon: <HistoryOutlinedIcon />, permissions: ['super', 'admin'] },
@@ -40,8 +42,10 @@ const menuItems = [
   { to: '/financial/performance', labelKey: 'menu.financial_performance', icon: <AssessmentOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/settings/tunnel', labelKey: 'menu.tunnel_settings', icon: <VpnKeyOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/system/maintenance', labelKey: 'menu.maintenance', icon: <ConstructionIcon />, permissions: ['super', 'admin'] },
-  { to: '/voucher-batches', labelKey: 'menu.vouchers', icon: <ConfirmationNumberOutlinedIcon /> }, // Everyone
-  { to: '/voucher-printing', labelKey: 'menu.print_vouchers', icon: <PrintIcon /> }, // Everyone
+  { to: '/voucher-batches', labelKey: 'menu.vouchers', icon: <ConfirmationNumberOutlinedIcon />, permissions: ['super', 'admin'] },
+  { to: '/voucher-printing', labelKey: 'menu.print_vouchers', icon: <PrintIcon />, permissions: ['super', 'admin'] },
+  { to: '/portal/devices', labelKey: 'portal.my_devices', icon: <DevicesIcon />, permissions: ['user'] },
+  { to: '/portal/vouchers/redeem', labelKey: 'portal.redeem_voucher', icon: <ConfirmationNumberOutlinedIcon />, permissions: ['user'] },
 ];
 
 export const CustomMenu = ({ dense, onMenuClick, logout }: MenuProps) => {

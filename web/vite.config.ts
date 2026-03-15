@@ -3,8 +3,23 @@ import react from '@vitejs/plugin-react'
 
 // https://vitejs.dev/config/
 export default defineConfig({
-  base: '/admin',
-  plugins: [react()],
+  base: './', // Using relative base for multi-path support
+  plugins: [
+    react(),
+    {
+      name: 'portal-rewrite',
+      configureServer(server) {
+        server.middlewares.use((req, res, next) => {
+          if (req.url === '/portal' || req.url?.startsWith('/portal/')) {
+            if (!req.url.includes('/assets/') && !req.url.includes('.')) {
+              req.url = '/portal.html';
+            }
+          }
+          next();
+        });
+      },
+    }
+  ],
   server: {
     port: 3000,
     proxy: {
@@ -16,11 +31,15 @@ export default defineConfig({
     }
   },
   build: {
-    outDir: 'dist/admin',
+    outDir: 'dist',
     assetsDir: 'assets',
     emptyOutDir: true,
     sourcemap: false,
     rollupOptions: {
+      input: {
+        admin: 'index.html',
+        portal: 'portal.html',
+      },
       output: {
         manualChunks: {
           'react-vendor': ['react', 'react-dom'],
