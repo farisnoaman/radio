@@ -110,6 +110,7 @@ export const createAppTheme = (mode: PaletteMode) => {
     },
     typography: {
       fontFamily: [
+        '"Readex Pro"',
         '-apple-system',
         'BlinkMacSystemFont',
         '"Segoe UI"',

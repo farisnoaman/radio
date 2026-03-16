@@ -728,6 +728,7 @@ const customEnglishMessages: TranslationMessages = {
         level: 'Level',
         tier: 'Tier',
         contact: 'Contact',
+        radius_username: 'Linked Monthly Account',
         amount: 'Amount',
       },
       status: {
@@ -1133,6 +1134,8 @@ const customEnglishMessages: TranslationMessages = {
         expiration_type: 'Expiration Type',
         expiration_fixed: 'Fixed (From creation)',
         expiration_first_use: 'First-Use (From activation)',
+        validity: 'Validity',
+        validity_unit: 'Validity Unit',
         validity_days: 'Validity Days',
         pin_length: 'PIN Length',
         wallet: {
@@ -1359,6 +1362,9 @@ const customEnglishMessages: TranslationMessages = {
     mac_address: 'MAC Address',
     duration: 'Duration',
     network_error: 'Network error',
+    minutes: 'Minutes',
+    hours: 'Hours',
+    days: 'Days',
   },
   error: {
     connectivity_title: 'Connection Issue',

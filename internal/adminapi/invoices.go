@@ -58,8 +58,14 @@ func ListInvoices(c echo.Context) error {
 				role, _ := claims["role"].(string)
 				tokenUsername, _ := claims["username"].(string)
 				if role == "user" {
-					// Enforce filtering by own username for portal users
 					query = query.Where("username = ?", tokenUsername)
+				} else if role == "agent" {
+					var agent domain.SysOpr
+					if err := db.Where("username = ?", tokenUsername).First(&agent).Error; err == nil && agent.RadiusUsername != "" {
+						query = query.Where("username IN (?, ?)", tokenUsername, agent.RadiusUsername)
+					} else {
+						query = query.Where("username = ?", tokenUsername)
+					}
 				} else {
 					// Admin/Operator can filter by any username
 					if username := strings.TrimSpace(c.QueryParam("username")); username != "" {
@@ -110,6 +116,18 @@ func GetInvoice(c echo.Context) error {
 				tokenUsername, _ := claims["username"].(string)
 				if role == "user" && invoice.Username != tokenUsername {
 					return fail(c, http.StatusForbidden, "FORBIDDEN", "You do not have permission to view this invoice", nil)
+				}
+				if role == "agent" {
+					var agent domain.SysOpr
+					if err := GetDB(c).Where("username = ?", tokenUsername).First(&agent).Error; err == nil {
+						if invoice.Username != tokenUsername && invoice.Username != agent.RadiusUsername {
+							return fail(c, http.StatusForbidden, "FORBIDDEN", "You do not have permission to view this invoice", nil)
+						}
+					} else {
+						if invoice.Username != tokenUsername {
+							return fail(c, http.StatusForbidden, "FORBIDDEN", "You do not have permission to view this invoice", nil)
+						}
+					}
 				}
 			}
 		}

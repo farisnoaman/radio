@@ -46,6 +46,12 @@ const (
 	InvoiceOverdue = "overdue"
 )
 
+// Invoice categories
+const (
+	InvoiceCategoryService = "service"
+	InvoiceCategoryTopup   = "topup"
+)
+
 // Invoice represents a single monthly billing record for a postpaid subscriber.
 //
 // Each invoice covers a specific billing period (BillingPeriodStart to BillingPeriodEnd)
@@ -79,6 +85,7 @@ type Invoice struct {
 	BillingPeriodStart time.Time `json:"billing_period_start"`
 	BillingPeriodEnd   time.Time `json:"billing_period_end"`
 	Remark            string    `json:"remark" gorm:"size:500"`
+	Category          string    `json:"category" gorm:"index;size:50;default:'service'"`
 	CreatedAt         time.Time `json:"created_at"`
 	UpdatedAt         time.Time `json:"updated_at"`
 }

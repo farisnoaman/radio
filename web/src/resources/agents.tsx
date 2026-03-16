@@ -694,6 +694,16 @@ export const AgentCreate = (props: CreateProps) => {
                                 InputLabelProps={inputLabelProps}
                             />
                         </FieldGridItem>
+                        <FieldGridItem>
+                            <TextInput
+                                source="radius_username"
+                                label={translate('resources.agents.fields.radius_username')}
+                                fullWidth
+                                size="small"
+                                inputProps={textInputProps}
+                                InputLabelProps={inputLabelProps}
+                            />
+                        </FieldGridItem>
                     </FieldGrid>
                 </FormSection>
 
@@ -832,6 +842,16 @@ export const AgentEdit = (props: EditProps) => {
                                 source="email"
                                 label={translate('resources.agents.fields.email')}
                                 type="email"
+                                fullWidth
+                                size="small"
+                                inputProps={textInputProps}
+                                InputLabelProps={inputLabelProps}
+                            />
+                        </FieldGridItem>
+                        <FieldGridItem>
+                            <TextInput
+                                source="radius_username"
+                                label={translate('resources.agents.fields.radius_username')}
                                 fullWidth
                                 size="small"
                                 inputProps={textInputProps}

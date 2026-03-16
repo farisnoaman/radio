@@ -24,6 +24,7 @@ type operatorPayload struct {
 	Email    string `json:"email"`
 	Level    string `json:"level"`
 	Status   string `json:"status"`
+	RadiusUsername string `json:"radius_username"`
 	Remark   string `json:"remark"`
 }
 

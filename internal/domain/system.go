@@ -29,6 +29,7 @@ type SysOpr struct {
 	Password  string    `json:"password" form:"password"`
 	Level     string    `gorm:"index" json:"level" form:"level"`
 	Status    string    `gorm:"index" json:"status" form:"status"`
+	RadiusUsername string `json:"radius_username" form:"radius_username" gorm:"index;size:255"`
 
 	Remark    string    `json:"remark" form:"remark"`
 	LastLogin time.Time `json:"last_login" form:"last_login"`

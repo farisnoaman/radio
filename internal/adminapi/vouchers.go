@@ -148,6 +148,12 @@ func ListVouchers(c echo.Context) error {
 		}
 	}
 
+	// Filter by agent: Agents can only see their own vouchers
+	currentUser, err := resolveOperatorFromContext(c)
+	if err == nil && currentUser.Level == "agent" {
+		query = query.Where("agent_id = ?", currentUser.ID)
+	}
+
 	query.Count(&total)
 
 	offset := (page - 1) * perPage
@@ -1394,6 +1400,14 @@ func PrintVoucherBatch(c echo.Context) error {
 	var batch domain.VoucherBatch
 	if err := GetDB(c).First(&batch, id).Error; err != nil {
 		return fail(c, http.StatusNotFound, "BATCH_NOT_FOUND", "Batch not found", err.Error())
+	}
+
+	// Permission check: Agents can only print their own batches
+	currentUser, err := resolveOperatorFromContext(c)
+	if err == nil && currentUser.Level == "agent" {
+		if batch.AgentID != currentUser.ID {
+			return fail(c, http.StatusForbidden, "FORBIDDEN", "Cannot print batch not owned by you", nil)
+		}
 	}
 
 	var vouchers []domain.Voucher

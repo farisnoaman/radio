@@ -137,6 +137,10 @@ func UpdateAgent(c echo.Context) error {
 		agent.Remark = payload.Remark
 	}
 
+	if payload.RadiusUsername != "" {
+		agent.RadiusUsername = payload.RadiusUsername
+	}
+
 	// Save the agent
 	if err := GetDB(c).Save(&agent).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "Failed to update agent", err.Error())
@@ -269,6 +273,12 @@ func TopupAgent(c echo.Context) error {
 	if err := tx.Create(&log).Error; err != nil {
 		tx.Rollback()
 		return fail(c, http.StatusInternalServerError, "LOG_FAILED", "Failed to create transaction log", err.Error())
+	}
+
+	// 4. Generate Topup Invoice
+	if err := generateTopupInvoice(tx, agent.Username, req.Amount, req.Remark); err != nil {
+		tx.Rollback()
+		return fail(c, http.StatusInternalServerError, "INVOICE_FAILED", "Failed to generate topup invoice", err.Error())
 	}
 
 	tx.Commit()
@@ -470,6 +480,16 @@ func BulkWalletOperation(c echo.Context) error {
 			continue
 		}
 
+		// Generate Topup Invoice if it's a deposit
+		if req.Operation == "deposit" || req.Operation == "set" {
+			if err := generateTopupInvoice(tx, agent.Username, req.Amount, req.Remark); err != nil {
+				result.Success = false
+				result.Error = "Failed to generate topup invoice"
+				results = append(results, result)
+				continue
+			}
+		}
+
 		result.Success = true
 		result.PreviousBalance = wallet.Balance
 		result.NewBalance = newBalance
@@ -610,6 +630,7 @@ func CreateAgent(c echo.Context) error {
 		Email:     payload.Email,
 		Level:     "agent", // Force level to agent
 		Status:    "enabled",
+		RadiusUsername: payload.RadiusUsername,
 		Remark:    payload.Remark,
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
@@ -1032,4 +1053,26 @@ func GetMySubAgents(c echo.Context) error {
 	}
 
 	return paged(c, subAgents, total, page, perPage)
+}
+
+// generateTopupInvoice creates a paid invoice for wallet top-ups
+func generateTopupInvoice(tx *gorm.DB, username string, amount float64, remark string) error {
+	now := time.Now()
+	invoice := domain.Invoice{
+		ID:                 common.UUIDint64(),
+		Username:           username,
+		Amount:             amount,
+		Currency:           "USD", // Default currency
+		IssueDate:          now,
+		DueDate:            now,
+		PaidAt:             now,
+		Status:             domain.InvoicePaid,
+		Category:           domain.InvoiceCategoryTopup,
+		Remark:             remark,
+		CreatedAt:          now,
+		UpdatedAt:          now,
+		BillingPeriodStart: now,
+		BillingPeriodEnd:   now,
+	}
+	return tx.Create(&invoice).Error
 }

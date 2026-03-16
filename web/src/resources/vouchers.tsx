@@ -70,7 +70,7 @@ const BatchActions = () => {
         try {
             await httpClient(`/voucher-batches/${record.id}/${action}`, { method: 'POST' });
             const actionKey = action === 'activate' ? 'activated' : action === 'deactivate' ? 'deactivated' : action === 'restore' ? 'restored' : 'refunded';
-            notify(translate(`resources['voucher-batches'].notifications.${actionKey}`), { type: 'success' });
+            notify(translate(`resources.voucher-batches.notifications.${actionKey}`), { type: 'success' });
             refresh();
         } catch (error: any) {
             const msg = error?.json?.msg || error?.message || `Failed to ${action} batch`;

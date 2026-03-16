@@ -86,6 +86,17 @@ const customArabicMessages: TranslationMessages = {
       yes: 'نعم',
       unsaved_changes: 'بعض التغييرات لم تُحفظ. هل أنت متأكد من رغبتك في تجاهلها؟',
     },
+    notification: {
+      ...englishMessages.ra?.notification,
+      created: 'تم إنشاء العنصر بنجاح',
+      updated: 'تم تحديث العنصر بنجاح',
+      deleted: 'تم حذف العنصر بنجاح',
+      bad_item: 'عنصر غير صالح',
+      item_doesnt_exist: 'العنصر غير موجود',
+      http_error: 'خطأ في الاتصال بالخادم',
+      canceled: 'تم إلغاء العملية',
+      data_provider_error: 'خطأ في مزود البيانات. راجع وحدة تحكم المتصفح لمزيد من التفاصيل.',
+    },
   },
   app: {
     title: 'توف راديوس',
@@ -303,13 +314,13 @@ const customArabicMessages: TranslationMessages = {
       },
       actions: {
         activate: 'تفعيل',
-        deactivate: 'إلغاء التفعيل',
+        deactivate: 'تعطيل',
         restore: 'استعادة',
         refund: 'استرداد غير المستخدم',
         download: 'تنزيل',
         print: 'طباعة',
         transfer: 'نقل',
-        view_list: 'قائمة القسائم',
+        view_list: 'الكروت ',
         delete: 'حذف',
       },
       notifications: {
@@ -376,6 +387,7 @@ const customArabicMessages: TranslationMessages = {
         level: 'المستوى',
         tier: 'الفئة',
         contact: 'الاتصال',
+        radius_username: 'الحساب الشهري المرتبط',
         amount: 'المبلغ',
       },
       status: {
@@ -535,6 +547,8 @@ const customArabicMessages: TranslationMessages = {
         expiration_type: 'نوع الانتهاء',
         expiration_fixed: 'ثابت (من الإنشاء)',
         expiration_first_use: 'أول استخدام (من التفعيل)',
+        validity: 'الصلاحية',
+        validity_unit: 'وحدة الصلاحية',
         validity_days: 'أيام الصلاحية',
         pin_length: 'طول PIN',
         wallet: {
@@ -882,6 +896,9 @@ const customArabicMessages: TranslationMessages = {
     mac_address: 'الماك أدرس',
     duration: 'المدة',
     network_error: 'خطأ في الشبكة',
+    minutes: 'دقائق',
+    hours: 'ساعات',
+    days: 'أيام',
   },
   error: {
     connectivity_title: 'مشكلة في الاتصال',
