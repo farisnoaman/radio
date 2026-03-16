@@ -915,6 +915,7 @@ const UserListActions = () => {
 const AnonymizeButton = () => {
   const record = useRecordContext<RadiusUser>();
   const [open, setOpen] = useState(false);
+  const translate = useTranslate();
 
   if (!record) return null;
 
@@ -925,7 +926,7 @@ const AnonymizeButton = () => {
 
   return (
     <>
-      <Tooltip title="Anonymize User (GDPR)">
+      <Tooltip title={translate('resources.radius/users.dialogs.anonymize_title', { _: 'Anonymize User (GDPR)' })}>
         <IconButton onClick={handleOpen} size="small" color="default">
           <NoAccountsIcon fontSize="small" />
         </IconButton>
@@ -946,6 +947,7 @@ const AnonymizeButton = () => {
 const UserCardGrid = () => {
   const { data, isLoading } = useListContext<RadiusUser>();
   const theme = useTheme();
+  const translate = useTranslate();
   const [anonymizeOpen, setAnonymizeOpen] = useState(false);
   const [selectedUsername, setSelectedUsername] = useState('');
 
@@ -1038,19 +1040,19 @@ const UserCardGrid = () => {
               {/* Stats Row */}
               <Box display="flex" justifyContent="space-between" gap={1} mb={1}>
                 <Box flex={1}>
-                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>Profile</Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>{translate('resources.radius/users.fields.profile_id', { _: 'Profile' })}</Typography>
                   <Typography variant="body2" fontWeight="bold" noWrap sx={{ color: 'text.primary' }}>
                     {record.profile_id || '-'}
                   </Typography>
                 </Box>
                 <Box flex={1}>
-                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>Type</Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>{translate('resources.radius/users.fields.billing_type', { _: 'Type' })}</Typography>
                   <Typography variant="body2" fontWeight="bold" noWrap sx={{ color: 'text.primary' }}>
                     {record.billing_type || '-'}
                   </Typography>
                 </Box>
                 <Box flex={1}>
-                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>Expire</Typography>
+                  <Typography variant="caption" sx={{ color: 'text.secondary' }}>{translate('resources.radius/users.fields.expire_time', { _: 'Expire' })}</Typography>
                   <Typography variant="body2" noWrap sx={{ color: 'text.primary' }}>
                     {formatExpireTime(record.expire_time).text}
                   </Typography>
@@ -1083,10 +1085,10 @@ const UserCardGrid = () => {
                   }
                 }}
               >
-                Anonymize
+                {translate('resources.radius/users.dialogs.confirm_anonymize', { _: 'Anonymize' })}
               </Button>
               <EditButton
-                label="Edit"
+                label={translate('ra.action.edit', { _: 'Edit' })}
                 size="medium"
                 variant="outlined"
                 sx={{
@@ -1488,8 +1490,8 @@ export const RadiusUserEdit = () => {
                 source="billing_type"
                 label={translate('resources.radius/users.fields.billing_type')}
                 choices={[
-                  { id: 'prepaid', name: 'Prepaid' },
-                  { id: 'postpaid', name: 'Postpaid' },
+                  { id: 'prepaid', name: translate('resources.radius/users.billing_types.prepaid', { _: 'Prepaid' }) },
+                  { id: 'postpaid', name: translate('resources.radius/users.billing_types.postpaid', { _: 'Postpaid' }) },
                 ]}
                 defaultValue="prepaid"
                 fullWidth
@@ -1501,9 +1503,9 @@ export const RadiusUserEdit = () => {
                 source="subscription_status"
                 label={translate('resources.radius/users.fields.subscription_status')}
                 choices={[
-                  { id: 'active', name: 'Active' },
-                  { id: 'suspended', name: 'Suspended' },
-                  { id: 'canceled', name: 'Canceled' },
+                  { id: 'active', name: translate('resources.radius/users.subscription_statuses.active', { _: 'Active' }) },
+                  { id: 'suspended', name: translate('resources.radius/users.subscription_statuses.suspended', { _: 'Suspended' }) },
+                  { id: 'canceled', name: translate('resources.radius/users.subscription_statuses.canceled', { _: 'Canceled' }) },
                 ]}
                 fullWidth
                 size="small"
@@ -1742,8 +1744,8 @@ export const RadiusUserCreate = () => {
                 source="billing_type"
                 label={translate('resources.radius/users.fields.billing_type')}
                 choices={[
-                  { id: 'prepaid', name: 'Prepaid' },
-                  { id: 'postpaid', name: 'Postpaid' },
+                  { id: 'prepaid', name: translate('resources.radius/users.billing_types.prepaid', { _: 'Prepaid' }) },
+                  { id: 'postpaid', name: translate('resources.radius/users.billing_types.postpaid', { _: 'Postpaid' }) },
                 ]}
                 defaultValue="prepaid"
                 fullWidth

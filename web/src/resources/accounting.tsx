@@ -7,6 +7,7 @@ import {
   Show,
   useRecordContext,
   useTranslate,
+  useLocale,
   ExportButton,
   TopToolbar,
   ListButton,
@@ -181,8 +182,8 @@ const DetailItem = ({ label, value, highlight = false }: DetailItemProps) => (
         highlight
           ? alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.15 : 0.06)
           : theme.palette.mode === 'dark'
-          ? 'rgba(255, 255, 255, 0.02)'
-          : 'rgba(0, 0, 0, 0.02)',
+            ? 'rgba(255, 255, 255, 0.02)'
+            : 'rgba(0, 0, 0, 0.02)',
       border: theme =>
         highlight
           ? `1px solid ${alpha(theme.palette.primary.main, 0.3)}`
@@ -193,8 +194,8 @@ const DetailItem = ({ label, value, highlight = false }: DetailItemProps) => (
           highlight
             ? alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.2 : 0.08)
             : theme.palette.mode === 'dark'
-            ? 'rgba(255, 255, 255, 0.04)'
-            : 'rgba(0, 0, 0, 0.03)',
+              ? 'rgba(255, 255, 255, 0.04)'
+              : 'rgba(0, 0, 0, 0.03)',
       },
     }}
   >
@@ -420,10 +421,10 @@ const EmptyValue = ({ message = 'No data' }: EmptyStateProps) => (
 // 获取终止原因的颜色和图标
 const getTerminateCauseInfo = (cause?: string) => {
   if (!cause) return { color: 'default' as const, icon: null, label: 'Unknown' };
-  
+
   const normalCauses = ['User-Request', 'Session-Timeout', 'Idle-Timeout'];
   const errorCauses = ['Admin-Reset', 'Lost-Carrier', 'Port-Error', 'NAS-Error'];
-  
+
   if (normalCauses.includes(cause)) {
     return { color: 'success' as const, icon: <SuccessIcon sx={{ fontSize: '1rem' }} />, label: cause };
   }
@@ -467,8 +468,8 @@ const AccountingHeaderCard = () => {
               ? `linear-gradient(135deg, ${alpha(theme.palette.success.dark, 0.3)} 0%, ${alpha(theme.palette.info.dark, 0.2)} 100%)`
               : `linear-gradient(135deg, ${alpha(theme.palette.grey[800], 0.5)} 0%, ${alpha(theme.palette.grey[700], 0.3)} 100%)`
             : isOnline
-            ? `linear-gradient(135deg, ${alpha(theme.palette.success.main, 0.1)} 0%, ${alpha(theme.palette.info.main, 0.08)} 100%)`
-            : `linear-gradient(135deg, ${alpha(theme.palette.grey[400], 0.15)} 0%, ${alpha(theme.palette.grey[300], 0.1)} 100%)`,
+              ? `linear-gradient(135deg, ${alpha(theme.palette.success.main, 0.1)} 0%, ${alpha(theme.palette.info.main, 0.08)} 100%)`
+              : `linear-gradient(135deg, ${alpha(theme.palette.grey[400], 0.15)} 0%, ${alpha(theme.palette.grey[300], 0.1)} 100%)`,
         border: theme => `1px solid ${alpha(isOnline ? theme.palette.success.main : theme.palette.grey[500], 0.2)}`,
         overflow: 'hidden',
         position: 'relative',
@@ -759,305 +760,305 @@ const AccountingDetails = () => {
     <>
       <style>{printStyles}</style>
       <Box className="printable-content" sx={{ width: '100%', p: { xs: 2, sm: 3, md: 4 } }}>
-      <Stack spacing={3}>
-        {/* 顶部概览卡片 */}
-        <AccountingHeaderCard />
+        <Stack spacing={3}>
+          {/* 顶部概览卡片 */}
+          <AccountingHeaderCard />
 
-        {/* 设备信息 */}
-        <DetailSectionCard
-          title={translate('resources.radius/accounting.sections.device')}
-          description={translate('resources.radius/accounting.sections.device_desc')}
-          icon={<DeviceIcon />}
-          color="info"
-        >
-          <Box
-            sx={{
-              display: 'grid',
-              gap: 2,
-              gridTemplateColumns: {
-                xs: 'repeat(1, 1fr)',
-                sm: 'repeat(2, 1fr)',
-                md: 'repeat(3, 1fr)',
-              },
-            }}
+          {/* 设备信息 */}
+          <DetailSectionCard
+            title={translate('resources.radius/accounting.sections.device')}
+            description={translate('resources.radius/accounting.sections.device_desc')}
+            icon={<DeviceIcon />}
+            color="info"
           >
-            <DetailItem
-              label={translate('resources.radius/accounting.fields.framed_ipaddr')}
-              value={
-                record.framed_ipaddr ? (
-                  <Chip
-                    label={record.framed_ipaddr}
-                    size="small"
-                    color="info"
-                    variant="outlined"
-                    sx={{ fontFamily: 'monospace' }}
-                  />
-                ) : (
-                  <EmptyValue message={translate('resources.radius/accounting.fields.unassigned', { _: 'Unassigned' })} />
-                )
-              }
-              highlight
-            />
-            <DetailItem
-              label={translate('resources.radius/accounting.fields.framed_netmask')}
-              value={record.framed_netmask || <EmptyValue />}
-            />
-            <DetailItem
-              label={translate('resources.radius/accounting.fields.mac_addr')}
-              value={
-                record.mac_addr ? (
-                  <Chip
-                    label={record.mac_addr}
-                    size="small"
-                    variant="outlined"
-                    sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}
-                  />
-                ) : (
-                  <EmptyValue message={translate('resources.radius/accounting.fields.not_obtained', { _: 'Not obtained' })} />
-                )
-              }
-            />
-            <DetailItem
-              label={translate('resources.radius/accounting.fields.framed_ipv6_address')}
-              value={record.framed_ipv6_address || <EmptyValue message={translate('resources.radius/accounting.fields.not_configured', { _: 'Not configured' })} />}
-            />
-            <DetailItem
-              label={translate('resources.radius/accounting.fields.framed_ipv6_prefix')}
-              value={record.framed_ipv6_prefix || <EmptyValue message={translate('resources.radius/accounting.fields.not_configured', { _: 'Not configured' })} />}
-            />
-          </Box>
-        </DetailSectionCard>
-
-        {/* NAS 设备信息 */}
-        <DetailSectionCard
-          title={translate('resources.radius/accounting.sections.overview')}
-          description={translate('resources.radius/accounting.sections.overview_desc')}
-          icon={<SignalIcon />}
-          color="primary"
-        >
-          <Box
-            sx={{
-              display: 'grid',
-              gap: 2,
-              gridTemplateColumns: {
-                xs: 'repeat(1, 1fr)',
-                sm: 'repeat(2, 1fr)',
-                md: 'repeat(3, 1fr)',
-              },
-            }}
-          >
-            <DetailItem
-              label={translate('resources.radius/accounting.fields.nas_addr')}
-              value={
-                record.nas_addr ? (
-                  <Chip
-                    label={record.nas_addr}
-                    size="small"
-                    color="primary"
-                    variant="outlined"
-                    sx={{ fontFamily: 'monospace' }}
-                  />
-                ) : (
-                  <EmptyValue />
-                )
-              }
-              highlight
-            />
-            <DetailItem
-              label={translate('resources.radius/accounting.fields.nas_id')}
-              value={record.nas_id || <EmptyValue />}
-            />
-            <DetailItem
-              label={translate('resources.radius/accounting.fields.nas_port')}
-              value={record.nas_port?.toString() || <EmptyValue />}
-            />
-            <DetailItem
-              label={translate('resources.radius/accounting.fields.service_type')}
-              value={record.service_type?.toString() || <EmptyValue />}
-            />
-          </Box>
-        </DetailSectionCard>
-
-        {/* 会话时间 */}
-        <DetailSectionCard
-          title={translate('resources.radius/accounting.sections.timing')}
-          description={translate('resources.radius/accounting.sections.timing_desc')}
-          icon={<TimeIcon />}
-          color="warning"
-        >
-          <Box
-            sx={{
-              display: 'grid',
-              gap: 2,
-              gridTemplateColumns: {
-                xs: 'repeat(1, 1fr)',
-                sm: 'repeat(2, 1fr)',
-                md: 'repeat(3, 1fr)',
-              },
-            }}
-          >
-            <DetailItem
-              label={translate('resources.radius/accounting.fields.acct_start_time')}
-              value={formatTimestamp(record.acct_start_time)}
-              highlight
-            />
-            <DetailItem
-              label={translate('resources.radius/accounting.fields.acct_stop_time')}
-              value={
-                record.acct_stop_time ? (
-                  <Chip
-                    label={formatTimestamp(record.acct_stop_time)}
-                    size="small"
-                    color="error"
-                    variant="outlined"
-                    sx={{ fontSize: '0.75rem' }}
-                  />
-                ) : (
-                  <Chip
-                    icon={<OnlineIcon sx={{ fontSize: '0.9rem !important' }} />}
-                    label={translate('resources.radius/accounting.status.online', { _: 'Online' })}
-                    size="small"
-                    color="success"
-                    sx={{ fontWeight: 600 }}
-                  />
-                )
-              }
-              highlight
-            />
-            <DetailItem
-              label={translate('resources.radius/accounting.fields.session_time')}
-              value={
-                <Chip
-                  label={formatDuration(record.acct_session_time)}
-                  size="small"
-                  color="warning"
-                  sx={{ fontWeight: 600 }}
-                />
-              }
-              highlight
-            />
-            <DetailItem
-              label={translate('resources.radius/accounting.fields.session_timeout')}
-              value={
-                record.session_timeout !== undefined && record.session_timeout !== null
-                  ? `${record.session_timeout}s`
-                  : <EmptyValue message={translate('resources.radius/accounting.fields.unlimited', { _: 'Unlimited' })} />
-              }
-            />
-            <DetailItem
-              label={translate('resources.radius/accounting.fields.last_update')}
-              value={formatTimestamp(record.last_update)}
-            />
-          </Box>
-        </DetailSectionCard>
-
-        {/* 流量统计 - 特殊展示 */}
-        <DetailSectionCard
-          title={translate('resources.radius/accounting.sections.traffic')}
-          description={translate('resources.radius/accounting.sections.traffic_desc')}
-          icon={<TrafficIcon />}
-          color="success"
-        >
-          <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-            {/* 流量统计卡片 */}
             <Box
               sx={{
-                display: 'flex',
-                flexWrap: 'wrap',
+                display: 'grid',
                 gap: 2,
-                justifyContent: 'stretch',
+                gridTemplateColumns: {
+                  xs: 'repeat(1, 1fr)',
+                  sm: 'repeat(2, 1fr)',
+                  md: 'repeat(3, 1fr)',
+                },
               }}
             >
-              <TrafficStat
-                label={translate('resources.radius/accounting.fields.acct_input_total')}
-                value={formatBytes(record.acct_input_total)}
-                icon={<UploadIcon />}
-                color="info"
-                subValue={`${record.acct_input_packets?.toLocaleString() ?? 0} 包`}
-              />
-              <TrafficStat
-                label={translate('resources.radius/accounting.fields.acct_output_total')}
-                value={formatBytes(record.acct_output_total)}
-                icon={<DownloadIcon />}
-                color="warning"
-                subValue={`${record.acct_output_packets?.toLocaleString() ?? 0} 包`}
-              />
-              <TrafficStat
-                label={translate('resources.radius/accounting.fields.total_traffic')}
-                value={formatBytes(totalTraffic)}
-                icon={<SpeedIcon />}
-                color="success"
-                subValue={`${((record.acct_input_packets ?? 0) + (record.acct_output_packets ?? 0)).toLocaleString()} 包`}
-              />
-            </Box>
-          </Box>
-        </DetailSectionCard>
-
-        {/* 会话详情 */}
-        <DetailSectionCard
-          title={translate('resources.radius/accounting.sections.session_details')}
-          description={translate('resources.radius/accounting.sections.session_details_desc')}
-          icon={<InfoIcon />}
-          color="primary"
-        >
-          <Box
-            sx={{
-              display: 'grid',
-              gap: 2,
-              gridTemplateColumns: {
-                xs: 'repeat(1, 1fr)',
-                sm: 'repeat(2, 1fr)',
-                md: 'repeat(4, 1fr)',
-              },
-            }}
-          >
-            <DetailItem
-              label={translate('resources.radius/accounting.fields.nas_class')}
-              value={record.nas_class || <EmptyValue />}
-            />
-            <DetailItem
-              label={translate('resources.radius/accounting.fields.nas_port_id')}
-              value={record.nas_port_id || <EmptyValue />}
-            />
-            <DetailItem
-              label={translate('resources.radius/accounting.fields.nas_port_type')}
-              value={record.nas_port_type?.toString() || <EmptyValue />}
-            />
-            <DetailItem
-              label={translate('resources.radius/accounting.fields.acct_terminate_cause')}
-              value={
-                record.acct_terminate_cause ? (
-                  (() => {
-                    const info = getTerminateCauseInfo(record.acct_terminate_cause);
-                    return (
-                      <Chip
-                        icon={info.icon || undefined}
-                        label={info.label}
-                        size="small"
-                        color={info.color}
-                        variant="outlined"
-                      />
-                    );
-                  })()
-                ) : (
-                  isOnline ? (
+              <DetailItem
+                label={translate('resources.radius/accounting.fields.framed_ipaddr')}
+                value={
+                  record.framed_ipaddr ? (
                     <Chip
-                      icon={<OnlineIcon sx={{ fontSize: '0.9rem !important' }} />}
-                      label={translate('resources.radius/accounting.status.in_progress', { _: 'Session in progress' })}
+                      label={record.framed_ipaddr}
                       size="small"
-                      color="success"
+                      color="info"
                       variant="outlined"
+                      sx={{ fontFamily: 'monospace' }}
                     />
                   ) : (
-                    <EmptyValue message={translate('resources.radius/accounting.fields.not_recorded', { _: 'Not recorded' })} />
+                    <EmptyValue message={translate('resources.radius/accounting.fields.unassigned', { _: 'Unassigned' })} />
                   )
-                )
-              }
-            />
-          </Box>
-        </DetailSectionCard>
-      </Stack>
-    </Box>
+                }
+                highlight
+              />
+              <DetailItem
+                label={translate('resources.radius/accounting.fields.framed_netmask')}
+                value={record.framed_netmask || <EmptyValue />}
+              />
+              <DetailItem
+                label={translate('resources.radius/accounting.fields.mac_addr')}
+                value={
+                  record.mac_addr ? (
+                    <Chip
+                      label={record.mac_addr}
+                      size="small"
+                      variant="outlined"
+                      sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}
+                    />
+                  ) : (
+                    <EmptyValue message={translate('resources.radius/accounting.fields.not_obtained', { _: 'Not obtained' })} />
+                  )
+                }
+              />
+              <DetailItem
+                label={translate('resources.radius/accounting.fields.framed_ipv6_address')}
+                value={record.framed_ipv6_address || <EmptyValue message={translate('resources.radius/accounting.fields.not_configured', { _: 'Not configured' })} />}
+              />
+              <DetailItem
+                label={translate('resources.radius/accounting.fields.framed_ipv6_prefix')}
+                value={record.framed_ipv6_prefix || <EmptyValue message={translate('resources.radius/accounting.fields.not_configured', { _: 'Not configured' })} />}
+              />
+            </Box>
+          </DetailSectionCard>
+
+          {/* NAS 设备信息 */}
+          <DetailSectionCard
+            title={translate('resources.radius/accounting.sections.overview')}
+            description={translate('resources.radius/accounting.sections.overview_desc')}
+            icon={<SignalIcon />}
+            color="primary"
+          >
+            <Box
+              sx={{
+                display: 'grid',
+                gap: 2,
+                gridTemplateColumns: {
+                  xs: 'repeat(1, 1fr)',
+                  sm: 'repeat(2, 1fr)',
+                  md: 'repeat(3, 1fr)',
+                },
+              }}
+            >
+              <DetailItem
+                label={translate('resources.radius/accounting.fields.nas_addr')}
+                value={
+                  record.nas_addr ? (
+                    <Chip
+                      label={record.nas_addr}
+                      size="small"
+                      color="primary"
+                      variant="outlined"
+                      sx={{ fontFamily: 'monospace' }}
+                    />
+                  ) : (
+                    <EmptyValue />
+                  )
+                }
+                highlight
+              />
+              <DetailItem
+                label={translate('resources.radius/accounting.fields.nas_id')}
+                value={record.nas_id || <EmptyValue />}
+              />
+              <DetailItem
+                label={translate('resources.radius/accounting.fields.nas_port')}
+                value={record.nas_port?.toString() || <EmptyValue />}
+              />
+              <DetailItem
+                label={translate('resources.radius/accounting.fields.service_type')}
+                value={record.service_type?.toString() || <EmptyValue />}
+              />
+            </Box>
+          </DetailSectionCard>
+
+          {/* 会话时间 */}
+          <DetailSectionCard
+            title={translate('resources.radius/accounting.sections.timing')}
+            description={translate('resources.radius/accounting.sections.timing_desc')}
+            icon={<TimeIcon />}
+            color="warning"
+          >
+            <Box
+              sx={{
+                display: 'grid',
+                gap: 2,
+                gridTemplateColumns: {
+                  xs: 'repeat(1, 1fr)',
+                  sm: 'repeat(2, 1fr)',
+                  md: 'repeat(3, 1fr)',
+                },
+              }}
+            >
+              <DetailItem
+                label={translate('resources.radius/accounting.fields.acct_start_time')}
+                value={formatTimestamp(record.acct_start_time)}
+                highlight
+              />
+              <DetailItem
+                label={translate('resources.radius/accounting.fields.acct_stop_time')}
+                value={
+                  record.acct_stop_time ? (
+                    <Chip
+                      label={formatTimestamp(record.acct_stop_time)}
+                      size="small"
+                      color="error"
+                      variant="outlined"
+                      sx={{ fontSize: '0.75rem' }}
+                    />
+                  ) : (
+                    <Chip
+                      icon={<OnlineIcon sx={{ fontSize: '0.9rem !important' }} />}
+                      label={translate('resources.radius/accounting.status.online', { _: 'Online' })}
+                      size="small"
+                      color="success"
+                      sx={{ fontWeight: 600 }}
+                    />
+                  )
+                }
+                highlight
+              />
+              <DetailItem
+                label={translate('resources.radius/accounting.fields.session_time')}
+                value={
+                  <Chip
+                    label={formatDuration(record.acct_session_time)}
+                    size="small"
+                    color="warning"
+                    sx={{ fontWeight: 600 }}
+                  />
+                }
+                highlight
+              />
+              <DetailItem
+                label={translate('resources.radius/accounting.fields.session_timeout')}
+                value={
+                  record.session_timeout !== undefined && record.session_timeout !== null
+                    ? `${record.session_timeout}s`
+                    : <EmptyValue message={translate('resources.radius/accounting.fields.unlimited', { _: 'Unlimited' })} />
+                }
+              />
+              <DetailItem
+                label={translate('resources.radius/accounting.fields.last_update')}
+                value={formatTimestamp(record.last_update)}
+              />
+            </Box>
+          </DetailSectionCard>
+
+          {/* 流量统计 - 特殊展示 */}
+          <DetailSectionCard
+            title={translate('resources.radius/accounting.sections.traffic')}
+            description={translate('resources.radius/accounting.sections.traffic_desc')}
+            icon={<TrafficIcon />}
+            color="success"
+          >
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+              {/* 流量统计卡片 */}
+              <Box
+                sx={{
+                  display: 'flex',
+                  flexWrap: 'wrap',
+                  gap: 2,
+                  justifyContent: 'stretch',
+                }}
+              >
+                <TrafficStat
+                  label={translate('resources.radius/accounting.fields.acct_input_total')}
+                  value={formatBytes(record.acct_input_total)}
+                  icon={<UploadIcon />}
+                  color="info"
+                  subValue={`${record.acct_input_packets?.toLocaleString() ?? 0} 包`}
+                />
+                <TrafficStat
+                  label={translate('resources.radius/accounting.fields.acct_output_total')}
+                  value={formatBytes(record.acct_output_total)}
+                  icon={<DownloadIcon />}
+                  color="warning"
+                  subValue={`${record.acct_output_packets?.toLocaleString() ?? 0} 包`}
+                />
+                <TrafficStat
+                  label={translate('resources.radius/accounting.fields.total_traffic')}
+                  value={formatBytes(totalTraffic)}
+                  icon={<SpeedIcon />}
+                  color="success"
+                  subValue={`${((record.acct_input_packets ?? 0) + (record.acct_output_packets ?? 0)).toLocaleString()} 包`}
+                />
+              </Box>
+            </Box>
+          </DetailSectionCard>
+
+          {/* 会话详情 */}
+          <DetailSectionCard
+            title={translate('resources.radius/accounting.sections.session_details')}
+            description={translate('resources.radius/accounting.sections.session_details_desc')}
+            icon={<InfoIcon />}
+            color="primary"
+          >
+            <Box
+              sx={{
+                display: 'grid',
+                gap: 2,
+                gridTemplateColumns: {
+                  xs: 'repeat(1, 1fr)',
+                  sm: 'repeat(2, 1fr)',
+                  md: 'repeat(4, 1fr)',
+                },
+              }}
+            >
+              <DetailItem
+                label={translate('resources.radius/accounting.fields.nas_class')}
+                value={record.nas_class || <EmptyValue />}
+              />
+              <DetailItem
+                label={translate('resources.radius/accounting.fields.nas_port_id')}
+                value={record.nas_port_id || <EmptyValue />}
+              />
+              <DetailItem
+                label={translate('resources.radius/accounting.fields.nas_port_type')}
+                value={record.nas_port_type?.toString() || <EmptyValue />}
+              />
+              <DetailItem
+                label={translate('resources.radius/accounting.fields.acct_terminate_cause')}
+                value={
+                  record.acct_terminate_cause ? (
+                    (() => {
+                      const info = getTerminateCauseInfo(record.acct_terminate_cause);
+                      return (
+                        <Chip
+                          icon={info.icon || undefined}
+                          label={info.label}
+                          size="small"
+                          color={info.color}
+                          variant="outlined"
+                        />
+                      );
+                    })()
+                  ) : (
+                    isOnline ? (
+                      <Chip
+                        icon={<OnlineIcon sx={{ fontSize: '0.9rem !important' }} />}
+                        label={translate('resources.radius/accounting.status.in_progress', { _: 'Session in progress' })}
+                        size="small"
+                        color="success"
+                        variant="outlined"
+                      />
+                    ) : (
+                      <EmptyValue message={translate('resources.radius/accounting.fields.not_recorded', { _: 'Not recorded' })} />
+                    )
+                  )
+                }
+              />
+            </Box>
+          </DetailSectionCard>
+        </Stack>
+      </Box>
     </>
   );
 };
@@ -1185,10 +1186,10 @@ const EmptyListState = () => {
     >
       <TrafficIcon sx={{ fontSize: 64, opacity: 0.3, mb: 2 }} />
       <Typography variant="h6" sx={{ opacity: 0.6, mb: 1 }}>
-        {translate('resources.radius/accounting.empty.title', { _: '暂无计费记录' })}
+        {translate('resources.radius/accounting.empty.title', { _: 'No accounting records' })}
       </Typography>
       <Typography variant="body2" sx={{ opacity: 0.5 }}>
-        {translate('resources.radius/accounting.empty.description', { _: '尝试调整筛选条件或等待新的会话记录' })}
+        {translate('resources.radius/accounting.empty.description', { _: 'Try adjusting filter conditions or wait for new session records' })}
       </Typography>
     </Box>
   );
@@ -1197,6 +1198,8 @@ const EmptyListState = () => {
 
 const SearchHeaderCard = () => {
   const translate = useTranslate();
+  const locale = useLocale();
+  const isRtl = locale === 'ar';
   const { filterValues, setFilters, displayedFilters } = useListContext();
   const [localFilters, setLocalFilters] = useState<Record<string, string>>({});
 
@@ -1245,18 +1248,18 @@ const SearchHeaderCard = () => {
   );
 
   const filterFields = [
-    { key: 'username', label: translate('resources.radius/accounting.fields.username', { _: '用户名' }) },
-    { key: 'acct_session_id', label: translate('resources.radius/accounting.fields.acct_session_id', { _: '会话ID' }) },
-    { key: 'framed_ipaddr', label: translate('resources.radius/accounting.fields.framed_ipaddr', { _: '用户IP' }) },
-    { key: 'framed_ipv6addr', label: translate('resources.radius/accounting.fields.framed_ipv6addr', { _: 'IPv6地址' }) },
-    { key: 'nas_addr', label: translate('resources.radius/accounting.fields.nas_addr', { _: 'NAS地址' }) },
-    { key: 'mac_addr', label: translate('resources.radius/accounting.fields.mac_addr', { _: 'MAC地址' }) },
+    { key: 'username', label: translate('resources.radius/accounting.fields.username', { _: 'Username' }) },
+    { key: 'acct_session_id', label: translate('resources.radius/accounting.fields.acct_session_id', { _: 'Session ID' }) },
+    { key: 'framed_ipaddr', label: translate('resources.radius/accounting.fields.framed_ipaddr', { _: 'IP Address' }) },
+    { key: 'framed_ipv6addr', label: translate('resources.radius/accounting.fields.framed_ipv6addr', { _: 'IPv6 Address' }) },
+    { key: 'nas_addr', label: translate('resources.radius/accounting.fields.nas_addr', { _: 'NAS Address' }) },
+    { key: 'mac_addr', label: translate('resources.radius/accounting.fields.mac_addr', { _: 'MAC Address' }) },
   ];
 
   // 只保留开始时间范围筛选
   const dateFields = [
-    { key: 'acct_start_time_gte', label: translate('resources.radius/accounting.filter.start_time_from', { _: '开始时间从' }) },
-    { key: 'acct_start_time_lte', label: translate('resources.radius/accounting.filter.start_time_to', { _: '开始时间至' }) },
+    { key: 'acct_start_time_gte', label: translate('resources.radius/accounting.filter.start_time_from', { _: 'Start Time From' }) },
+    { key: 'acct_start_time_lte', label: translate('resources.radius/accounting.filter.start_time_to', { _: 'Start Time To' }) },
   ];
 
   return (
@@ -1267,6 +1270,7 @@ const SearchHeaderCard = () => {
         borderRadius: 2,
         border: theme => `1px solid ${theme.palette.divider}`,
         overflow: 'hidden',
+        direction: isRtl ? 'rtl' : 'ltr',
       }}
     >
       <Box
@@ -1283,7 +1287,7 @@ const SearchHeaderCard = () => {
       >
         <FilterIcon sx={{ color: 'primary.main', fontSize: 20 }} />
         <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary' }}>
-          {translate('resources.radius/accounting.filter.title', { _: '筛选条件' })}
+          {translate('resources.radius/accounting.filter.title', { _: 'Filter Conditions' })}
         </Typography>
       </Box>
 
@@ -1313,6 +1317,10 @@ const SearchHeaderCard = () => {
               onKeyPress={handleKeyPress}
               size="small"
               fullWidth
+              inputProps={{ style: { textAlign: isRtl ? 'right' : 'left', direction: isRtl ? 'rtl' : 'ltr' } }}
+              InputLabelProps={{
+                sx: isRtl ? { transformOrigin: 'top right', left: 'auto', right: 16 } : {}
+              }}
               sx={{
                 '& .MuiInputBase-root': {
                   borderRadius: 1.5,
@@ -1331,8 +1339,10 @@ const SearchHeaderCard = () => {
               onChange={e => handleFilterChange(field.key, e.target.value)}
               size="small"
               fullWidth
+              inputProps={{ style: { textAlign: isRtl ? 'right' : 'left', direction: isRtl ? 'rtl' : 'ltr' } }}
               InputLabelProps={{
                 shrink: true,
+                sx: isRtl ? { transformOrigin: 'top right', left: 'auto', right: 16 } : {}
               }}
               sx={{
                 '& .MuiInputBase-root': {
@@ -1344,7 +1354,7 @@ const SearchHeaderCard = () => {
 
           {/* 操作按钮 */}
           <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
-            <Tooltip title={translate('ra.action.clear_filters', { _: '清除筛选' })}>
+            <Tooltip title={translate('ra.action.clear_filters', { _: 'Clear Filters' })}>
               <IconButton
                 onClick={handleClear}
                 size="small"

@@ -312,6 +312,44 @@ export const createAppTheme = (mode: PaletteMode) => {
           },
         },
       },
+      MuiInputLabel: {
+        styleOverrides: {
+          root: {
+            // Standard left/right padding for labels to prevent them touching the border
+            paddingLeft: 4,
+            paddingRight: 4,
+            // RTL specific label alignment
+            '[dir="rtl"] &': {
+              left: 'auto',
+              right: 28,
+              transformOrigin: 'right',
+            },
+          },
+          shrink: {
+            '[dir="rtl"] &': {
+              transform: 'translate(14px, -9px) scale(0.75) !important',
+            },
+          },
+        },
+      },
+      MuiOutlinedInput: {
+        styleOverrides: {
+          notchedOutline: {
+            '[dir="rtl"] &': {
+              textAlign: 'right',
+            },
+          },
+        },
+      },
+      MuiFormHelperText: {
+        styleOverrides: {
+          root: {
+            '[dir="rtl"] &': {
+              textAlign: 'right',
+            },
+          },
+        },
+      },
       MuiAppBar: {
         styleOverrides: {
           root: {

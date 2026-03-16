@@ -83,7 +83,7 @@ interface OnlineSession extends RaRecord {
   acct_output_packets?: number;
 }
 
-const formatDuration = (seconds?: number): string => {
+const formatDuration = (translate: any, seconds?: number): string => {
   if (seconds === undefined || seconds === null) {
     return '-';
   }
@@ -92,21 +92,21 @@ const formatDuration = (seconds?: number): string => {
   const secs = seconds % 60;
   const parts = [];
   if (hours) {
-    parts.push(`${hours}h`);
+    parts.push(`${hours}${translate('common.units.h', { _: 'h' })}`);
   }
   if (minutes) {
-    parts.push(`${minutes}m`);
+    parts.push(`${minutes}${translate('common.units.m', { _: 'm' })}`);
   }
-  parts.push(`${secs}s`);
+  parts.push(`${secs}${translate('common.units.s', { _: 's' })}`);
   return parts.join(' ');
 };
 
-const formatBytes = (bytes?: number): string => {
+const formatBytes = (translate: any, bytes?: number): string => {
   if (bytes === undefined || bytes === null) {
     return '-';
   }
   if (bytes === 0) {
-    return '0 B';
+    return `0 ${translate('common.units.b', { _: 'B' })}`;
   }
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
   let value = bytes;
@@ -115,7 +115,7 @@ const formatBytes = (bytes?: number): string => {
     value /= 1024;
     index += 1;
   }
-  return `${parseFloat(value.toFixed(2))} ${units[index]}`;
+  return `${parseFloat(value.toFixed(2))} ${translate(`common.units.${units[index].toLowerCase()}`, { _: units[index] })}`;
 };
 
 const formatTimestamp = (value?: string | number): string => {
@@ -167,7 +167,7 @@ const SessionDurationField = ({ label }: { label?: string }) => {
     <FunctionField
       source="acct_session_time"
       label={label || translate('resources.radius/online.fields.session_time')}
-      render={(record: OnlineSession) => formatDuration(record.acct_session_time)}
+      render={(record: OnlineSession) => formatDuration(translate, record.acct_session_time)}
     />
   );
 };
@@ -456,12 +456,12 @@ const SessionHeaderCard = () => {
       { id: record.id },
       {
         onSuccess: () => {
-          notify(translate('resources.radius/online.notifications.disconnected', { _: '用户已强制下线' }), { type: 'success' });
+          notify(translate('resources.radius/online.notifications.disconnected', { _: 'User has been disconnected' }), { type: 'success' });
           redirect('list', 'radius/online');
         },
         onError: (error) => {
           const errorMessage = error instanceof Error ? error.message : String(error);
-          notify(translate('resources.radius/online.notifications.disconnect_error', { _: '强制下线失败' }) + `: ${errorMessage}`, { type: 'error' });
+          notify(translate('resources.radius/online.notifications.disconnect_error', { _: 'Failed to disconnect user' }) + `: ${errorMessage}`, { type: 'error' });
         },
       }
     );
@@ -581,7 +581,7 @@ const SessionHeaderCard = () => {
 
           {/* 右侧：操作按钮 */}
           <Box className="no-print" sx={{ display: 'flex', gap: 1 }}>
-            <Tooltip title={translate('resources.radius/online.actions.disconnect', { _: '强制下线' })}>
+            <Tooltip title={translate('resources.radius/online.actions.disconnect', { _: 'Force Disconnect' })}>
               <IconButton
                 onClick={() => setDisconnectDialogOpen(true)}
                 disabled={isDeleting}
@@ -644,12 +644,12 @@ const SessionHeaderCard = () => {
           fullWidth
         >
           <DialogTitle sx={{ color: 'error.main', fontWeight: 600 }}>
-            {translate('resources.radius/online.dialog.disconnect_title', { _: '确认强制下线' })}
+            {translate('resources.radius/online.dialog.disconnect_title', { _: 'Confirm Disconnect' })}
           </DialogTitle>
           <DialogContent>
             <DialogContentText>
               {translate('resources.radius/online.dialog.disconnect_content', {
-                _: '确定要强制下线用户 "{username}" 吗？此操作将断开用户的网络连接。',
+                _: 'Are you sure you want to force disconnect user "{username}"? This will terminate the network connection.',
                 username: record.username || translate('resources.radius/online.unknown_user', { _: 'Unknown user' }),
               })}
             </DialogContentText>
@@ -659,7 +659,7 @@ const SessionHeaderCard = () => {
               onClick={() => setDisconnectDialogOpen(false)}
               disabled={isDeleting}
             >
-              {translate('ra.action.cancel', { _: '取消' })}
+              {translate('ra.action.cancel', { _: 'Cancel' })}
             </Button>
             <Button
               onClick={handleDisconnect}
@@ -669,8 +669,8 @@ const SessionHeaderCard = () => {
               startIcon={<DisconnectIcon />}
             >
               {isDeleting
-                ? translate('resources.radius/online.actions.disconnecting', { _: '正在下线...' })
-                : translate('resources.radius/online.actions.disconnect', { _: '强制下线' })}
+                ? translate('resources.radius/online.actions.disconnecting', { _: 'Disconnecting...' })
+                : translate('resources.radius/online.actions.disconnect', { _: 'Force Disconnect' })}
             </Button>
           </DialogActions>
         </Dialog>
@@ -701,7 +701,7 @@ const SessionHeaderCard = () => {
               </Typography>
             </Box>
             <Typography variant="h6" sx={{ fontWeight: 700 }}>
-              {formatDuration(record.acct_session_time)}
+              {formatDuration(translate, record.acct_session_time)}
             </Typography>
             {record.session_timeout && (
               <Box sx={{ mt: 1 }}>
@@ -739,7 +739,7 @@ const SessionHeaderCard = () => {
               </Typography>
             </Box>
             <Typography variant="h6" sx={{ fontWeight: 700, color: 'info.main' }}>
-              {formatBytes(record.acct_input_octets)}
+              {formatBytes(translate, record.acct_input_octets)}
             </Typography>
           </Box>
 
@@ -758,7 +758,7 @@ const SessionHeaderCard = () => {
               </Typography>
             </Box>
             <Typography variant="h6" sx={{ fontWeight: 700, color: 'warning.main' }}>
-              {formatBytes(record.acct_output_octets)}
+              {formatBytes(translate, record.acct_output_octets)}
             </Typography>
           </Box>
 
@@ -777,7 +777,7 @@ const SessionHeaderCard = () => {
               </Typography>
             </Box>
             <Typography variant="h6" sx={{ fontWeight: 700, color: 'success.main' }}>
-              {formatBytes(totalTraffic)}
+              {formatBytes(translate, totalTraffic)}
             </Typography>
           </Box>
         </Box>
@@ -1145,10 +1145,10 @@ const EmptyListState = () => {
     >
       <OnlineIcon sx={{ fontSize: 64, opacity: 0.3, mb: 2 }} />
       <Typography variant="h6" sx={{ opacity: 0.6, mb: 1 }}>
-        {translate('resources.radius/online.empty.title', { _: '暂无在线会话' })}
+        {translate('resources.radius/online.empty.title', { _: 'No Online Sessions' })}
       </Typography>
       <Typography variant="body2" sx={{ opacity: 0.5 }}>
-        {translate('resources.radius/online.empty.description', { _: '当前没有用户在线' })}
+        {translate('resources.radius/online.empty.description', { _: 'Currently no users are online' })}
       </Typography>
     </Box>
   );
@@ -1206,18 +1206,18 @@ const SearchHeaderCard = () => {
   );
 
   const filterFields = [
-    { key: 'username', label: translate('resources.radius/online.fields.username', { _: '用户名' }) },
-    { key: 'acct_session_id', label: translate('resources.radius/online.fields.acct_session_id', { _: '会话ID' }) },
-    { key: 'framed_ipaddr', label: translate('resources.radius/online.fields.framed_ipaddr', { _: '用户IP' }) },
-    { key: 'framed_ipv6addr', label: translate('resources.radius/online.fields.framed_ipv6addr', { _: 'IPv6地址' }) },
-    { key: 'nas_addr', label: translate('resources.radius/online.fields.nas_addr', { _: 'NAS地址' }) },
-    { key: 'mac_addr', label: translate('resources.radius/online.fields.mac_addr', { _: 'MAC地址' }) },
+    { key: 'username', label: translate('resources.radius/online.fields.username', { _: 'Username' }) },
+    { key: 'acct_session_id', label: translate('resources.radius/online.fields.acct_session_id', { _: 'Session ID' }) },
+    { key: 'framed_ipaddr', label: translate('resources.radius/online.fields.framed_ipaddr', { _: 'User IP' }) },
+    { key: 'framed_ipv6addr', label: translate('resources.radius/online.fields.framed_ipv6addr', { _: 'IPv6 Address' }) },
+    { key: 'nas_addr', label: translate('resources.radius/online.fields.nas_addr', { _: 'NAS Address' }) },
+    { key: 'mac_addr', label: translate('resources.radius/online.fields.mac_addr', { _: 'MAC Address' }) },
   ];
 
   // 开始时间范围筛选
   const dateFields = [
-    { key: 'acct_start_time_gte', label: translate('resources.radius/online.filter.start_time_from', { _: '开始时间从' }) },
-    { key: 'acct_start_time_lte', label: translate('resources.radius/online.filter.start_time_to', { _: '开始时间至' }) },
+    { key: 'acct_start_time_gte', label: translate('resources.radius/online.filter.start_time_from', { _: 'Start Time From' }) },
+    { key: 'acct_start_time_lte', label: translate('resources.radius/online.filter.start_time_to', { _: 'Start Time To' }) },
   ];
 
   return (
@@ -1244,7 +1244,7 @@ const SearchHeaderCard = () => {
       >
         <FilterIcon sx={{ color: 'primary.main', fontSize: 20 }} />
         <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary' }}>
-          {translate('resources.radius/online.filter.title', { _: '筛选条件' })}
+          {translate('resources.radius/online.filter.title', { _: 'Filter Conditions' })}
         </Typography>
       </Box>
 
@@ -1261,7 +1261,7 @@ const SearchHeaderCard = () => {
               lg: 'repeat(5, 1fr)',           // 大屏：5列
               xl: 'repeat(8, 1fr) auto',      // 超大屏：8列 + 按钮
             },
-            alignItems: 'end',
+            alignItems: 'center',
           }}
         >
           {/* 文本筛选字段 */}
@@ -1305,7 +1305,7 @@ const SearchHeaderCard = () => {
 
           {/* 操作按钮 */}
           <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end' }}>
-            <Tooltip title={translate('ra.action.clear_filters', { _: '清除筛选' })}>
+            <Tooltip title={translate('ra.action.clear_filters', { _: 'Clear Filters' })}>
               <IconButton
                 onClick={handleClear}
                 size="small"
@@ -1319,7 +1319,7 @@ const SearchHeaderCard = () => {
                 <ClearIcon />
               </IconButton>
             </Tooltip>
-            <Tooltip title={translate('ra.action.search', { _: '搜索' })}>
+            <Tooltip title={translate('ra.action.search', { _: 'Search' })}>
               <IconButton
                 onClick={handleSearch}
                 color="primary"
@@ -1396,6 +1396,7 @@ const IpAddressField = () => {
 
 const TrafficFieldCompact = ({ type }: { type: 'upload' | 'download' }) => {
   const record = useRecordContext<OnlineSession>();
+  const translate = useTranslate();
   if (!record) return null;
 
   const value = type === 'upload' ? record.acct_input_octets : record.acct_output_octets;
@@ -1406,7 +1407,7 @@ const TrafficFieldCompact = ({ type }: { type: 'upload' | 'download' }) => {
     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
       <Icon sx={{ fontSize: 16, color }} />
       <Typography variant="body2" sx={{ fontWeight: 500, color }}>
-        {formatBytes(value)}
+        {formatBytes(translate, value)}
       </Typography>
     </Box>
   );
@@ -1443,7 +1444,7 @@ const OnlineSessionActions = () => {
     <TopToolbar>
       <SortButton
         fields={['acct_start_time', 'acct_session_time', 'username']}
-        label={translate('ra.action.sort', { _: '排序' })}
+        label={translate('ra.action.sort', { _: 'Sort' })}
       />
       <ExportButton />
     </TopToolbar>

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNotify, useRefresh } from 'react-admin';
+import { useNotify, useRefresh, useTranslate } from 'react-admin';
 import {
     Dialog,
     DialogTitle,
@@ -21,6 +21,7 @@ const UserAnonymizeDialog = ({ open, onClose, username }: UserAnonymizeDialogPro
     const [loading, setLoading] = useState(false);
     const notify = useNotify();
     const refresh = useRefresh();
+    const translate = useTranslate();
 
     const handleConfirm = async () => {
         setLoading(true);
@@ -29,11 +30,11 @@ const UserAnonymizeDialog = ({ open, onClose, username }: UserAnonymizeDialogPro
                 method: 'POST',
                 body: JSON.stringify({ username }),
             });
-            notify('User data anonymized successfully', { type: 'success' });
+            notify(translate('resources.radius/users.dialogs.anonymize_success', { _: 'User data anonymized successfully' }), { type: 'success' });
             refresh();
             onClose();
         } catch (error: any) {
-            const msg = error?.body?.msg || 'Failed to anonymize user';
+            const msg = error?.body?.msg || translate('resources.radius/users.dialogs.anonymize_failed', { _: 'Failed to anonymize user' });
             notify(msg, { type: 'error' });
         } finally {
             setLoading(false);
@@ -42,32 +43,30 @@ const UserAnonymizeDialog = ({ open, onClose, username }: UserAnonymizeDialogPro
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-            <DialogTitle>Anonymize User Data</DialogTitle>
+            <DialogTitle>{translate('resources.radius/users.dialogs.anonymize_title', { _: 'Anonymize User Data' })}</DialogTitle>
             <DialogContent>
                 <Alert severity="warning" sx={{ mb: 2 }}>
-                    Warning: This action is irreversible!
+                    {translate('resources.radius/users.dialogs.anonymize_warning', { _: 'Warning: This action is irreversible!' })}
                 </Alert>
                 <Typography variant="body1" gutterBottom>
-                    You are about to anonymize all personal data for user: <strong>{username}</strong>.
+                    {translate('resources.radius/users.dialogs.anonymize_desc', { _: 'You are about to anonymize all personal data for user: %{username}', username })}
                 </Typography>
                 <Typography variant="body2" color="textSecondary" paragraph>
-                    This will mask the user's real name, email, phone number, and address.
-                    This action is performed to comply with GDPR "Right to be Forgotten" requests.
-                    Accounting records will be preserved but delinked from personal identity where possible.
+                    {translate('resources.radius/users.dialogs.anonymize_detail', { _: 'This will mask the user\'s real name, email, phone number, and address. This action is performed to comply with GDPR "Right to be Forgotten" requests. Accounting records will be preserved but delinked from personal identity where possible.' })}
                 </Typography>
                 <Typography variant="body2" color="textSecondary">
-                    Are you sure you want to proceed?
+                    {translate('resources.radius/users.dialogs.anonymize_confirm', { _: 'Are you sure you want to proceed?' })}
                 </Typography>
             </DialogContent>
             <DialogActions>
-                <Button onClick={onClose} disabled={loading}>Cancel</Button>
+                <Button onClick={onClose} disabled={loading}>{translate('ra.action.cancel', { _: 'Cancel' })}</Button>
                 <Button
                     onClick={handleConfirm}
                     color="error"
                     variant="contained"
                     disabled={loading}
                 >
-                    {loading ? 'Processing...' : 'Confirm Anonymize'}
+                    {loading ? translate('resources.radius/users.dialogs.processing', { _: 'Processing...' }) : translate('resources.radius/users.dialogs.confirm_anonymize', { _: 'Confirm Anonymize' })}
                 </Button>
             </DialogActions>
         </Dialog>
