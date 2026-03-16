@@ -299,6 +299,45 @@ const customArabicMessages: TranslationMessages = {
         description: 'انقر على زر "إنشاء" لإضافة أول جهاز NAS',
       },
     },
+    'network/servers': {
+      name: 'خادم |||| خوادم',
+      list_title: 'قائمة الخوادم',
+      add_title: 'إضافة خادم',
+      edit_title: 'تعديل الخادم',
+      sections: {
+        router_info: 'معلومات Router',
+        database_info: 'معلومات قاعدة البيانات',
+      },
+      fields: {
+        id: 'معرف',
+        db_name: 'قاعدة البيانات',
+        router_limit: 'حد الراوتر',
+        router_status: 'حالة الراوتر',
+        name: 'اسم',
+        secret: 'سر',
+        public_ip: 'عنوان IP العام',
+        online_hotspot: 'Hotspot نشط',
+        online_pppoe: 'PPPoE نشط',
+        ports: 'المنافذ',
+        username: 'اسم المستخدم',
+        created_at: 'تاريخ الإنشاء',
+        // Create/Edit fields
+        public_ip_address: 'عنوان IP العام',
+        password: 'كلمة المرور',
+        db_host: 'مضيف قاعدة البيانات',
+        db_port: 'منفذ قاعدة البيانات',
+        db_username: 'اسم مستخدم قاعدة البيانات',
+        db_password: 'كلمة مرور قاعدة البيانات',
+      },
+      helper: {
+        ports: 'منفذ Mikrotik API (مثال: 8728)',
+      },
+      status: {
+        online: 'متصل',
+        offline: 'غير متصل',
+        disabled: 'معطل',
+      },
+    },
     'voucher-batches': {
       name: 'دفعة قسيمة |||| دفعات القسائم',
       fields: {
