@@ -26,7 +26,7 @@ import {
   Add as AddIcon,
   Devices as DeviceIcon,
 } from '@mui/icons-material';
-import { useNotify, useRefresh } from 'react-admin';
+import { useNotify, useRefresh, useTranslate, useLocale } from 'react-admin';
 import { apiRequest } from '../utils/apiClient';
 
 interface DiscoveredDevice {
@@ -56,7 +56,10 @@ interface ScanNetworkModalProps {
 export const ScanNetworkModal = ({ open, onClose }: ScanNetworkModalProps) => {
   const notify = useNotify();
   const refresh = useRefresh();
-  
+  const translate = useTranslate();
+  const locale = useLocale();
+  const isRTL = locale === 'ar';
+
   const [ipRange, setIpRange] = useState('192.168.1.0/24');
   const [username, setUsername] = useState('admin');
   const [password, setPassword] = useState('');
@@ -66,7 +69,7 @@ export const ScanNetworkModal = ({ open, onClose }: ScanNetworkModalProps) => {
 
   const handleScan = useCallback(async () => {
     if (!ipRange.trim()) {
-      notify('Please enter an IP range', { type: 'warning' });
+      notify(translate('pages.scan_modal.enter_ip_range', { _: 'Please enter an IP range' }), { type: 'warning' });
       return;
     }
 
@@ -89,19 +92,19 @@ export const ScanNetworkModal = ({ open, onClose }: ScanNetworkModalProps) => {
           password: password,
         }),
       });
-      
+
       clearTimeout(timeoutId);
-      
+
       if (result) {
         setScanResult(result);
-        notify(`Found ${result.found_count} MikroTik devices`, { type: 'success' });
+        notify(translate('pages.scan_modal.found_devices', { count: result.found_count, _: `Found ${result.found_count} MikroTik devices` }), { type: 'success' });
       }
     } catch (error: any) {
       console.error('Scan error:', error);
       if (error.name === 'AbortError') {
-        notify('Scan timed out', { type: 'error' });
+        notify(translate('pages.scan_modal.scan_timeout', { _: 'Scan timed out' }), { type: 'error' });
       } else {
-        notify(error.message || 'Scan failed', { type: 'error' });
+        notify(error.message || translate('pages.scan_modal.scan_failed', { _: 'Scan failed' }), { type: 'error' });
       }
     } finally {
       setScanning(false);
@@ -109,7 +112,7 @@ export const ScanNetworkModal = ({ open, onClose }: ScanNetworkModalProps) => {
   }, [ipRange, username, password, notify]);
 
   const handleAddDevice = useCallback(async (device: DiscoveredDevice) => {
-    const secret = prompt('Enter RADIUS secret for this device:', 'mikrotik');
+    const secret = prompt(translate('pages.scan_modal.enter_secret', { _: 'Enter RADIUS secret for this device:' }), translate('pages.scan_modal.default_secret', { _: 'mikrotik' }));
     if (!secret) return;
 
     setAddingDevices(prev => new Set(prev).add(device.ip));
@@ -125,10 +128,10 @@ export const ScanNetworkModal = ({ open, onClose }: ScanNetworkModalProps) => {
           tags: 'discovered',
         }),
       });
-      notify('Device added to NAS successfully', { type: 'success' });
+      notify(translate('pages.scan_modal.device_added', { _: 'Device added to NAS successfully' }), { type: 'success' });
       refresh();
     } catch (error: any) {
-      notify(error.message || 'Failed to add device', { type: 'error' });
+      notify(error.message || translate('pages.scan_modal.scan_failed', { _: 'Failed to add device' }), { type: 'error' });
     } finally {
       setAddingDevices(prev => {
         const next = new Set(prev);
@@ -144,7 +147,7 @@ export const ScanNetworkModal = ({ open, onClose }: ScanNetworkModalProps) => {
     const devices = scanResult.results.filter(r => r.is_router_os);
     if (devices.length === 0) return;
 
-    const secret = prompt('Enter RADIUS secret for all devices:', 'mikrotik');
+    const secret = prompt(translate('pages.scan_modal.enter_secret_all', { _: 'Enter RADIUS secret for all devices:' }), translate('pages.scan_modal.default_secret', { _: 'mikrotik' }));
     if (!secret) return;
 
     setAddingDevices(new Set(devices.map(d => d.ip)));
@@ -160,7 +163,7 @@ export const ScanNetworkModal = ({ open, onClose }: ScanNetworkModalProps) => {
           tags: 'discovered',
         }))),
       });
-      notify(`Added ${result.added_count} devices to NAS`, { type: 'success' });
+      notify(translate('pages.scan_modal.devices_added', { count: result.added_count, _: `Added ${result.added_count} devices to NAS` }), { type: 'success' });
       refresh();
     } catch (error: any) {
       notify(error.message || 'Failed to add devices', { type: 'error' });
@@ -180,24 +183,24 @@ export const ScanNetworkModal = ({ open, onClose }: ScanNetworkModalProps) => {
   };
 
   return (
-    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth>
+    <Dialog open={open} onClose={handleClose} maxWidth="md" fullWidth dir={isRTL ? 'rtl' : 'ltr'}>
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
         <DeviceIcon color="primary" />
-        Network Discovery
+        {translate('pages.scan_modal.title', { _: 'Network Discovery' })}
       </DialogTitle>
       <DialogContent>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 3, mt: 1 }}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} sx={{ mb: 3, mt: 1 }} dir={isRTL ? 'rtl' : 'ltr'}>
           <TextField
-            label="IP Range (CIDR)"
+            label={translate('pages.scan_modal.ip_range', { _: 'IP Range (CIDR)' })}
             value={ipRange}
             onChange={e => setIpRange(e.target.value)}
-            placeholder="192.168.1.0/24"
+            placeholder={translate('pages.scan_modal.ip_range_placeholder', { _: '192.168.1.0/24' })}
             size="small"
             sx={{ flexGrow: 1 }}
             disabled={scanning}
           />
           <TextField
-            label="Username"
+            label={translate('pages.scan_modal.username', { _: 'Username' })}
             value={username}
             onChange={e => setUsername(e.target.value)}
             size="small"
@@ -205,7 +208,7 @@ export const ScanNetworkModal = ({ open, onClose }: ScanNetworkModalProps) => {
             disabled={scanning}
           />
           <TextField
-            label="Password"
+            label={translate('pages.scan_modal.password', { _: 'Password' })}
             value={password}
             onChange={e => setPassword(e.target.value)}
             type="password"
@@ -219,7 +222,7 @@ export const ScanNetworkModal = ({ open, onClose }: ScanNetworkModalProps) => {
             onClick={handleScan}
             disabled={scanning || !ipRange.trim()}
           >
-            {scanning ? 'Scanning...' : 'Scan'}
+            {scanning ? translate('pages.scan_modal.scanning', { _: 'Scanning...' }) : translate('pages.scan_modal.scan', { _: 'Scan' })}
           </Button>
         </Stack>
 
@@ -227,7 +230,7 @@ export const ScanNetworkModal = ({ open, onClose }: ScanNetworkModalProps) => {
           <Box sx={{ mb: 2 }}>
             <LinearProgress />
             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-              Scanning network for MikroTik devices...
+              {translate('pages.scan_modal.scanning_network', { _: 'Scanning network for MikroTik devices...' })}
             </Typography>
           </Box>
         )}
@@ -235,7 +238,7 @@ export const ScanNetworkModal = ({ open, onClose }: ScanNetworkModalProps) => {
         {scanResult && mikrotikDevices.length > 0 && (
           <Box sx={{ mb: 2, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Typography variant="body2">
-              Found <strong>{mikrotikDevices.length}</strong> MikroTik devices
+              {translate('pages.scan_modal.found_devices', { count: mikrotikDevices.length, _: 'Found <strong>{count}</strong> MikroTik devices' })}
             </Typography>
             <Button
               variant="contained"
@@ -244,7 +247,7 @@ export const ScanNetworkModal = ({ open, onClose }: ScanNetworkModalProps) => {
               onClick={handleAddAll}
               disabled={addingDevices.size > 0}
             >
-              Add All
+              {translate('pages.scan_modal.add_all', { _: 'Add All' })}
             </Button>
           </Box>
         )}
@@ -254,12 +257,12 @@ export const ScanNetworkModal = ({ open, onClose }: ScanNetworkModalProps) => {
             <Table size="small" stickyHeader>
               <TableHead>
                 <TableRow>
-                  <TableCell>IP Address</TableCell>
-                  <TableCell>Port</TableCell>
-                  <TableCell>Identity</TableCell>
-                  <TableCell>Model</TableCell>
-                  <TableCell>Version</TableCell>
-                  <TableCell align="right">Actions</TableCell>
+                  <TableCell>{translate('pages.scan_modal.ip_address', { _: 'IP Address' })}</TableCell>
+                  <TableCell>{translate('pages.scan_modal.port', { _: 'Port' })}</TableCell>
+                  <TableCell>{translate('pages.scan_modal.identity', { _: 'Identity' })}</TableCell>
+                  <TableCell>{translate('pages.scan_modal.model', { _: 'Model' })}</TableCell>
+                  <TableCell>{translate('pages.scan_modal.version', { _: 'Version' })}</TableCell>
+                  <TableCell align="right">{translate('pages.scan_modal.actions', { _: 'Actions' })}</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -277,7 +280,7 @@ export const ScanNetworkModal = ({ open, onClose }: ScanNetworkModalProps) => {
                     <TableCell>{device.model || device.board_name || '-'}</TableCell>
                     <TableCell>{device.version || '-'}</TableCell>
                     <TableCell align="right">
-                      <Tooltip title="Add to NAS">
+                      <Tooltip title={translate('pages.scan_modal.add_to_nas', { _: 'Add to NAS' })}>
                         <IconButton
                           size="small"
                           onClick={() => handleAddDevice(device)}
@@ -300,12 +303,12 @@ export const ScanNetworkModal = ({ open, onClose }: ScanNetworkModalProps) => {
 
         {scanResult && scanResult.found_count === 0 && (
           <Typography color="text.secondary" sx={{ textAlign: 'center', py: 4 }}>
-            No MikroTik devices found in the specified IP range.
+            {translate('pages.scan_modal.no_devices_found', { _: 'No MikroTik devices found in the specified IP range.' })}
           </Typography>
         )}
       </DialogContent>
       <DialogActions>
-        <Button onClick={handleClose}>Close</Button>
+        <Button onClick={handleClose}>{translate('pages.scan_modal.close', { _: 'Close' })}</Button>
       </DialogActions>
     </Dialog>
   );

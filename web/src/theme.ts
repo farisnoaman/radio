@@ -250,6 +250,7 @@ export const createAppTheme = (mode: PaletteMode) => {
       MuiButton: {
         defaultProps: {
           disableElevation: true,
+          variant: 'outlined',
         },
         styleOverrides: {
           root: {

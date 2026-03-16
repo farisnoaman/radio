@@ -28,11 +28,10 @@ import {
     Link,
     Filter,
     Show,
-    SimpleShowLayout,
     useTranslate,
     useLocale,
 } from 'react-admin';
-import { Box, Card, CardContent, CardActions, Typography, useMediaQuery, Theme, Avatar, Chip } from '@mui/material';
+import { Box, Card, CardContent, CardActions, Typography, useMediaQuery, Theme, Avatar, Chip, Stack } from '@mui/material';
 import {
     Dialog,
     DialogTitle,
@@ -53,8 +52,20 @@ import {
     FormSection,
     FieldGrid,
     FieldGridItem,
-    formLayoutSx
+    formLayoutSx,
+    DetailItem,
+    DetailSectionCard,
+    EmptyValue,
 } from '../components';
+import PersonIcon from '@mui/icons-material/Person';
+import PhoneAndroidIcon from '@mui/icons-material/PhoneAndroid';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import BadgeIcon from '@mui/icons-material/Badge';
+import NotesIcon from '@mui/icons-material/Notes';
+import CalendarTodayIcon from '@mui/icons-material/CalendarToday';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import { alpha } from '@mui/material/styles';
 
 const ShowIconButton = () => {
     const record = useRecordContext();
@@ -128,11 +139,11 @@ const TopupButton = () => {
     return (
         <>
             <Tooltip title={translate('resources.agents.actions.topup')}>
-                <MuiButton 
-                    size="small" 
+                <MuiButton
+                    size="small"
                     variant="contained"
                     color="success"
-                    onClick={(e) => { e.stopPropagation(); handleOpen(); }} 
+                    onClick={(e) => { e.stopPropagation(); handleOpen(); }}
                     startIcon={<AddCardIcon />}
                     sx={{ textTransform: 'none', minWidth: 0, px: 1, ml: isRTL ? 0 : 0.5, mr: isRTL ? 0.5 : 0 }}
                 >
@@ -195,8 +206,8 @@ const EditButton = () => {
 
     return (
         <Tooltip title={translate('resources.agents.actions.edit')}>
-            <MuiButton 
-                size="small" 
+            <MuiButton
+                size="small"
                 variant="outlined"
                 color="info"
                 onClick={handleClick}
@@ -278,8 +289,8 @@ const HierarchyButton = () => {
     return (
         <>
             <Tooltip title={translate('resources.agents.actions.hierarchy')}>
-                <MuiButton 
-                    size="small" 
+                <MuiButton
+                    size="small"
                     variant="contained"
                     color="primary"
                     onClick={(e) => { e.stopPropagation(); handleOpen(); }}
@@ -343,6 +354,7 @@ const HierarchyButton = () => {
 };
 
 
+
 const AgentGrid = () => {
     const { data, isLoading } = useListContext();
     const translate = useTranslate();
@@ -353,180 +365,138 @@ const AgentGrid = () => {
 
     return (
         <Box
-            display="grid"
-            gridTemplateColumns={{ xs: '1fr', sm: '1fr 1fr', md: 'repeat(3, 1fr)' }}
-            gap={3}
-            p={3}
             dir={isRTL ? 'rtl' : 'ltr'}
-            sx={{ bgcolor: theme => theme.palette.mode === 'dark' ? 'transparent' : 'rgba(0,0,0,0.02)' }}
+            sx={{
+                display: 'grid',
+                gridTemplateColumns: {
+                    xs: '1fr',
+                    sm: '1fr 1fr',
+                    md: 'repeat(3,1fr)'
+                },
+                gap: { xs: 0.75, sm: 1.25 },
+                px: { xs: 1, sm: 1 },
+                py: 1
+            }}
         >
             {data.map(record => (
                 <RecordContextProvider value={record} key={record.id}>
                     <Card
-                        elevation={2}
+                        elevation={1}
                         sx={{
-                            borderRadius: 3,
-                            transition: 'all 0.3s ease',
+                            borderRadius: 2,
+                            transition: 'all .2s ease',
                             '&:hover': {
-                                transform: 'translateY(-4px)',
-                                boxShadow: 6
+                                transform: 'translateY(-2px)',
+                                boxShadow: 4
                             }
                         }}
                     >
-                        <CardContent sx={{ pb: 2, pt: 2.5, px: 2.5 }}>
-                            {/* Header: Avatar, Name, Status */}
-                            <Box display="flex" justifyContent="space-between" alignItems="flex-start" mb={2.5}>
-                                <Box display="flex" alignItems="center" gap={1.5}>
+                        <CardContent
+                            sx={{
+                                p: 1.75,
+                                '&:last-child': { pb: 1.75 }
+                            }}
+                        >
+                            {/* Header */}
+                            <Box
+                                display="flex"
+                                justifyContent="space-between"
+                                alignItems="center"
+                                mb={1.5}
+                            >
+                                <Box display="flex" alignItems="center" gap={1}>
                                     <Avatar
                                         sx={{
+                                            width: 38,
+                                            height: 38,
                                             bgcolor: 'primary.main',
-                                            width: 48,
-                                            height: 48,
-                                            fontSize: '1.1rem',
-                                            fontWeight: 'bold',
-                                            boxShadow: 2
+                                            fontSize: 14,
+                                            fontWeight: 700
                                         }}
                                     >
-                                        {record.username?.charAt(0).toUpperCase()}
+                                        {record.username?.charAt(0)?.toUpperCase()}
                                     </Avatar>
-                                    <Box minWidth={0}>
+
+                                    <Box>
                                         <Typography
-                                            variant="h6"
-                                            component="div"
-                                            sx={{
-                                                fontWeight: 700,
-                                                lineHeight: 1.2,
-                                                fontSize: '1rem',
-                                                overflow: 'hidden',
-                                                textOverflow: 'ellipsis',
-                                                whiteSpace: 'nowrap',
-                                                maxWidth: 150
-                                            }}
+                                            variant="subtitle2"
+                                            sx={{ fontWeight: 700 }}
                                         >
                                             {record.username}
                                         </Typography>
-                                        <Typography variant="caption" color="text.secondary">
-                                            ID: #{String(record.id).slice(-8)}
+
+                                        <Typography
+                                            variant="caption"
+                                            color="text.secondary"
+                                        >
+                                            #{String(record.id).slice(-6)}
                                         </Typography>
                                     </Box>
                                 </Box>
+
                                 <Chip
-                                    label={record.status === 'enabled' ? translate('resources.agents.status.active') : translate('resources.agents.status.inactive')}
-                                    size="medium"
-                                    color={record.status === 'enabled' ? 'success' : 'default'}
-                                    variant="filled"
-                                    sx={{
-                                        fontWeight: 'bold',
-                                        fontSize: '0.7rem',
-                                        height: 28
-                                    }}
+                                    size="small"
+                                    label={
+                                        record.status === 'enabled'
+                                            ? translate('resources.agents.status.active')
+                                            : translate('resources.agents.status.inactive')
+                                    }
+                                    color={
+                                        record.status === 'enabled'
+                                            ? 'success'
+                                            : 'default'
+                                    }
                                 />
                             </Box>
 
-                            {/* Agent Info Section */}
+                            {/* Agent Info */}
                             <Box
                                 sx={{
-                                    bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.03)',
-                                    p: 2,
-                                    borderRadius: 2,
-                                    mb: 2
+                                    bgcolor: theme =>
+                                        theme.palette.mode === 'dark'
+                                            ? 'rgba(255,255,255,0.05)'
+                                            : 'rgba(0,0,0,0.03)',
+                                    p: 1.25,
+                                    borderRadius: 1.5,
+                                    mb: 1.25
                                 }}
                             >
-                                <Box display="flex" alignItems="center" gap={1} mb={1.5}>
-                                    <Typography variant="caption" color="text.secondary" sx={{ minWidth: 60 }}>
+                                <Typography variant="body2">
+                                    <strong>
                                         {translate('resources.agents.fields.realname')}:
-                                    </Typography>
-                                    <Typography variant="body2" fontWeight="bold">
-                                        {record.realname || 'N/A'}
-                                    </Typography>
-                                </Box>
-                                <Box display="flex" alignItems="center" gap={1} mb={1.5}>
-                                    <Typography variant="caption" color="text.secondary" sx={{ minWidth: 60 }}>
-                                        {translate('resources.agents.fields.contact')}:
-                                    </Typography>
-                                    <Typography variant="body2">
-                                        {record.mobile || record.email || 'N/A'}
-                                    </Typography>
-                                </Box>
-                                <Box display="flex" alignItems="center" gap={1}>
-                                    <Typography variant="caption" color="text.secondary" sx={{ minWidth: 60 }}>
-                                        {translate('resources.agents.fields.balance')}:
-                                    </Typography>
-                                    <Typography
-                                        variant="body1"
-                                        fontWeight="bold"
-                                        color="primary.main"
-                                    >
-                                        ${(record.balance || 0).toFixed(2)}
-                                    </Typography>
-                                </Box>
-                            </Box>
+                                    </strong>{' '}
+                                    {record.realname || 'N/A'}
+                                </Typography>
 
-                            {/* Statistics Section */}
-                            <Box
-                                sx={{
-                                    bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(33, 150, 243, 0.15)' : 'rgba(33, 150, 243, 0.08)',
-                                    p: 2,
-                                    borderRadius: 2,
-                                    mb: 2
-                                }}
-                            >
+                                <Typography variant="body2">
+                                    <strong>
+                                        {translate('resources.agents.fields.contact')}:
+                                    </strong>{' '}
+                                    {record.mobile || record.email || 'N/A'}
+                                </Typography>
+
                                 <Typography
-                                    variant="caption"
-                                    color="primary.main"
+                                    variant="body2"
                                     sx={{
-                                        display: 'block',
-                                        mb: 1.5,
-                                        fontWeight: 600,
-                                        letterSpacing: 0.5,
-                                        textAlign: isRTL ? 'right' : 'left'
+                                        fontWeight: 700,
+                                        color: 'primary.main'
                                     }}
                                 >
-                                    {translate('resources.agents.sections.statistics')}
+                                    {translate('resources.agents.fields.balance')}:
+                                    ${(record.balance || 0).toFixed(2)}
                                 </Typography>
-                                <Box display="flex" justifyContent="space-between" gap={2}>
-                                    <Box textAlign="center" flex={1}>
-                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-                                            {translate('resources.agents.fields.level')}
-                                        </Typography>
-                                        <Typography variant="body1" fontWeight="bold" sx={{ fontSize: '1.1rem' }}>
-                                            {record.level !== undefined ? record.level : '-'}
-                                        </Typography>
-                                    </Box>
-                                    <Box textAlign="center" flex={1}>
-                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-                                            {translate('resources.agents.fields.tier')}
-                                        </Typography>
-                                        <Typography variant="body1" fontWeight="bold" sx={{ fontSize: '1.1rem' }}>
-                                            {record.level === 0 ? translate('resources.agents.hierarchy.no_parent') : record.level === 1 ? 'Level 1' : `L${record.level || 0}`}
-                                        </Typography>
-                                    </Box>
-                                    <Box textAlign="center" flex={1}>
-                                        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 0.5 }}>
-                                            {translate('resources.agents.fields.status')}
-                                        </Typography>
-                                        <Typography
-                                            variant="body1"
-                                            fontWeight="bold"
-                                            color={record.status === 'enabled' ? 'success.main' : 'error.main'}
-                                            sx={{ fontSize: '1.1rem' }}
-                                        >
-                                            {record.status === 'enabled' ? translate('resources.agents.status.active') : translate('resources.agents.status.off')}
-                                        </Typography>
-                                    </Box>
-                                </Box>
                             </Box>
                         </CardContent>
 
                         {/* Actions */}
-                        <CardActions sx={{
-                            justifyContent: 'flex-end',
-                            borderTop: theme => `1px solid ${theme.palette.divider}`,
-                            px: 2,
-                            py: 1,
-                            gap: 0.5,
-                            bgcolor: theme => theme.palette.mode === 'dark' ? 'rgba(0,0,0,0.2)' : 'rgba(0,0,0,0.02)'
-                        }}>
+                        <CardActions
+                            sx={{
+                                px: 1,
+                                py: 0.75,
+                                justifyContent: 'flex-end',
+                                borderTop: theme => `1px solid ${theme.palette.divider}`
+                            }}
+                        >
                             <Tooltip title={translate('resources.agents.actions.show')}>
                                 <IconButton
                                     component={Link}
@@ -535,16 +505,15 @@ const AgentGrid = () => {
                                     sx={{
                                         bgcolor: 'primary.main',
                                         color: 'white',
-                                        '&:hover': { bgcolor: 'primary.dark' },
-                                        width: 36,
-                                        height: 36,
-                                        ml: isRTL ? 0.5 : 0,
-                                        mr: isRTL ? 0 : 0.5
+                                        '&:hover': {
+                                            bgcolor: 'primary.dark'
+                                        }
                                     }}
                                 >
-                                    <VisibilityIcon sx={{ fontSize: 20 }} />
+                                    <VisibilityIcon fontSize="small" />
                                 </IconButton>
                             </Tooltip>
+
                             <TopupButton />
                         </CardActions>
                     </Card>
@@ -553,36 +522,79 @@ const AgentGrid = () => {
         </Box>
     );
 };
+
+
 export const AgentList = (props: ListProps) => {
-    const isSmall = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
+    const isSmall = useMediaQuery((theme: Theme) =>
+        theme.breakpoints.down('sm')
+    );
     const translate = useTranslate();
+
     return (
-        <List {...props} actions={<AgentListActions />} filters={<AgentFilter />}>
+        <List
+            {...props}
+            actions={<AgentListActions />}
+            filters={<AgentFilter />}
+            sx={{
+                '& .RaList-main': {
+                    padding: 0
+                },
+                '& .RaList-content': {
+                    padding: 0
+                },
+                '& .RaLayout-content': {
+                    padding: 0
+                }
+            }}
+        >
             {isSmall ? (
                 <AgentGrid />
             ) : (
                 <Datagrid rowClick={false}>
-                    <TextField source="id" label={translate('resources.agents.fields.id')} />
-                    <TextField source="username" label={translate('resources.agents.fields.username')} />
-                    <TextField source="realname" label={translate('resources.agents.fields.realname')} />
-                    <EmailField source="mobile" label={translate('resources.agents.fields.mobile')} />
+                    <TextField
+                        source="id"
+                        label={translate('resources.agents.fields.id')}
+                    />
+                    <TextField
+                        source="username"
+                        label={translate('resources.agents.fields.username')}
+                    />
+                    <TextField
+                        source="realname"
+                        label={translate('resources.agents.fields.realname')}
+                    />
+                    <EmailField
+                        source="mobile"
+                        label={translate('resources.agents.fields.mobile')}
+                    />
+
                     <FunctionField
                         label={translate('resources.agents.fields.balance')}
-                        render={(record: any) => (record.balance || 0).toFixed(2)}
+                        render={(record: any) =>
+                            (record.balance || 0).toFixed(2)
+                        }
                     />
+
                     <FunctionField
                         source="status"
                         label={translate('resources.agents.fields.status')}
                         render={(record: any) => (
                             <Chip
-                                label={record.status === 'enabled' ? translate('resources.agents.status.enabled', { _: 'Enabled' }) : translate('resources.agents.status.disabled', { _: 'Disabled' })}
+                                label={
+                                    record.status === 'enabled'
+                                        ? translate('resources.agents.status.enabled')
+                                        : translate('resources.agents.status.disabled')
+                                }
                                 size="small"
-                                color={record.status === 'enabled' ? 'success' : 'default'}
-                                variant={record.status === 'enabled' ? 'filled' : 'outlined'}
-                                sx={{ fontWeight: 600, fontSize: '0.75rem' }}
+                                color={
+                                    record.status === 'enabled'
+                                        ? 'success'
+                                        : 'default'
+                                }
                             />
                         )}
                     />
+
                     <ShowIconButton />
                     <EditButton />
                     <TopupButton />
@@ -592,6 +604,7 @@ export const AgentList = (props: ListProps) => {
         </List>
     );
 };
+
 
 export const AgentCreate = (props: CreateProps) => {
     const translate = useTranslate();
@@ -851,37 +864,326 @@ export const AgentEdit = (props: EditProps) => {
 import { AgentHierarchyTree } from './AgentHierarchyTree';
 import { AgentHierarchyForm } from './AgentHierarchyForm';
 
-const AgentHierarchySection = () => {
-    const record = useRecordContext();
-    return record ? <AgentHierarchyForm agentId={String(record.id)} /> : null;
-};
-
-export const AgentShow = (props: any) => {
+// Helper hook for formatting (similar to products.tsx)
+const useAgentFormatters = () => {
     const translate = useTranslate();
     const locale = useLocale();
     const isRTL = locale === 'ar';
 
+    const formatTimestamp = (value?: string | number): string => {
+        if (!value) return '-';
+        const date = new Date(value);
+        if (Number.isNaN(date.getTime())) return '-';
+        return date.toLocaleString();
+    };
+
+    const formatBalance = (balance?: number): string => {
+        if (balance === undefined || balance === null) return '$0.00';
+        return `${balance.toFixed(2)}`;
+    };
+
+    return { formatTimestamp, formatBalance, isRTL, translate };
+};
+
+const AgentStatusIndicator = ({ isEnabled }: { isEnabled: boolean }) => {
+    const translate = useTranslate();
     return (
-        <Show {...props}>
-            <SimpleShowLayout sx={{ direction: isRTL ? 'rtl' : 'ltr' }}>
-                <Box sx={{ mb: 2 }}>
-                    <Typography variant="h5" gutterBottom>
-                        {translate('resources.agents.sections.details')}
-                    </Typography>
-                </Box>
-                <TextField source="id" label={translate('resources.agents.fields.id')} />
-                <TextField source="username" label={translate('resources.agents.fields.username')} />
-                <TextField source="realname" label={translate('resources.agents.fields.realname')} />
-                <EmailField source="email" label={translate('resources.agents.fields.email')} />
-                <TextField source="mobile" label={translate('resources.agents.fields.mobile')} />
-                <TextField source="status" label={translate('resources.agents.fields.status')} />
-                <FunctionField
-                    label={translate('resources.agents.fields.balance')}
-                    render={(record: any) => `${(record.balance || 0).toFixed(2)}`}
-                />
-                <AgentHierarchyTree />
-                <AgentHierarchySection />
-            </SimpleShowLayout>
-        </Show>
+        <Chip
+            icon={isEnabled ? <CheckCircleIcon sx={{ fontSize: '0.85rem !important' }} /> : <CancelIcon sx={{ fontSize: '0.85rem !important' }} />}
+            label={isEnabled ? translate('resources.agents.status.active', { _: 'Active' }) : translate('resources.agents.status.inactive', { _: 'Inactive' })}
+            size="small"
+            color={isEnabled ? 'success' : 'default'}
+            variant={isEnabled ? 'filled' : 'outlined'}
+            sx={{ height: 22, fontWeight: 500, fontSize: '0.75rem' }}
+        />
     );
 };
+
+const AgentHeaderCard = () => {
+    const record = useRecordContext();
+    const { formatBalance, translate } = useAgentFormatters();
+
+    if (!record) return null;
+
+    const isEnabled = record.status === 'enabled';
+
+    return (
+        <Card
+            elevation={0}
+            sx={{
+                borderRadius: 4,
+                background: theme =>
+                    theme.palette.mode === 'dark'
+                        ? isEnabled
+                            ? `linear-gradient(135deg, ${alpha(theme.palette.primary.dark, 0.4)} 0%, ${alpha(theme.palette.info.dark, 0.3)} 100%)`
+                            : `linear-gradient(135deg, ${alpha(theme.palette.grey[800], 0.5)} 0%, ${alpha(theme.palette.grey[700], 0.3)} 100%)`
+                        : isEnabled
+                            ? `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.info.main, 0.08)} 100%)`
+                            : `linear-gradient(135deg, ${alpha(theme.palette.grey[400], 0.15)} 0%, ${alpha(theme.palette.grey[300], 0.1)} 100%)`,
+                border: theme => `1px solid ${alpha(isEnabled ? theme.palette.primary.main : theme.palette.grey[500], 0.2)}`,
+                overflow: 'hidden',
+                position: 'relative',
+            }}
+        >
+            <Box
+                sx={{
+                    position: 'absolute',
+                    top: -50,
+                    right: -50,
+                    width: 200,
+                    height: 200,
+                    borderRadius: '50%',
+                    background: theme => alpha(isEnabled ? theme.palette.primary.main : theme.palette.grey[500], 0.1),
+                    pointerEvents: 'none',
+                }}
+            />
+
+            <CardContent sx={{ p: 3, position: 'relative', zIndex: 1 }}>
+                <Box sx={{ display: 'flex', flexDirection: { xs: 'column', sm: 'row' }, justifyContent: 'space-between', alignItems: { xs: 'stretch', sm: 'flex-start' }, mb: 3, gap: 2 }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+                        <Avatar
+                            sx={{
+                                width: 64,
+                                height: 64,
+                                bgcolor: isEnabled ? 'primary.main' : 'grey.500',
+                                fontSize: '1.5rem',
+                                fontWeight: 700,
+                                boxShadow: theme => `0 4px 14px ${alpha(isEnabled ? theme.palette.primary.main : theme.palette.grey[500], 0.4)}`,
+                            }}
+                        >
+                            {record.username?.charAt(0).toUpperCase() || 'A'}
+                        </Avatar>
+                        <Box>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                                <Typography variant="h5" sx={{ fontWeight: 700, color: 'text.primary' }}>
+                                    {record.realname || record.username || <EmptyValue message="Unknown Agent" />}
+                                </Typography>
+                                <AgentStatusIndicator isEnabled={isEnabled} />
+                            </Box>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 0.5 }}>
+                                <Typography variant="caption" color="text.secondary" sx={{ fontFamily: 'monospace' }}>
+                                    ID: {record.id}
+                                </Typography>
+                            </Box>
+                        </Box>
+                    </Box>
+                    <Box
+                        sx={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: { xs: 'stretch', sm: 'flex-end' },
+                            gap: 1
+                        }}
+                    >
+                        <Typography variant="caption" color="text.secondary">
+                            {translate('resources.agents.fields.balance', { _: 'Balance' })}
+                        </Typography>
+                        <Typography variant="h4" sx={{ fontWeight: 700, color: 'primary.main' }}>
+                            {formatBalance(record.balance)}
+                        </Typography>
+                    </Box>
+                </Box>
+            </CardContent>
+        </Card>
+    );
+};
+
+const AgentDetails = () => {
+    const record = useRecordContext();
+    const { formatTimestamp, formatBalance, isRTL, translate } = useAgentFormatters();
+
+    if (!record) {
+        return null;
+    }
+
+    return (
+        <Box sx={{ width: '100%', p: { xs: 2, sm: 3, md: 4 }, direction: isRTL ? 'rtl' : 'ltr' }}>
+            <Stack spacing={3}>
+                <AgentHeaderCard />
+
+                <DetailSectionCard
+                    title={translate('resources.agents.sections.basic', { _: 'Basic Information' })}
+                    description={translate('resources.agents.details.basic_desc', { _: 'Agent core profile details' })}
+                    icon={<PersonIcon />}
+                    color="primary"
+                >
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gap: 2,
+                            gridTemplateColumns: {
+                                xs: 'repeat(1, 1fr)',
+                                sm: 'repeat(2, 1fr)',
+                            },
+                        }}
+                    >
+                        <DetailItem
+                            label={translate('resources.agents.fields.id', { _: 'ID' })}
+                            value={record.id}
+                        />
+                        <DetailItem
+                            label={translate('resources.agents.fields.username', { _: 'Username' })}
+                            value={record.username}
+                        />
+                        <DetailItem
+                            label={translate('resources.agents.fields.realname', { _: 'Real Name' })}
+                            value={record.realname || '-'}
+                        />
+                        <DetailItem
+                            label={translate('resources.agents.fields.status', { _: 'Status' })}
+                            value={
+                                <Chip
+                                    label={record.status === 'enabled' ? translate('resources.agents.status.enabled', { _: 'Enabled' }) : translate('resources.agents.status.disabled', { _: 'Disabled' })}
+                                    size="small"
+                                    color={record.status === 'enabled' ? 'success' : 'default'}
+                                />
+                            }
+                        />
+                    </Box>
+                </DetailSectionCard>
+
+                <DetailSectionCard
+                    title={translate('resources.agents.sections.contact', { _: 'Contact Information' })}
+                    description={translate('resources.agents.details.contact_desc', { _: 'Agent contact details' })}
+                    icon={<PhoneAndroidIcon />}
+                    color="info"
+                >
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gap: 2,
+                            gridTemplateColumns: {
+                                xs: 'repeat(1, 1fr)',
+                                sm: 'repeat(2, 1fr)',
+                            },
+                        }}
+                    >
+                        <DetailItem
+                            label={translate('resources.agents.fields.mobile', { _: 'Mobile' })}
+                            value={record.mobile || '-'}
+                        />
+                        <DetailItem
+                            label={translate('resources.agents.fields.email', { _: 'Email' })}
+                            value={record.email || '-'}
+                        />
+                    </Box>
+                </DetailSectionCard>
+
+                <DetailSectionCard
+                    title={translate('resources.agents.sections.financial', { _: 'Financial' })}
+                    description={translate('resources.agents.details.financial_desc', { _: 'Agent balance and commission' })}
+                    icon={<AccountBalanceWalletIcon />}
+                    color="success"
+                >
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gap: 2,
+                            gridTemplateColumns: {
+                                xs: 'repeat(1, 1fr)',
+                                sm: 'repeat(2, 1fr)',
+                            },
+                        }}
+                    >
+                        <DetailItem
+                            label={translate('resources.agents.fields.balance', { _: 'Balance' })}
+                            value={formatBalance(record.balance)}
+                            highlight
+                        />
+                        <DetailItem
+                            label={translate('resources.agents.fields.commission_rate', { _: 'Commission Rate' })}
+                            value={record.commission_rate ? `${(record.commission_rate * 100).toFixed(2)}%` : '-'}
+                        />
+                    </Box>
+                </DetailSectionCard>
+
+                <DetailSectionCard
+                    title={translate('resources.agents.details.time_info', { _: 'Time Information' })}
+                    description={translate('resources.agents.details.time_desc', { _: 'Creation and modification dates' })}
+                    icon={<CalendarTodayIcon />}
+                    color="warning"
+                >
+                    <Box
+                        sx={{
+                            display: 'grid',
+                            gap: 2,
+                            gridTemplateColumns: {
+                                xs: 'repeat(1, 1fr)',
+                                sm: 'repeat(2, 1fr)',
+                            },
+                        }}
+                    >
+                        <DetailItem
+                            label={translate('resources.agents.fields.created_at', { _: 'Created At' })}
+                            value={formatTimestamp(record.created_at)}
+                        />
+                        <DetailItem
+                            label={translate('resources.agents.fields.updated_at', { _: 'Updated At' })}
+                            value={formatTimestamp(record.updated_at)}
+                        />
+                    </Box>
+                </DetailSectionCard>
+
+                <DetailSectionCard
+                    title={translate('resources.agents.sections.remark', { _: 'Remarks' })}
+                    description={translate('resources.agents.details.remarks_desc', { _: 'Additional notes or descriptions' })}
+                    icon={<NotesIcon />}
+                    color="primary"
+                >
+                    <Box
+                        sx={{
+                            p: 2,
+                            borderRadius: 2,
+                            bgcolor: theme =>
+                                theme.palette.mode === 'dark'
+                                    ? 'rgba(255, 255, 255, 0.02)'
+                                    : 'rgba(0, 0, 0, 0.02)',
+                            border: theme => `1px solid ${theme.palette.divider}`,
+                            minHeight: 80,
+                        }}
+                    >
+                        <Typography
+                            variant="body2"
+                            sx={{
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word',
+                                color: record.remark ? 'text.primary' : 'text.disabled',
+                                fontStyle: record.remark ? 'normal' : 'italic',
+                            }}
+                        >
+                            {record.remark || 'No remark added.'}
+                        </Typography>
+                    </Box>
+                </DetailSectionCard>
+
+                {record.id && (
+                    <>
+                        <DetailSectionCard
+                            title={translate('resources.agents.hierarchy.sub_agents', { _: 'Sub Agents' })}
+                            description={translate('resources.agents.hierarchy.sub_agents_desc', { _: 'View sub-agents under this agent' })}
+                            icon={<BadgeIcon />}
+                            color="primary"
+                        >
+                            <AgentHierarchyTree />
+                        </DetailSectionCard>
+
+                        <DetailSectionCard
+                            title={translate('resources.agents.hierarchy.title', { _: 'Agent Hierarchy' })}
+                            description={translate('resources.agents.hierarchy.description', { _: 'Manage agent parent relationships' })}
+                            icon={<AccountTreeIcon />}
+                            color="info"
+                        >
+                            <AgentHierarchyForm agentId={String(record.id)} />
+                        </DetailSectionCard>
+                    </>
+                )}
+            </Stack>
+        </Box>
+    );
+};
+
+export const AgentShow = (props: any) => (
+    <Show {...props} emptyWhileLoading>
+        <AgentDetails />
+    </Show>
+);

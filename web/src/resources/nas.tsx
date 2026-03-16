@@ -33,6 +33,7 @@ import {
   useListContext,
   useRefresh,
   useNotify,
+  useLocale,
   RaRecord,
   FunctionField,
   Button
@@ -481,7 +482,7 @@ const NASNameField = () => {
 const VendorField = () => {
   const record = useRecordContext<NASDevice>();
   if (!record) return null;
-  
+
   const vendorName = getVendorName(record.vendor_code);
   return (
     <Chip
@@ -497,7 +498,7 @@ const VendorField = () => {
 const IPAddressField = () => {
   const record = useRecordContext<NASDevice>();
   if (!record?.ipaddr) return <EmptyValue />;
-  
+
   return (
     <Typography
       variant="body2"
@@ -521,7 +522,7 @@ const TagsDisplay = ({ tags }: { tags?: string }) => {
   if (!tags) return <EmptyValue />;
 
   const tagList = tags.split(',').map((tag: string) => tag.trim()).filter((tag: string) => tag);
-  
+
   if (tagList.length === 0) {
     return <EmptyValue />;
   }
@@ -657,7 +658,7 @@ const NASListContent = () => {
           }}
         >
           <Typography variant="body2" color="text.secondary">
-            共 <strong>{total?.toLocaleString() || 0}</strong> 台 NAS 设备
+            {translate('resources.network/nas.total_devices', { _: '共 %{count} 台 NAS 设备', count: total?.toLocaleString() || 0 })}
           </Typography>
         </Box>
 
@@ -760,13 +761,13 @@ export const NASList = () => {
         perPage={LARGE_LIST_PER_PAGE}
         pagination={<ServerPagination />}
         empty={false}
-    >
-      <NASListContent />
-    </List>
-    <ScanNetworkModal 
-      open={scanModalOpen} 
-      onClose={() => setScanModalOpen(false)} 
-    />
+      >
+        <NASListContent />
+      </List>
+      <ScanNetworkModal
+        open={scanModalOpen}
+        onClose={() => setScanModalOpen(false)}
+      />
     </>
   );
 };
@@ -775,10 +776,31 @@ export const NASList = () => {
 
 export const NASEdit = () => {
   const translate = useTranslate();
-  
+  const locale = useLocale();
+  const isRTL = locale === 'ar';
+
+  // RTL props for form inputs
+  const rtlInputLabelProps = isRTL ? {
+    shrink: true,
+    sx: {
+      transformOrigin: isRTL ? 'top right' : 'top left',
+      right: isRTL ? 0 : 'auto',
+      left: isRTL ? 'auto' : 0,
+      transform: isRTL ? 'translate(-14px, -6px) scale(0.75)' : 'translate(14px, -6px) scale(0.75)',
+      '&.Mui-focused': {
+        transform: isRTL ? 'translate(-14px, -6px) scale(0.75)' : 'translate(14px, -6px) scale(0.75)',
+      },
+    }
+  } : {};
+
+  const rtlTextInputProps = isRTL ? {
+    sx: { textAlign: 'right' },
+    inputProps: { dir: 'rtl' }
+  } : {};
+
   return (
     <Edit>
-      <SimpleForm toolbar={<NASFormToolbar />} sx={formLayoutSx}>
+      <SimpleForm toolbar={<NASFormToolbar />} sx={{ ...formLayoutSx, direction: isRTL ? 'rtl' : 'ltr' }}>
         <FormSection
           title={translate('resources.network/nas.sections.basic.title', { _: '基本信息' })}
           description={translate('resources.network/nas.sections.basic.description', { _: 'NAS 设备的基本配置' })}
@@ -792,6 +814,9 @@ export const NASEdit = () => {
                 helperText={translate('resources.network/nas.helpers.id', { _: '系统自动生成的唯一标识' })}
                 fullWidth
                 size="small"
+                InputLabelProps={rtlInputLabelProps}
+                inputProps={rtlTextInputProps.inputProps}
+                sx={rtlTextInputProps.sx}
               />
             </FieldGridItem>
             <FieldGridItem>
@@ -802,6 +827,9 @@ export const NASEdit = () => {
                 helperText={translate('resources.network/nas.helpers.name', { _: '1-100个字符的设备名称' })}
                 fullWidth
                 size="small"
+                InputLabelProps={rtlInputLabelProps}
+                inputProps={rtlTextInputProps.inputProps}
+                sx={rtlTextInputProps.sx}
               />
             </FieldGridItem>
             <FieldGridItem>
@@ -812,6 +840,9 @@ export const NASEdit = () => {
                 helperText={translate('resources.network/nas.helpers.identifier', { _: 'NAS-Identifier属性值' })}
                 fullWidth
                 size="small"
+                InputLabelProps={rtlInputLabelProps}
+                inputProps={rtlTextInputProps.inputProps}
+                sx={rtlTextInputProps.sx}
               />
             </FieldGridItem>
             <FieldGridItem>
@@ -822,6 +853,7 @@ export const NASEdit = () => {
                 choices={VENDOR_CHOICES}
                 fullWidth
                 size="small"
+                InputLabelProps={rtlInputLabelProps}
               />
             </FieldGridItem>
             <FieldGridItem>
@@ -831,6 +863,9 @@ export const NASEdit = () => {
                 validate={[maxLength(100)]}
                 fullWidth
                 size="small"
+                InputLabelProps={rtlInputLabelProps}
+                inputProps={rtlTextInputProps.inputProps}
+                sx={rtlTextInputProps.sx}
               />
             </FieldGridItem>
             <FieldGridItem>
@@ -841,6 +876,7 @@ export const NASEdit = () => {
                 choices={STATUS_CHOICES}
                 fullWidth
                 size="small"
+                InputLabelProps={rtlInputLabelProps}
               />
             </FieldGridItem>
           </FieldGrid>
@@ -859,6 +895,9 @@ export const NASEdit = () => {
                 helperText={translate('resources.network/nas.helpers.ipaddr', { _: 'NAS设备的IP地址' })}
                 fullWidth
                 size="small"
+                InputLabelProps={rtlInputLabelProps}
+                inputProps={rtlTextInputProps.inputProps}
+                sx={rtlTextInputProps.sx}
               />
             </FieldGridItem>
             <FieldGridItem>
@@ -869,6 +908,9 @@ export const NASEdit = () => {
                 helperText={translate('resources.network/nas.helpers.hostname', { _: 'NAS设备的主机名' })}
                 fullWidth
                 size="small"
+                InputLabelProps={rtlInputLabelProps}
+                inputProps={rtlTextInputProps.inputProps}
+                sx={rtlTextInputProps.sx}
               />
             </FieldGridItem>
             <FieldGridItem>
@@ -879,6 +921,7 @@ export const NASEdit = () => {
                 helperText={translate('resources.network/nas.helpers.coa_port', { _: 'CoA/DM端口号 (1-65535)' })}
                 fullWidth
                 size="small"
+                InputLabelProps={rtlInputLabelProps}
               />
             </FieldGridItem>
           </FieldGrid>
@@ -897,11 +940,12 @@ export const NASEdit = () => {
                 helperText={translate('resources.network/nas.helpers.secret', { _: 'RADIUS共享密钥，至少6位' })}
                 fullWidth
                 size="small"
+                InputLabelProps={rtlInputLabelProps}
               />
             </FieldGridItem>
             <FieldGridItem>
               <ReferenceInput source="node_id" reference="network/nodes" label={translate('resources.network/nas.fields.node_id', { _: '所属节点' })}>
-                <SelectInput optionText="name" fullWidth size="small" />
+                <SelectInput optionText="name" fullWidth size="small" InputLabelProps={rtlInputLabelProps} />
               </ReferenceInput>
             </FieldGridItem>
             <FieldGridItem span={{ xs: 1, sm: 2 }}>
@@ -912,6 +956,9 @@ export const NASEdit = () => {
                 helperText={translate('resources.network/nas.helpers.tags', { _: '多个标签用逗号分隔' })}
                 fullWidth
                 size="small"
+                InputLabelProps={rtlInputLabelProps}
+                inputProps={rtlTextInputProps.inputProps}
+                sx={rtlTextInputProps.sx}
               />
             </FieldGridItem>
           </FieldGrid>
@@ -932,6 +979,9 @@ export const NASEdit = () => {
                 fullWidth
                 size="small"
                 helperText={translate('resources.network/nas.helpers.remark', { _: '可选的备注信息' })}
+                InputLabelProps={rtlInputLabelProps}
+                inputProps={rtlTextInputProps.inputProps}
+                sx={rtlTextInputProps.sx}
               />
             </FieldGridItem>
           </FieldGrid>
@@ -945,10 +995,31 @@ export const NASEdit = () => {
 
 export const NASCreate = () => {
   const translate = useTranslate();
-  
+  const locale = useLocale();
+  const isRTL = locale === 'ar';
+
+  // RTL props for form inputs
+  const rtlInputLabelProps = isRTL ? {
+    shrink: true,
+    sx: {
+      transformOrigin: isRTL ? 'top right' : 'top left',
+      right: isRTL ? 0 : 'auto',
+      left: isRTL ? 'auto' : 0,
+      transform: isRTL ? 'translate(-14px, -6px) scale(0.75)' : 'translate(14px, -6px) scale(0.75)',
+      '&.Mui-focused': {
+        transform: isRTL ? 'translate(-14px, -6px) scale(0.75)' : 'translate(14px, -6px) scale(0.75)',
+      },
+    }
+  } : {};
+
+  const rtlTextInputProps = isRTL ? {
+    sx: { textAlign: 'right' },
+    inputProps: { dir: 'rtl' }
+  } : {};
+
   return (
     <Create>
-      <SimpleForm sx={formLayoutSx}>
+      <SimpleForm sx={{ ...formLayoutSx, direction: isRTL ? 'rtl' : 'ltr' }}>
         <FormSection
           title={translate('resources.network/nas.sections.basic.title', { _: '基本信息' })}
           description={translate('resources.network/nas.sections.basic.description', { _: 'NAS 设备的基本配置' })}
@@ -962,6 +1033,9 @@ export const NASCreate = () => {
                 helperText={translate('resources.network/nas.helpers.name', { _: '1-100个字符的设备名称' })}
                 fullWidth
                 size="small"
+                InputLabelProps={rtlInputLabelProps}
+                inputProps={rtlTextInputProps.inputProps}
+                sx={rtlTextInputProps.sx}
               />
             </FieldGridItem>
             <FieldGridItem>
@@ -972,6 +1046,9 @@ export const NASCreate = () => {
                 helperText={translate('resources.network/nas.helpers.identifier', { _: 'NAS-Identifier属性值' })}
                 fullWidth
                 size="small"
+                InputLabelProps={rtlInputLabelProps}
+                inputProps={rtlTextInputProps.inputProps}
+                sx={rtlTextInputProps.sx}
               />
             </FieldGridItem>
             <FieldGridItem>
@@ -983,6 +1060,7 @@ export const NASCreate = () => {
                 defaultValue="0"
                 fullWidth
                 size="small"
+                InputLabelProps={rtlInputLabelProps}
               />
             </FieldGridItem>
             <FieldGridItem>
@@ -992,6 +1070,9 @@ export const NASCreate = () => {
                 validate={[maxLength(100)]}
                 fullWidth
                 size="small"
+                InputLabelProps={rtlInputLabelProps}
+                inputProps={rtlTextInputProps.inputProps}
+                sx={rtlTextInputProps.sx}
               />
             </FieldGridItem>
             <FieldGridItem>
@@ -1003,6 +1084,7 @@ export const NASCreate = () => {
                 defaultValue="enabled"
                 fullWidth
                 size="small"
+                InputLabelProps={rtlInputLabelProps}
               />
             </FieldGridItem>
           </FieldGrid>
@@ -1021,6 +1103,9 @@ export const NASCreate = () => {
                 helperText={translate('resources.network/nas.helpers.ipaddr', { _: 'NAS设备的IP地址' })}
                 fullWidth
                 size="small"
+                InputLabelProps={rtlInputLabelProps}
+                inputProps={rtlTextInputProps.inputProps}
+                sx={rtlTextInputProps.sx}
               />
             </FieldGridItem>
             <FieldGridItem>
@@ -1031,6 +1116,9 @@ export const NASCreate = () => {
                 helperText={translate('resources.network/nas.helpers.hostname', { _: 'NAS设备的主机名' })}
                 fullWidth
                 size="small"
+                InputLabelProps={rtlInputLabelProps}
+                inputProps={rtlTextInputProps.inputProps}
+                sx={rtlTextInputProps.sx}
               />
             </FieldGridItem>
             <FieldGridItem>
@@ -1042,6 +1130,7 @@ export const NASCreate = () => {
                 defaultValue={3799}
                 fullWidth
                 size="small"
+                InputLabelProps={rtlInputLabelProps}
               />
             </FieldGridItem>
           </FieldGrid>
@@ -1060,11 +1149,12 @@ export const NASCreate = () => {
                 helperText={translate('resources.network/nas.helpers.secret', { _: 'RADIUS共享密钥，至少6位' })}
                 fullWidth
                 size="small"
+                InputLabelProps={rtlInputLabelProps}
               />
             </FieldGridItem>
             <FieldGridItem>
               <ReferenceInput source="node_id" reference="network/nodes" label={translate('resources.network/nas.fields.node_id', { _: '所属节点' })}>
-                <SelectInput optionText="name" fullWidth size="small" />
+                <SelectInput optionText="name" fullWidth size="small" InputLabelProps={rtlInputLabelProps} />
               </ReferenceInput>
             </FieldGridItem>
             <FieldGridItem span={{ xs: 1, sm: 2 }}>
@@ -1075,6 +1165,9 @@ export const NASCreate = () => {
                 helperText={translate('resources.network/nas.helpers.tags', { _: '多个标签用逗号分隔' })}
                 fullWidth
                 size="small"
+                InputLabelProps={rtlInputLabelProps}
+                inputProps={rtlTextInputProps.inputProps}
+                sx={rtlTextInputProps.sx}
               />
             </FieldGridItem>
           </FieldGrid>
@@ -1095,6 +1188,9 @@ export const NASCreate = () => {
                 fullWidth
                 size="small"
                 helperText={translate('resources.network/nas.helpers.remark', { _: '可选的备注信息' })}
+                InputLabelProps={rtlInputLabelProps}
+                inputProps={rtlTextInputProps.inputProps}
+                sx={rtlTextInputProps.sx}
               />
             </FieldGridItem>
           </FieldGrid>
@@ -1137,8 +1233,8 @@ const NASHeaderCard = () => {
               ? `linear-gradient(135deg, ${alpha(theme.palette.primary.dark, 0.4)} 0%, ${alpha(theme.palette.success.dark, 0.3)} 100%)`
               : `linear-gradient(135deg, ${alpha(theme.palette.grey[800], 0.5)} 0%, ${alpha(theme.palette.grey[700], 0.3)} 100%)`
             : isEnabled
-            ? `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.success.main, 0.08)} 100%)`
-            : `linear-gradient(135deg, ${alpha(theme.palette.grey[400], 0.15)} 0%, ${alpha(theme.palette.grey[300], 0.1)} 100%)`,
+              ? `linear-gradient(135deg, ${alpha(theme.palette.primary.main, 0.1)} 0%, ${alpha(theme.palette.success.main, 0.08)} 100%)`
+              : `linear-gradient(135deg, ${alpha(theme.palette.grey[400], 0.15)} 0%, ${alpha(theme.palette.grey[300], 0.1)} 100%)`,
         border: theme => `1px solid ${alpha(isEnabled ? theme.palette.primary.main : theme.palette.grey[500], 0.2)}`,
         overflow: 'hidden',
         position: 'relative',
@@ -1365,7 +1461,7 @@ const printStyles = `
 const NASDetails = () => {
   const record = useRecordContext<NASDevice>();
   const translate = useTranslate();
-  
+
   if (!record) {
     return null;
   }

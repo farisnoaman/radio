@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNotify, useTranslate } from 'react-admin';
+import { useNotify, useTranslate, useLocale } from 'react-admin';
 import {
     Box,
     TextField,
@@ -39,6 +39,8 @@ export const TunnelSettings = () => {
     const translate = useTranslate();
     const theme = useTheme();
     const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
+    const locale = useLocale();
+    const isRTL = locale === 'ar';
 
     const [saving, setSaving] = useState(false);
     const [restarting, setRestarting] = useState(false);
@@ -105,7 +107,7 @@ export const TunnelSettings = () => {
     const isConnected = status?.status === 'connected';
 
     return (
-        <Box sx={{ p: { xs: 2, sm: 3 } }}>
+        <Box sx={{ p: { xs: 2, sm: 3 } }} dir={isRTL ? 'rtl' : 'ltr'}>
             {/* Page Title */}
             <Box sx={{ mb: 3 }}>
                 <Typography variant={isMobile ? 'h5' : 'h4'} gutterBottom>
@@ -257,6 +259,17 @@ export const TunnelSettings = () => {
                                 type="password"
                                 helperText={translate('pages.tunnel.config.token_help', { _: 'Paste your base64 encoded tunnel token here.' })}
                                 sx={{ mb: 3 }}
+                                dir={isRTL ? 'rtl' : 'ltr'}
+                                InputLabelProps={{
+                                    sx: {
+                                        transformOrigin: isRTL ? 'top right' : 'top left',
+                                        left: isRTL ? 'auto' : 0,
+                                        right: isRTL ? 0 : 'auto',
+                                    }
+                                }}
+                                inputProps={{
+                                    sx: { textAlign: isRTL ? 'right' : 'left' }
+                                }}
                             />
 
                             <Box sx={{
