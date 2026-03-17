@@ -34,7 +34,8 @@ RUN apk add --no-cache curl ca-certificates tzdata
 
 COPY --from=builder /toughradius /usr/local/bin/toughradius
 
-RUN chmod +x /usr/local/bin/toughradius
+COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Expose required ports:
 # 1816 - Web/Admin API (HTTP)
@@ -43,4 +44,4 @@ RUN chmod +x /usr/local/bin/toughradius
 # 2083 - RadSec (RADIUS over TLS)
 EXPOSE 1816/tcp 1812/udp 1813/udp 2083/tcp
 
-ENTRYPOINT ["/usr/local/bin/toughradius"]
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
