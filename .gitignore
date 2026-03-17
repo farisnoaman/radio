@@ -35,4 +35,5 @@ pkg/tls
 pkg/tls/ca.crt
 pkg/tls/ca.key
 pkg/tls/my.crt
-pkg/tls/my.key
+pkg/tls/my.keybackend.log
+*.tar.gz
