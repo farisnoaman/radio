@@ -25,7 +25,6 @@ import {
     FunctionField,
     useListContext,
     RecordContextProvider,
-    Link as RaLink,
     Filter,
     Show,
     useTranslate,
@@ -70,7 +69,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import { alpha } from '@mui/material/styles';
 
 const AgentLink = React.forwardRef<HTMLAnchorElement, any>((props, ref) => (
-    <RouterLink ref={ref} {...props} />
+    <RouterLink ref={ref} {...(props as any)} />
 ));
 
 const ShowIconButton = () => {

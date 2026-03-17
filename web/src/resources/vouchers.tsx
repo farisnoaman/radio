@@ -14,7 +14,7 @@ import RestoreIcon from '@mui/icons-material/Restore';
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import SettingsIcon from '@mui/icons-material/Settings';
 const LinkWrapper = React.forwardRef<HTMLAnchorElement, any>((props, ref) => (
-    <RouterLink ref={ref} {...props} />
+    <RouterLink ref={ref} {...(props as any)} />
 ));
 
 import {
