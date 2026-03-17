@@ -25,12 +25,14 @@ import {
     FunctionField,
     useListContext,
     RecordContextProvider,
-    Link,
+    Link as RaLink,
     Filter,
     Show,
     useTranslate,
     useLocale,
 } from 'react-admin';
+import { Link as RouterLink } from 'react-router-dom';
+import React from 'react';
 import { Box, Card, CardContent, CardActions, Typography, useMediaQuery, Theme, Avatar, Chip, Stack } from '@mui/material';
 import {
     Dialog,
@@ -67,6 +69,10 @@ import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import CancelIcon from '@mui/icons-material/Cancel';
 import { alpha } from '@mui/material/styles';
 
+const AgentLink = React.forwardRef<HTMLAnchorElement, any>((props, ref) => (
+    <RouterLink ref={ref} {...props} />
+));
+
 const ShowIconButton = () => {
     const record = useRecordContext();
     const translate = useTranslate();
@@ -74,7 +80,7 @@ const ShowIconButton = () => {
     return (
         <Tooltip title={translate('resources.agents.actions.show')}>
             <IconButton
-                component={Link}
+                component={AgentLink}
                 to={`/agents/${record?.id}/show`}
                 size="small"
                 sx={{ color: 'primary.main' }}
@@ -499,7 +505,7 @@ const AgentGrid = () => {
                         >
                             <Tooltip title={translate('resources.agents.actions.show')}>
                                 <IconButton
-                                    component={Link}
+                                    component={AgentLink}
                                     to={`/agents/${record.id}/show`}
                                     size="small"
                                     sx={{

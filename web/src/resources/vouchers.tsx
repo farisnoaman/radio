@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import { useMediaQuery, Theme, Box, Card, CardContent, CardActions, TextField as MuiTextField, Button as MuiButton, IconButton, InputAdornment, Dialog, DialogTitle, DialogContent, DialogActions, Typography, Chip } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
@@ -13,6 +13,10 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import RestoreIcon from '@mui/icons-material/Restore';
 import CurrencyExchangeIcon from '@mui/icons-material/CurrencyExchange';
 import SettingsIcon from '@mui/icons-material/Settings';
+const LinkWrapper = React.forwardRef<HTMLAnchorElement, any>((props, ref) => (
+    <RouterLink ref={ref} {...props} />
+));
+
 import {
     List,
     Datagrid,
@@ -140,7 +144,7 @@ const BatchActions = () => {
             <MuiButton
                 size="small"
                 variant="outlined"
-                component={Link}
+                component={LinkWrapper}
                 to={`/vouchers?filter=${JSON.stringify({ batch_id: record.id })}`}
                 onClick={(e: any) => e.stopPropagation()}
                 startIcon={!isRTL ? <VisibilityIcon /> : undefined}
@@ -154,7 +158,7 @@ const BatchActions = () => {
                     <MuiButton size="small" variant="outlined" onClick={handleDownload} startIcon={!isRTL ? <DownloadIcon /> : undefined} endIcon={isRTL ? <DownloadIcon /> : undefined} sx={{ minWidth: 80, justifyContent: 'space-between' }}>
                         {translate('resources.voucher-batches.actions.download')}
                     </MuiButton>
-                    <MuiButton size="small" variant="outlined" component={Link} to={`/voucher-printing?batch=${record.id}`} onClick={(e: any) => e.stopPropagation()} startIcon={!isRTL ? <PrintIcon /> : undefined} endIcon={isRTL ? <PrintIcon /> : undefined} sx={{ minWidth: 65, justifyContent: 'space-between' }}>
+                    <MuiButton size="small" variant="outlined" component={LinkWrapper} to={`/voucher-printing?batch=${record.id}`} onClick={(e: any) => e.stopPropagation()} startIcon={!isRTL ? <PrintIcon /> : undefined} endIcon={isRTL ? <PrintIcon /> : undefined} sx={{ minWidth: 65, justifyContent: 'space-between' }}>
                         {translate('resources.voucher-batches.actions.print')}
                     </MuiButton>
                     {record.activated_at ? (
@@ -782,7 +786,7 @@ const VoucherListActions = () => {
     return (
         <TopToolbar sx={{ flexWrap: 'nowrap', gap: 1, overflowX: 'auto' }}>
             <MuiButton
-                component={Link}
+                component={LinkWrapper}
                 to="/voucher-batches"
                 size="small"
                 startIcon={!isRTL ? <ArrowBackIcon /> : undefined}
