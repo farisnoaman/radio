@@ -175,6 +175,23 @@ export const createAppTheme = (mode: PaletteMode) => {
             paddingRight: '14px !important',
             paddingLeft: '32px !important',
           },
+          // RTL fixes for Autocomplete
+          '[dir="rtl"] .MuiAutocomplete-endAdornment': {
+            right: 'auto !important',
+            left: '9px !important',
+          },
+          '[dir="rtl"] .MuiAutocomplete-inputRoot': {
+            paddingRight: '9px !important',
+            paddingLeft: '39px !important',
+          },
+          '[dir="rtl"] .MuiAutocomplete-popupIndicator': {
+            marginLeft: '-2px !important',
+            marginRight: '0 !important',
+          },
+          '[dir="rtl"] .MuiAutocomplete-clearIndicator': {
+            marginLeft: '-2px !important',
+            marginRight: '0 !important',
+          },
           // RTL fixes for button icons
           '[dir="rtl"] .MuiButton-startIcon': {
             marginLeft: '8px !important',

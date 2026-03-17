@@ -519,7 +519,7 @@ html,body{margin:0;padding:2px;font-family:Arial,sans-serif;font-size:12px;-webk
                 </Typography>
             </Box>
 
-            <Box display="flex" gap={3} flexDirection={isMobile ? 'column' : 'row'} sx={{ direction: isRtl ? 'rtl' : 'ltr' }}>
+            <Box display="flex" gap={3} flexDirection={isMobile ? 'column' : 'row'} dir={isRtl ? 'rtl' : 'ltr'}>
                 {/* ─── Left: Configuration Panel ─── */}
                 <Card sx={{ flex: isMobile ? '1' : '0 0 380px', maxWidth: isMobile ? '100%' : 400 }}>
                     <CardContent>

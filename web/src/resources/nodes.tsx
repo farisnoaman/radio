@@ -218,10 +218,10 @@ const NodeEmptyState = () => {
     >
       <NodeIcon sx={{ fontSize: 64, opacity: 0.3, mb: 2 }} />
       <Typography variant="h6" sx={{ opacity: 0.6, mb: 1 }}>
-        {translate('resources.network/nodes.empty.title', { _: '暂无节点' })}
+        {translate('resources.network/nodes.empty.title', { _: 'No nodes found' })}
       </Typography>
       <Typography variant="body2" sx={{ opacity: 0.5 }}>
-        {translate('resources.network/nodes.empty.description', { _: '点击"新建"按钮添加第一个网络节点' })}
+        {translate('resources.network/nodes.empty.description', { _: 'Click the "Create" button to add your first network node' })}
       </Typography>
     </Box>
   );
@@ -278,8 +278,8 @@ const NodeSearchHeaderCard = () => {
   );
 
   const filterFields = [
-    { key: 'name', label: translate('resources.network/nodes.fields.name', { _: '节点名称' }) },
-    { key: 'tags', label: translate('resources.network/nodes.fields.tags', { _: '标签' }) },
+    { key: 'name', label: translate('resources.network/nodes.fields.name', { _: 'Node Name' }) },
+    { key: 'tags', label: translate('resources.network/nodes.fields.tags', { _: 'Tags' }) },
   ];
 
   return (
@@ -306,7 +306,7 @@ const NodeSearchHeaderCard = () => {
       >
         <FilterIcon sx={{ color: 'primary.main', fontSize: 20 }} />
         <Typography variant="subtitle2" sx={{ fontWeight: 600, color: 'text.primary' }}>
-          {translate('resources.network/nodes.filter.title', { _: '筛选条件' })}
+          {translate('resources.network/nodes.filter.title', { _: 'Filter Conditions' })}
         </Typography>
       </Box>
 
@@ -469,8 +469,8 @@ const NodeListContent = () => {
 
   const fieldLabels = useMemo(
     () => ({
-      name: translate('resources.network/nodes.fields.name', { _: '节点名称' }),
-      tags: translate('resources.network/nodes.fields.tags', { _: '标签' }),
+      name: translate('resources.network/nodes.fields.name', { _: 'Node Name' }),
+      tags: translate('resources.network/nodes.fields.tags', { _: 'Tags' }),
     }),
     [translate],
   );
@@ -657,7 +657,7 @@ const NodeListContent = () => {
               />
               <DateField
                 source="created_at"
-                label={translate('resources.network/nodes.fields.created_at', { _: '创建时间' })}
+                label={translate('resources.network/nodes.fields.created_at', { _: 'Created At' })}
                 showTime
               />
               <DateField
