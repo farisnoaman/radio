@@ -136,7 +136,7 @@ func (s *AdminServer) setupReactAdminStatic() {
 		return c.JSON(200, map[string]interface{}{
 			"applications": []map[string]interface{}{
 				{
-					"name":    "ToughRADIUS",
+					"name":    "RADIO",
 					"version": "9.0",
 					"url":     "/admin",
 				},

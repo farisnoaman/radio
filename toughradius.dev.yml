@@ -1,5 +1,6 @@
 system:
-  appid: ToughRADIUS
+  appid: RADIO
+  domain: https://radius.hayataxi.online
   location: Asia/Shanghai
   workdir: ./rundata
 

@@ -48,6 +48,8 @@ RUN chmod +x /usr/local/bin/entrypoint.sh
 # Production Environment Defaults
 # These are mapped to Coolify's expected behavior
 ENV TOUGHRADIUS_SYSTEM_WORKER_DIR=/var/toughradius \
+    TOUGHRADIUS_SYSTEM_APPID=RADIO \
+    TOUGHRADIUS_SYSTEM_DOMAIN=https://radius.hayataxi.online \
     TOUGHRADIUS_LOGGER_MODE=production \
     TOUGHRADIUS_SYSTEM_DEBUG=false \
     TOUGHRADIUS_DB_TYPE=sqlite \

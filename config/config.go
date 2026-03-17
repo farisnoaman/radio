@@ -476,7 +476,7 @@ func setEnvIntValue(name string, val *int) {
 //   - Logger.Mode to "production"
 var DefaultAppConfig = &AppConfig{
 	System: SysConfig{
-		Appid:    "ToughRADIUS",
+		Appid:    "RADIO",
 		Location: "Asia/Shanghai",
 		Workdir:  "/var/toughradius",
 		Debug:    true,

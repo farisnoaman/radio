@@ -1,6 +1,15 @@
 {
   "schemas": [
     {
+      "key": "system.Domain",
+      "type": "string",
+      "default": "https://radius.hayataxi.online",
+      "title": "Application Domain",
+      "title_i18n": "config.system.domain.title",
+      "description": "The base URL for the application (e.g., https://radius.hayataxi.online). Used for generating links and self-referencing.",
+      "description_i18n": "config.system.domain.description"
+    },
+    {
       "key": "web.CacheTTL",
       "type": "int",
       "default": "60",
