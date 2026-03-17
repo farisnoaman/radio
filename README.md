@@ -141,6 +141,15 @@ toughradius/
 ├── pkg/            # Public libraries
 ├── web/            # React Admin frontend
 └── docs/           # Documentation
+
+## 🚢 Deployment
+
+### 🐳 Coolify Deployment (Recommended)
+RADIO is optimized for one-click deployment on Coolify.
+Follow our [Detailed Coolify Guide](docs/guides/coolify-deployment.md) for step-by-step instructions on volumes, ports, and environment variables.
+
+### 🐧 Manual Linux Deployment
+For manual deployment, see our [Production Setup Guide](docs/guides/production-setup.md).
 ```
 
 ## 🔧 Development
