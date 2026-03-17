@@ -1,21 +1,26 @@
-FROM --platform=$BUILDPLATFORM node:20-bookworm AS frontend-builder
+# 1. Base stage to load all source code once
+# This is our "context bootstrap" stage.
+FROM --platform=$BUILDPLATFORM golang:1.24-bookworm AS source
+COPY . /src
+WORKDIR /src
 
-COPY web/package*.json /web/
+# 2. Frontend builder
+# We use the source stage to get the web files
+FROM --platform=$BUILDPLATFORM node:20-bookworm AS frontend-builder
+COPY --from=source /src/web /web
 WORKDIR /web
 RUN npm ci
-
-COPY web/ /web/
 RUN npm run build && \
-     echo "Frontend build completed:" && \
-     ls -lah dist/
+    echo "Frontend build completed:" && \
+    ls -lah dist/
 
+# 3. Backend builder
+# We use the source stage and the built frontend
 FROM --platform=$BUILDPLATFORM golang:1.24-bookworm AS builder
-
-ARG TARGETPLATFORM
 ARG TARGETOS
 ARG TARGETARCH
 
-COPY . /src
+COPY --from=source /src /src
 WORKDIR /src
 
 # Copy built frontend from frontend-builder stage
@@ -28,6 +33,7 @@ RUN test -f /src/web/dist/admin/index.html || (echo "ERROR: Frontend not found!"
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -a -ldflags \
      '-s -w -extldflags "-static"' -o /toughradius main.go
 
+# 4. Final production image
 FROM alpine:latest
 
 RUN apk add --no-cache curl ca-certificates tzdata
@@ -39,14 +45,15 @@ RUN mkdir -p /var/toughradius/data /var/toughradius/logs /var/toughradius/backup
 COPY --from=builder /toughradius /usr/local/bin/toughradius
 
 # Copy RADIUS dictionaries and other shared assets
-COPY share/ /var/toughradius/share/
+# We copy from the source stage instead of the build context
+# to be safe against empty context errors in final stages.
+COPY --from=source /src/share/ /var/toughradius/share/
 
 # Copy entrypoint script
-COPY scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
+COPY --from=source /src/scripts/entrypoint.sh /usr/local/bin/entrypoint.sh
 RUN chmod +x /usr/local/bin/entrypoint.sh
 
 # Production Environment Defaults
-# These are mapped to Coolify's expected behavior
 ENV TOUGHRADIUS_SYSTEM_WORKER_DIR=/var/toughradius \
     TOUGHRADIUS_SYSTEM_APPID=RADIO \
     TOUGHRADIUS_SYSTEM_DOMAIN=https://radius.hayataxi.online \

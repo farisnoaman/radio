@@ -1,0 +1,28 @@
+# Ignore unnecessary large directories
+go/
+node_modules/
+web/node_modules/
+web/dist/
+release/
+rundata/
+
+# Ignore binaries and archives
+toughradius
+toughradius_debug
+*.tar.gz
+*.db
+*.db-shm
+*.db-wal
+
+# Ignore system/editor files
+.git/
+.github/
+.idea/
+.vscode/
+.DS_Store
+.fleet/
+/tmp/
+log_info.log
+coverage.out
+AGENT.md
+cookies.txt
