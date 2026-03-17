@@ -5,21 +5,24 @@ set -e
 WORK_DIR=${TOUGHRADIUS_SYSTEM_WORKER_DIR:-/var/toughradius}
 DB_FILE=${TOUGHRADIUS_DB_NAME:-$WORK_DIR/data/toughradius.db}
 
-echo "Starting ToughRadius Entrypoint..."
+echo "--------------------------------------------------"
+echo "🚀 Starting RADIO (ISP Billing & Management)"
+echo "--------------------------------------------------"
 echo "Workdir: $WORK_DIR"
 echo "Database: $DB_FILE"
+echo "Logger Mode: ${TOUGHRADIUS_LOGGER_MODE:-production}"
+echo "--------------------------------------------------"
 
-# Ensure directories exist
+# Ensure critical directories exist
 mkdir -p "$WORK_DIR/data"
 mkdir -p "$WORK_DIR/logs"
+mkdir -p "$WORK_DIR/backup"
+mkdir -p "$WORK_DIR/private"
 
-# Initialize database if it doesn't exist
-if [ ! -f "$DB_FILE" ]; then
-    echo "Database file not found. Initializing database..."
-    /usr/local/bin/toughradius -initdb
-else
-    echo "Database file exists. Skipping initialization."
-fi
+# Note: Database migration is automatically handled by the application 
+# on startup via internal/app/app.go. No need for manual -initdb.
 
 # Start the application
+# We pass through all arguments to the binary
 exec /usr/local/bin/toughradius "$@"
+
