@@ -1,44 +1,31 @@
-Welcome to the TOUGHRADIUS project!
+# RADIO - ISP Billing & Management
 
-     _____   _____   _   _   _____   _   _   _____        ___   _____   _   _   _   _____
-    |_   _| /  _  \ | | | | /  ___| | | | | |  _  \      /   | |  _  \ | | | | | | /  ___/
-      | |   | | | | | | | | | |     | |_| | | |_| |     / /| | | | | | | | | | | | | |___
-      | |   | | | | | | | | | |  _  |  _  | |  _  /    / / | | | | | | | | | | | | \___  \
-      | |   | |_| | | |_| | | |_| | | | | | | | \ \   / /  | | | |_| | | | | |_| |  ___| |
-      |_|   \_____/ \_____/ \_____/ |_| |_| |_|  \_\ /_/   |_| |_____/ |_| \_____/ /_____/
+> [!NOTE]
+> This project is a customized and enhanced version of [ToughRADIUS](https://github.com/talkincode/toughradius). It builds upon the powerful core of ToughRADIUS with specialized features for ISP management, improved UI/UX, and extensive localization.
 
-# TOUGHRADIUS
-
-[![License](https://img.shields.io/github/license/talkincode/toughradius)](https://github.com/talkincode/toughradius/blob/main/LICENSE)
-[![Go Version](https://img.shields.io/github/go-mod/go-version/talkincode/toughradius)](go.mod)
-[![Release](https://img.shields.io/github/v/release/talkincode/toughradius)](https://github.com/talkincode/toughradius/releases)
-[![Build Status](https://github.com/talkincode/toughradius/actions/workflows/ci.yml/badge.svg)](https://github.com/talkincode/toughradius/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/talkincode/toughradius/graph/badge.svg)](https://codecov.io/gh/talkincode/toughradius)
-[![Docker Pulls](https://img.shields.io/docker/pulls/talkincode/toughradius)](https://hub.docker.com/r/talkincode/toughradius)
-
-A powerful, open-source RADIUS server designed for ISPs, enterprise networks, and carriers. Supports standard RADIUS protocols, RadSec (RADIUS over TLS), and a modern Web management interface.
+A powerful RADIUS server and ISP management platform designed for ISPs, enterprise networks, and carriers. Supports standard RADIUS protocols, RadSec (RADIUS over TLS), and a modern Web management interface with full RTL support.
 
 ## ✨ Core Features
 
-### RADIUS Protocol Support
+### 📡 Network & RADIUS
+- 🔐 **Standard RADIUS** - Full support for RFC 2865/2866 authentication and accounting protocols.
+- 🔒 **RadSec** - TLS encrypted RADIUS over TCP (RFC 6614).
+- 🌐 **Mikrotik Auto-Discovery** - Automatically discover and configure Mikrotik routers on your network.
+- ⚡ **High Performance** - Built with Go, supporting high concurrency processing for large-scale deployments.
+- 🔌 **Dynamic Configuration** - Configure RADIUS server IP and other critical settings directly from the system management page.
 
-- 🔐 **Standard RADIUS** - Full support for RFC 2865/2866 authentication and accounting protocols
-- 🔒 **RadSec** - TLS encrypted RADIUS over TCP (RFC 6614)
-- 🌐 **Multi-Vendor Support** - Compatible with major network devices like Cisco, Mikrotik, Huawei, etc.
-- ⚡ **High Performance** - Built with Go, supporting high concurrency processing
+### 🎟️ Advanced Voucher Management
+- 📊 **Quota & Validity Support** - Create vouchers with specific data limits (Quota) and time limits (Validity).
+- 🔄 **Voucher Transfers** - Easily transfer vouchers between different user accounts or batches.
+- 🗑️ **Batch Operations** - Support for batch delete with confirmation and status tracking.
+- 📜 **Detailed Analytics** - Monitor voucher activation, usage, and expiration in real-time.
 
-### Management Features
+### 🌍 Localization & UI/UX
+- 🇸🇦 **Full Arabic Support** - Completely translated into Arabic for seamless regional operation.
+- ↔️ **Professional RTL Layout** - Full Right-to-Left alignment for the entire management interface.
+- 📈 **Enhanced Dashboards** - Visualize network performance and user trends with integrated **ECharts**.
+- 📱 **Mobile Responsive** - Optimized interface for management on the go, including specialized mobile navigation bars.
 
-- 📊 **React Admin Interface** - Modern Web management dashboard
-- 👥 **User Management** - Complete user account and profile management
-- 📈 **Real-time Monitoring** - Online session monitoring and accounting record queries
-- 🔍 **Log Auditing** - Detailed authentication and accounting logs
-
-### Integration Capabilities
-
-- **Multi-Database Support** - PostgreSQL, SQLite
-- 🔌 **Flexible Extension** - Supports custom authentication and accounting logic
-- 📡 **Multi-Vendor VSA** - Huawei, Mikrotik, Cisco, H3C, etc.
 
 ## 🚀 Quick Start
 
@@ -54,8 +41,8 @@ A powerful, open-source RADIUS server designed for ISPs, enterprise networks, an
 
 ```bash
 # Clone repository
-git clone https://github.com/talkincode/toughradius.git
-cd toughradius
+git clone https://github.com/farisnoaman/radio.git
+cd radio
 
 # Build frontend
 cd web
@@ -198,16 +185,7 @@ This project is licensed under the [MIT License](LICENSE).
 
 The RADIUS dictionary files in the `share/` directory are derived from the [FreeRADIUS](https://freeradius.org/) project and are licensed under the [Creative Commons Attribution 4.0 International License (CC BY 4.0)](share/LICENSE).
 
-## 🔗 Related Links
+## 💎 Attribution
 
-- [Official Website](https://www.toughradius.net/)
-- [Online Documentation](https://github.com/talkincode/toughradius/wiki)
-- [RadSec RFC 6614](https://tools.ietf.org/html/rfc6614)
-- [RADIUS RFC 2865](https://tools.ietf.org/html/rfc2865)
-- [Mikrotik RADIUS Configuration](https://wiki.mikrotik.com/wiki/Manual:RADIUS_Client)
+This project is built upon the excellent work of the [ToughRADIUS](https://github.com/talkincode/toughradius) project. We thank the original authors for their contributions to the open-source community.
 
-## 💎 Sponsors
-
-Thanks to [JetBrains](https://jb.gg/OpenSourceSupport) for supporting this project!
-
-![JetBrains Logo](https://resources.jetbrains.com/storage/products/company/brand/logos/jb_beam.svg)
