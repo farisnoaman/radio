@@ -575,3 +575,191 @@ runtime.goexit
 2026-03-19T02:40:28.083+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
 runtime.goexit
 	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:41:28.050+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:41:28.050+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:42:28.082+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:42:28.082+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:43:28.050+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:43:28.051+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:44:28.082+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:44:28.083+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:45:28.050+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:45:28.051+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:46:28.082+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:46:28.083+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:47:28.050+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:47:28.050+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026/03/19 02:47:58 [analytics] Forecast request: metric=users, days=30, future=7
+2026/03/19 02:47:58 [analytics] Got 4 history points
+2026-03-19T02:47:58.439+0800	INFO	webserver/maintenance.go:23	dashboard cache miss
+2026-03-19T02:48:28.083+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:48:28.084+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:48:58.496+0800	INFO	webserver/maintenance.go:23	dashboard cache miss
+2026-03-19T02:49:28.050+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:49:28.051+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:49:58.677+0800	INFO	webserver/maintenance.go:23	dashboard cache miss
+2026-03-19T02:50:28.082+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:50:28.082+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:50:58.824+0800	INFO	webserver/maintenance.go:23	dashboard cache miss
+2026-03-19T02:51:28.051+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:51:28.051+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:51:58.904+0800	INFO	webserver/maintenance.go:23	dashboard cache miss
+2026-03-19T02:52:28.082+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:52:28.083+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:52:58.938+0800	INFO	webserver/maintenance.go:23	dashboard cache miss
+2026-03-19T02:53:28.051+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:53:28.051+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:53:59.081+0800	INFO	webserver/maintenance.go:23	dashboard cache miss
+2026-03-19T02:54:28.082+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:54:28.082+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:54:59.399+0800	INFO	webserver/maintenance.go:23	dashboard cache miss
+2026-03-19T02:55:28.051+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:55:28.051+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:55:59.425+0800	INFO	webserver/maintenance.go:23	dashboard cache miss
+2026-03-19T02:56:28.082+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:56:28.083+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:56:59.466+0800	INFO	webserver/maintenance.go:23	dashboard cache miss
+2026-03-19T02:57:28.050+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:57:28.050+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:57:59.595+0800	INFO	webserver/maintenance.go:23	dashboard cache miss
+2026-03-19T02:58:28.082+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:58:28.083+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:58:59.914+0800	INFO	webserver/maintenance.go:23	dashboard cache miss
+2026-03-19T02:59:28.050+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:59:28.050+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T02:59:59.955+0800	INFO	webserver/maintenance.go:23	dashboard cache miss
+2026-03-19T03:00:28.082+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T03:00:28.083+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T03:00:59.987+0800	INFO	webserver/maintenance.go:23	dashboard cache miss
+2026-03-19T03:01:28.115+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T03:01:28.115+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T03:02:00.294+0800	INFO	webserver/maintenance.go:23	dashboard cache miss
+2026-03-19T03:02:28.082+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T03:02:28.083+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T03:03:00.414+0800	INFO	webserver/maintenance.go:23	dashboard cache miss
+2026-03-19T03:03:28.050+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T03:03:28.050+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T03:04:00.432+0800	INFO	webserver/maintenance.go:23	dashboard cache miss
+2026-03-19T03:04:28.082+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T03:04:28.082+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T03:05:00.570+0800	INFO	webserver/maintenance.go:23	dashboard cache miss
+2026-03-19T03:05:28.050+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T03:05:28.051+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T03:06:28.082+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T03:06:28.082+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T03:07:28.051+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T03:07:28.051+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T03:08:28.082+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-19T03:08:28.082+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
