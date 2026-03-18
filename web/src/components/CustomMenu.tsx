@@ -24,7 +24,7 @@ import { MenuItemLink, MenuProps, useGetIdentity, useTranslate, useLocale } from
 const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
 
 const menuItems = [
-  { to: '/', labelKey: 'menu.dashboard', icon: <DashboardOutlinedIcon />, permissions: ['super', 'admin', 'user'] },
+  { to: '/', labelKey: 'menu.dashboard', icon: <DashboardOutlinedIcon />, permissions: ['super', 'admin', 'user', 'agent'] },
   { to: '/network/servers', labelKey: 'menu.servers', icon: <StorageOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/network/nodes', labelKey: 'menu.network_nodes', icon: <AccountTreeOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/network/nas', labelKey: 'menu.nas_devices', icon: <RouterOutlinedIcon />, permissions: ['super', 'admin'] },

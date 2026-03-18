@@ -20,7 +20,7 @@ import {
 import { alpha, useTheme } from '@mui/material/styles';
 import Grid from '@mui/material/GridLegacy';
 import { useState, useEffect } from 'react';
-import { useGetIdentity } from 'react-admin';
+import { useGetIdentity, useTranslate } from 'react-admin';
 import { httpClient } from '../utils/apiClient';
 
 interface AgentStats {
@@ -55,6 +55,7 @@ interface WalletLog {
 const AgentDashboard = () => {
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
+    const translate = useTranslate();
     const { data: identity, isLoading: identityLoading } = useGetIdentity();
     const [stats, setStats] = useState<AgentStats | null>(null);
     const [loading, setLoading] = useState(true);
@@ -77,7 +78,7 @@ const AgentDashboard = () => {
     }
 
     if (!stats) {
-        return <Typography>Failed to load dashboard statistics.</Typography>;
+        return <Typography>{translate('agent_dashboard.load_error')}</Typography>;
     }
 
     const numberFormatter = new Intl.NumberFormat();
@@ -91,25 +92,25 @@ const AgentDashboard = () => {
 
     const statCards = [
         {
-            title: 'Current Balance',
+            title: translate('agent_dashboard.current_balance'),
             value: `${stats.balance.toFixed(2)}`,
             icon: <AccountBalanceWalletOutlinedIcon fontSize="large" />,
             accent: theme.palette.primary.main,
         },
         {
-            title: 'Voucher Batches',
+            title: translate('agent_dashboard.voucher_batches'),
             value: numberFormatter.format(stats.total_batches),
             icon: <ReceiptLongOutlinedIcon fontSize="large" />,
             accent: '#34d399',
         },
         {
-            title: 'Total Vouchers',
+            title: translate('agent_dashboard.total_vouchers'),
             value: numberFormatter.format(stats.total_vouchers),
             icon: <ConfirmationNumberOutlinedIcon fontSize="large" />,
             accent: '#f97316',
         },
         {
-            title: 'Sold (Redeemed)',
+            title: translate('agent_dashboard.sold_redeemed'),
             value: numberFormatter.format(stats.used_vouchers),
             icon: <InventoryOutlinedIcon fontSize="large" />,
             accent: '#8b5cf6',
@@ -136,16 +137,16 @@ const AgentDashboard = () => {
                         justifyContent="space-between"
                     >
                         <Box>
-                            <Chip label="AGENT DASHBOARD" color="primary" sx={{ mb: 2, fontWeight: 600 }} />
+                            <Chip label={translate('agent_dashboard.title')} color="primary" sx={{ mb: 2, fontWeight: 600 }} />
                             <Typography variant="h5" sx={{ fontWeight: 700, mb: 1 }}>
-                                Welcome back, {identity?.fullName}!
+                                {translate('agent_dashboard.welcome', { name: identity?.fullName })}
                             </Typography>
                             <Typography variant="body1" sx={{ color: 'text.secondary', maxWidth: 520 }}>
-                                Here is an overview of your voucher sales and wallet activities.
+                                {translate('agent_dashboard.subtitle')}
                             </Typography>
                         </Box>
                         <Box sx={{ textAlign: 'center', minWidth: 200 }}>
-                            <Typography variant="subtitle2" color="text.secondary">Available Balance</Typography>
+                            <Typography variant="subtitle2" color="text.secondary">{translate('agent_dashboard.available_balance')}</Typography>
                             <Typography variant="h3" sx={{ fontWeight: 700, color: theme.palette.primary.main }}>
                                 {stats.balance.toFixed(2)}
                             </Typography>
@@ -193,18 +194,18 @@ const AgentDashboard = () => {
                     <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 3 }}>
                         <InventoryOutlinedIcon color="primary" />
                         <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                            Recent Voucher Batches
+                            {translate('agent_dashboard.recent_batches')}
                         </Typography>
                     </Stack>
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell>Date</TableCell>
-                                <TableCell>Batch Name</TableCell>
-                                <TableCell align="right">Total</TableCell>
-                                <TableCell align="right">Used (Sold)</TableCell>
-                                <TableCell align="right">Unused (Remaining)</TableCell>
-                                <TableCell align="right">Usage Rate</TableCell>
+                                <TableCell>{translate('agent_dashboard.date')}</TableCell>
+                                <TableCell>{translate('agent_dashboard.batch_name')}</TableCell>
+                                <TableCell align="right">{translate('agent_dashboard.total')}</TableCell>
+                                <TableCell align="right">{translate('agent_dashboard.used_sold')}</TableCell>
+                                <TableCell align="right">{translate('agent_dashboard.unused_remaining')}</TableCell>
+                                <TableCell align="right">{translate('agent_dashboard.usage_rate')}</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -238,7 +239,7 @@ const AgentDashboard = () => {
                             })}
                             {(!stats.recent_batches || stats.recent_batches.length === 0) && (
                                 <TableRow>
-                                    <TableCell colSpan={6} align="center">No voucher batches found.</TableCell>
+                                    <TableCell colSpan={6} align="center">{translate('agent_dashboard.no_batches')}</TableCell>
                                 </TableRow>
                             )}
                         </TableBody>
@@ -251,18 +252,18 @@ const AgentDashboard = () => {
                     <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 3 }}>
                         <HistoryOutlinedIcon color="primary" />
                         <Typography variant="h6" sx={{ fontWeight: 700 }}>
-                            Recent Activities & Transactions
+                            {translate('agent_dashboard.recent_activities')}
                         </Typography>
                     </Stack>
                     <Table>
                         <TableHead>
                             <TableRow>
-                                <TableCell>Date</TableCell>
-                                <TableCell>Type</TableCell>
-                                <TableCell>Reference</TableCell>
-                                <TableCell>Remark</TableCell>
-                                <TableCell align="right">Amount</TableCell>
-                                <TableCell align="right">After Balance</TableCell>
+                                <TableCell>{translate('agent_dashboard.date')}</TableCell>
+                                <TableCell>{translate('agent_dashboard.type')}</TableCell>
+                                <TableCell>{translate('agent_dashboard.reference')}</TableCell>
+                                <TableCell>{translate('agent_dashboard.remark')}</TableCell>
+                                <TableCell align="right">{translate('agent_dashboard.amount')}</TableCell>
+                                <TableCell align="right">{translate('agent_dashboard.after_balance')}</TableCell>
                             </TableRow>
                         </TableHead>
                         <TableBody>
@@ -289,7 +290,7 @@ const AgentDashboard = () => {
                             ))}
                             {stats.recent_transactions.length === 0 && (
                                 <TableRow>
-                                    <TableCell colSpan={6} align="center">No recent transactions found.</TableCell>
+                                    <TableCell colSpan={6} align="center">{translate('agent_dashboard.no_transactions')}</TableCell>
                                 </TableRow>
                             )}
                         </TableBody>

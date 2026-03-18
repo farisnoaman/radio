@@ -24,7 +24,7 @@ export const LoginPage = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!username || !password) {
       notify(translate('validation.required'), { type: 'warning' });
       return;
@@ -135,7 +135,7 @@ export const LoginPage = () => {
 
           <Box sx={{ mt: 3, textAlign: 'center' }}>
             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-              ToughRADIUS v9 © {new Date().getFullYear()} {translate('app.rights')}
+              Radio v0.01 © {new Date().getFullYear()} {translate('app.rights')}
             </Typography>
           </Box>
         </CardContent>
