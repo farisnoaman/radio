@@ -142,7 +142,7 @@ export const CustomAppBar = (props: AppBarProps) => {
                 letterSpacing: '0.5px',
               }}
             >
-              TOUGHRADIUS
+              {translate('app.title')}
             </Typography>
           </Box>
         </Stack>

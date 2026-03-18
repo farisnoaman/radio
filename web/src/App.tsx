@@ -106,7 +106,7 @@ const App = () => (
     i18nProvider={i18nProvider}
     dashboard={Dashboard}
     loginPage={LoginPage}
-    title="TOUGHRADIUS v9"
+    title="Radio v0.01"
     theme={theme}
     darkTheme={darkTheme}
     defaultTheme="light"
