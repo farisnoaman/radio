@@ -225,6 +225,17 @@ func CreateVoucherBatch(c echo.Context) error {
 	// Start Transaction
 	tx := GetDB(c).Begin()
 
+	// Auto-generate batch name if not provided or matches default pattern
+	// This ensures unique naming even with concurrent requests
+	if req.Name == "" || isDefaultBatchNamePattern(req.Name) {
+		newName, err := generateNextBatchName(tx, req.Name)
+		if err != nil {
+			tx.Rollback()
+			return fail(c, http.StatusInternalServerError, "NAME_ERROR", "Failed to generate batch name", err.Error())
+		}
+		req.Name = newName
+	}
+
 	agentID, _ := strconv.ParseInt(req.AgentID, 10, 64)
 	var finalCost float64
 
@@ -1845,6 +1856,100 @@ func PublicVoucherStatus(c echo.Context) error {
 		"expire_time":  voucher.ExpireTime,
 		"activated_at": voucher.ActivatedAt,
 	})
+}
+
+// isDefaultBatchNamePattern checks if the batch name matches the default pattern
+// (e.g., "Batch #" or empty, or any name ending with # without a number)
+func isDefaultBatchNamePattern(name string) bool {
+	if name == "" {
+		return true
+	}
+	// Match patterns like "Batch #", "الباتش #", "批次 #", or names ending with #
+	return name == "Batch #" || name == "الباتش #" || name == "批次 #" || name == "#" ||
+		(len(name) >= 2 && name[len(name)-1] == '#' && !isNumeric(name[:len(name)-1]))
+}
+
+// isNumeric checks if a string contains only digits
+func isNumeric(s string) bool {
+	if len(s) == 0 {
+		return false
+	}
+	for _, c := range s {
+		if c < '0' || c > '9' {
+			return false
+		}
+	}
+	return true
+}
+
+// extractBatchNumber extracts the trailing number from a batch name
+// Returns 0 if no number is found
+func extractBatchNumber(name string) int {
+	if len(name) == 0 {
+		return 0
+	}
+	// Find trailing digits
+	var digits string
+	for i := len(name) - 1; i >= 0; i-- {
+		if name[i] >= '0' && name[i] <= '9' {
+			digits = string(name[i]) + digits
+		} else {
+			break
+		}
+	}
+	if digits == "" {
+		return 0
+	}
+	var num int
+	fmt.Sscanf(digits, "%d", &num)
+	return num
+}
+
+// generateNextBatchName generates the next batch name based on existing batches
+// It uses a database lock to prevent race conditions when multiple agents create batches simultaneously
+func generateNextBatchName(tx *gorm.DB, suggestedName string) (string, error) {
+	// Get the last batch with a numeric suffix, using FOR UPDATE to lock
+	var lastBatch domain.VoucherBatch
+	err := tx.Set("gorm:query_option", "FOR UPDATE").
+		Order("id DESC").
+		First(&lastBatch).Error
+
+	var nextNumber int
+	if err != nil {
+		// No batches exist, start from 1
+		if err == gorm.ErrRecordNotFound {
+			nextNumber = 1
+		} else {
+			return "", err
+		}
+	} else {
+		// Extract number from last batch name
+		nextNumber = extractBatchNumber(lastBatch.Name)
+		if nextNumber == 0 {
+			// No number in last name, use ID + 1 as fallback
+			nextNumber = int(lastBatch.ID) + 1
+		} else {
+			nextNumber = nextNumber + 1
+		}
+	}
+
+	// Determine the prefix based on suggested name or use default
+	prefix := "Batch #"
+	if suggestedName != "" && suggestedName != "Batch #" {
+		// Try to extract prefix from suggested name (everything except trailing digits)
+		var prefixBuilder string
+		for i := len(suggestedName) - 1; i >= 0; i-- {
+			if suggestedName[i] >= '0' && suggestedName[i] <= '9' {
+				break
+			}
+			prefixBuilder = string(suggestedName[i]) + prefixBuilder
+		}
+		if prefixBuilder != "" {
+			prefix = prefixBuilder
+		}
+	}
+
+	return fmt.Sprintf("%s%d", prefix, nextNumber), nil
 }
 
 func registerVoucherRoutes() {
