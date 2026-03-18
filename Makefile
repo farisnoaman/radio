@@ -70,11 +70,11 @@ build: buildf
 	@echo "⚠️  Static build (CGO_ENABLED=0)"
 	@echo ""
 	@echo "🔍 验证前端构建..."
-	@test -f web/dist/admin/index.html || (echo "❌ 错误: web/dist/admin/index.html 不存在！" && exit 1)
-	@test -d web/dist/admin/assets || (echo "❌ 错误: web/dist/admin/assets 目录不存在！" && exit 1)
-	@ASSET_COUNT=$$(find web/dist/admin/assets -type f 2>/dev/null | wc -l | tr -d ' '); \
+	@test -f web/dist/index.html || (echo "❌ 错误: web/dist/index.html 不存在！" && exit 1)
+	@test -d web/dist/assets || (echo "❌ 错误: web/dist/assets 目录不存在！" && exit 1)
+	@ASSET_COUNT=$$(find web/dist/assets -type f 2>/dev/null | wc -l | tr -d ' '); \
 	if [ "$$ASSET_COUNT" -lt 1 ]; then \
-		echo "❌ 错误: web/dist/admin/assets 中没有文件！"; \
+		echo "❌ 错误: web/dist/assets 中没有文件！"; \
 		exit 1; \
 	fi; \
 	echo "✅ 前端验证通过 ($$ASSET_COUNT 个资源文件)"
@@ -92,7 +92,7 @@ build-backend:
 	@echo "📦 Version: $(VERSION)"
 	@echo "🕐 Build Time: $(BUILD_TIME)"
 	@echo "📝 Git Commit: $(GIT_COMMIT)"
-	@if [ ! -f web/dist/admin/index.html ]; then \
+	@if [ ! -f web/dist/index.html ]; then \
 		echo "⚠️  警告: 前端未构建，正在构建..."; \
 		$(MAKE) buildf; \
 	fi
@@ -119,9 +119,9 @@ buildf:
 	@echo "🏗️  编译前端资源..."
 	@cd web && npm run build
 	@echo ""
-	@ASSET_COUNT=$$(find web/dist/admin/assets -type f 2>/dev/null | wc -l | tr -d ' '); \
-	echo "✅ 前端构建完成: web/dist/admin/ ($$ASSET_COUNT 个资源文件)"
-	@ls -lh web/dist/admin/index.html web/dist/admin/assets/*.js 2>/dev/null | head -5
+	@ASSET_COUNT=$$(find web/dist/assets -type f 2>/dev/null | wc -l | tr -d ' '); \
+	echo "✅ 前端构建完成: web/dist/ ($$ASSET_COUNT 个资源文件)"
+	@ls -lh web/dist/index.html web/dist/assets/*.js 2>/dev/null | head -5
 
 # 初始化数据库（危险操作）
 initdb:

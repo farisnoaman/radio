@@ -26,8 +26,8 @@ WORKDIR /src
 # Copy built frontend from frontend-builder stage
 COPY --from=frontend-builder /web/dist /src/web/dist
 
-# Verify frontend is present (built to dist/admin/)
-RUN test -f /src/web/dist/admin/index.html || (echo "ERROR: Frontend not found!" && exit 1)
+# Verify frontend is present (built to dist/)
+RUN test -f /src/web/dist/index.html || (echo "ERROR: Frontend not found!" && exit 1)
 
 # Build for target platform
 RUN CGO_ENABLED=0 GOOS=${TARGETOS} GOARCH=${TARGETARCH} go build -a -ldflags \
