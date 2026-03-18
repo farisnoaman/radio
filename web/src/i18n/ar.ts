@@ -118,7 +118,7 @@ const customArabicMessages: TranslationMessages = {
     radius_users: 'إدارة المستخدمين',
     online_sessions: 'الجلسات النشطة',
     accounting: 'سجلات المحاسبة',
-    radius_profiles: 'إدارة الملفات الشخصية',
+    radius_profiles: 'إدارة حسابات الراديوس',
     network: 'إدارة الشبكة',
     nas_devices: 'أجهزة NAS',
     network_nodes: 'عقد الشبكة',
@@ -181,7 +181,7 @@ const customArabicMessages: TranslationMessages = {
       saturday: 'السبت',
       sunday: 'الأحد',
     },
-    profile_unassigned: 'ملف شخصي غير معين',
+    profile_unassigned: 'حساب راديوس غير معين',
   },
   resources: {
     products: {
@@ -217,8 +217,8 @@ const customArabicMessages: TranslationMessages = {
       details: {
         pricing: 'تفاصيل التسعير',
         bandwidth_desc: 'الحدود المكونة لهذا الباقة',
-        linked_profile: 'الملف المرتبط',
-        profile_desc: 'ملف RADIUS التقني المرفق',
+        linked_profile: 'الحساب المرتبط',
+        profile_desc: 'حساب RADIUS التقني المرفق',
         time_info: 'معلومات الوقت',
         time_desc: 'تواريخ الإنشاء والتعديل',
         remarks_desc: 'ملاحظات إضافية',
@@ -530,7 +530,7 @@ const customArabicMessages: TranslationMessages = {
         email: 'البريد الإلكتروني',
         mobile: 'رقم الجوال',
         address: 'العنوان',
-        profile_id: 'ملف الفوترة',
+        profile_id: 'حساب الفوترة',
         status: 'الحالة',
         expire_time: 'تاريخ الانتهاء',
         ip_addr: 'عنوان IPv4',
@@ -810,7 +810,7 @@ const customArabicMessages: TranslationMessages = {
         remark: 'ملاحظات',
         balance: 'رصيد المحفظة',
         status: 'الحالة',
-        parent: 'الوكيل الأب',
+        parent: 'الوكيل الرئيس',
         commission_rate: 'نسبة العمولة (%)',
         territory: 'المنطقة/الإقليم',
         level: 'المستوى',
@@ -837,8 +837,8 @@ const customArabicMessages: TranslationMessages = {
       hierarchy: {
         title: 'هيكل الوكلاء',
         manage: 'إدارة هيكل الوكيل',
-        description: 'تعيين وكيل أب وتحديد نسبة العمولة لهذا الوكيل',
-        no_parent: 'وكيل رئيسي (بدون أب)',
+        description: 'تعيين وكيل رئيس وتحديد نسبة العمولة لهذا الوكيل',
+        no_parent: 'وكيل رئيسي (بدون وكيل رئيسي)',
         territory_placeholder: 'مثال: المنطقة الشمالية، وسط المدينة',
         current_level: 'المستوى الحالي',
         error: 'فشل تحديث الهيكل التنظيمي',
@@ -961,7 +961,7 @@ const customArabicMessages: TranslationMessages = {
       },
     },
     'radius/invoices': {
-      name: 'فاتورة |||| فواتير',
+      name: 'قائمة الفواتير |||| فواتير',
       fields: {
         id: 'رقم الفاتورة',
         username: 'اسم المستخدم',
@@ -1101,7 +1101,7 @@ const customArabicMessages: TranslationMessages = {
       },
       print: {
         title: 'استوديو طباعة القسائم',
-        studio: '🖨️ استوديو طباعة القسائم',
+        studio: ' استوديو طباعة القسائم',
         back: 'العودة للبحث',
         back_to_batches: 'العودة للدفعات',
         config: 'الإعدادات',
