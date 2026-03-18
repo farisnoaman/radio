@@ -354,13 +354,13 @@ const VoucherBatchInputs = () => {
     return (
         <Box sx={{ width: '100%' }}>
             <Box mb={2}>
-                <TextInput 
-                    source="name" 
-                    validate={[required()]} 
-                    fullWidth 
+                <TextInput
+                    source="name"
+                    validate={[required()]}
+                    fullWidth
                     size="small"
-                    label={translate('pages.voucher.create.name')} 
-                    inputProps={textInputProps} 
+                    label={translate('pages.voucher.create.name')}
+                    inputProps={textInputProps}
                     placeholder={translate('pages.voucher.create.name_placeholder')}
                     InputLabelProps={{ sx: { transformOrigin: isRTL ? 'top right' : 'top left', left: isRTL ? 'auto' : 0, right: isRTL ? 24 : 'auto' } }}
                 />
@@ -369,12 +369,12 @@ const VoucherBatchInputs = () => {
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: user?.level !== 'agent' ? '1fr 1fr' : '1fr' }, gap: 2, mb: 2, direction: isRTL ? 'rtl' : 'ltr' }}>
                 <Box>
                     <ReferenceInput source="product_id" reference="products">
-                        <SelectInput 
-                            optionText="name" 
-                            validate={[required()]} 
-                            fullWidth 
+                        <SelectInput
+                            optionText="name"
+                            validate={[required()]}
+                            fullWidth
                             size="small"
-                            label={translate('pages.voucher.create.product')} 
+                            label={translate('pages.voucher.create.product')}
                             InputLabelProps={{ sx: { transformOrigin: isRTL ? 'top right' : 'top left', left: isRTL ? 'auto' : 0, right: isRTL ? 24 : 'auto' } }}
                         />
                     </ReferenceInput>
@@ -383,12 +383,12 @@ const VoucherBatchInputs = () => {
                 {user?.level !== 'agent' && (
                     <Box>
                         <ReferenceInput source="agent_id" reference="agents">
-                            <SelectInput 
-                                optionText="realname" 
-                                helperText={translate('pages.voucher.create.agent_placeholder')} 
-                                fullWidth 
+                            <SelectInput
+                                optionText="realname"
+                                helperText={translate('pages.voucher.create.agent_placeholder')}
+                                fullWidth
                                 size="small"
-                                label={translate('pages.voucher.create.agent')} 
+                                label={translate('pages.voucher.create.agent')}
                                 InputLabelProps={{ sx: { transformOrigin: isRTL ? 'top right' : 'top left', left: isRTL ? 'auto' : 0, right: isRTL ? 24 : 'auto' } }}
                             />
                         </ReferenceInput>
@@ -424,13 +424,13 @@ const VoucherBatchInputs = () => {
                     />
                 </Box>
                 <Box>
-                    <TextInput 
-                        source="prefix" 
-                        fullWidth 
+                    <TextInput
+                        source="prefix"
+                        fullWidth
                         size="small"
-                        label={translate('pages.voucher.create.prefix')} 
-                        placeholder={translate('pages.voucher.create.prefix_placeholder')} 
-                        inputProps={textInputProps} 
+                        label={translate('pages.voucher.create.prefix')}
+                        placeholder={translate('pages.voucher.create.prefix_placeholder')}
+                        inputProps={textInputProps}
                         InputLabelProps={{ sx: { transformOrigin: isRTL ? 'top right' : 'top left', left: isRTL ? 'auto' : 0, right: isRTL ? 24 : 'auto' } }}
                     />
                 </Box>
@@ -438,29 +438,29 @@ const VoucherBatchInputs = () => {
 
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, mb: 2, direction: isRTL ? 'rtl' : 'ltr' }}>
                 <Box>
-                    <NumberInput 
-                        source="length" 
-                        placeholder="10" 
-                        min={6} 
-                        max={20} 
-                        fullWidth 
+                    <NumberInput
+                        source="length"
+                        placeholder="10"
+                        min={6}
+                        max={20}
+                        fullWidth
                         size="small"
-                        label={translate('pages.voucher.create.code_length')} 
-                        inputProps={numInputProps} 
+                        label={translate('pages.voucher.create.code_length')}
+                        inputProps={numInputProps}
                         InputLabelProps={{ sx: { transformOrigin: isRTL ? 'top right' : 'top left', left: isRTL ? 'auto' : 0, right: isRTL ? 24 : 'auto' } }}
                     />
                 </Box>
                 <Box>
-                    <SelectInput 
-                        source="type" 
-                        label={translate('pages.voucher.create.code_type')} 
+                    <SelectInput
+                        source="type"
+                        label={translate('pages.voucher.create.code_type')}
                         choices={[
                             { id: 'mixed', name: translate('pages.voucher.create.code_type_mixed') },
                             { id: 'number', name: translate('pages.voucher.create.code_type_number') },
                             { id: 'alpha', name: translate('pages.voucher.create.code_type_alpha') },
-                        ]} 
-                        defaultValue="mixed" 
-                        fullWidth 
+                        ]}
+                        defaultValue="mixed"
+                        fullWidth
                         size="small"
                         InputLabelProps={{ sx: { transformOrigin: isRTL ? 'top right' : 'top left', left: isRTL ? 'auto' : 0, right: isRTL ? 24 : 'auto' } }}
                     />
@@ -469,24 +469,24 @@ const VoucherBatchInputs = () => {
 
             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, mb: 2, direction: isRTL ? 'rtl' : 'ltr' }}>
                 <Box>
-                    <DateTimeInput 
-                        source="expire_time" 
-                        fullWidth 
+                    <DateTimeInput
+                        source="expire_time"
+                        fullWidth
                         size="small"
-                        label={translate('pages.voucher.create.expiry')} 
-                        helperText={translate('pages.voucher.create.expiry_helper')} 
+                        label={translate('pages.voucher.create.expiry')}
+                        helperText={translate('pages.voucher.create.expiry_helper')}
                         InputLabelProps={{ shrink: true, sx: { transformOrigin: isRTL ? 'top right' : 'top left', left: isRTL ? 'auto' : 0, right: isRTL ? 24 : 'auto' } }}
                     />
                 </Box>
                 <Box>
-                    <TextInput 
-                        source="remark" 
-                        multiline 
-                        fullWidth 
+                    <TextInput
+                        source="remark"
+                        multiline
+                        fullWidth
                         size="small"
-                        label={translate('pages.voucher.create.remark')} 
-                        placeholder={translate('pages.voucher.create.remark_placeholder')} 
-                        inputProps={textInputProps} 
+                        label={translate('pages.voucher.create.remark')}
+                        placeholder={translate('pages.voucher.create.remark_placeholder')}
+                        inputProps={textInputProps}
                         InputLabelProps={{ sx: { transformOrigin: isRTL ? 'top right' : 'top left', left: isRTL ? 'auto' : 0, right: isRTL ? 24 : 'auto' } }}
                     />
                 </Box>
@@ -500,23 +500,23 @@ const VoucherBatchInputs = () => {
 
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, direction: isRTL ? 'rtl' : 'ltr' }}>
                     <Box>
-                        <BooleanInput 
-                            source="generate_pin" 
-                            label={translate('pages.voucher.create.generate_pin')} 
-                            defaultValue={false} 
-                            sx={{ '& .MuiFormControlLabel-root': { ml: isRTL ? 0 : undefined, mr: isRTL ? '-11px' : undefined, flexFlow: isRTL ? 'row-reverse' : 'row' } }} 
+                        <BooleanInput
+                            source="generate_pin"
+                            label={translate('pages.voucher.create.generate_pin')}
+                            defaultValue={false}
+                            sx={{ '& .MuiFormControlLabel-root': { ml: isRTL ? 0 : undefined, mr: isRTL ? '-11px' : undefined, flexFlow: isRTL ? 'row-reverse' : 'row' } }}
                         />
                     </Box>
                     <Box>
-                        <SelectInput 
-                            source="expiration_type" 
-                            label={translate('pages.voucher.create.expiration_type')} 
+                        <SelectInput
+                            source="expiration_type"
+                            label={translate('pages.voucher.create.expiration_type')}
                             choices={[
                                 { id: 'fixed', name: translate('pages.voucher.create.expiration_fixed') },
                                 { id: 'first_use', name: translate('pages.voucher.create.expiration_first_use') },
-                            ]} 
-                            defaultValue="fixed" 
-                            fullWidth 
+                            ]}
+                            defaultValue="fixed"
+                            fullWidth
                             size="small"
                             InputLabelProps={{ sx: { transformOrigin: isRTL ? 'top right' : 'top left', left: isRTL ? 'auto' : 0, right: isRTL ? 24 : 'auto' } }}
                         />
@@ -526,15 +526,15 @@ const VoucherBatchInputs = () => {
                 <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, direction: isRTL ? 'rtl' : 'ltr' }}>
                     <Box>
                         {useWatch({ control, name: 'generate_pin' }) && (
-                            <NumberInput 
-                                source="pin_length" 
-                                label={translate('pages.voucher.create.pin_length')} 
-                                placeholder="4" 
-                                min={4} 
-                                max={8} 
-                                fullWidth 
+                            <NumberInput
+                                source="pin_length"
+                                label={translate('pages.voucher.create.pin_length')}
+                                placeholder="4"
+                                min={4}
+                                max={8}
+                                fullWidth
                                 size="small"
-                                inputProps={numInputProps} 
+                                inputProps={numInputProps}
                                 InputLabelProps={{ sx: { transformOrigin: isRTL ? 'top right' : 'top left', left: isRTL ? 'auto' : 0, right: isRTL ? 24 : 'auto' } }}
                             />
                         )}
@@ -542,26 +542,26 @@ const VoucherBatchInputs = () => {
                     <Box>
                         {useWatch({ control, name: 'expiration_type' }) === 'first_use' && (
                             <Box sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, direction: isRTL ? 'rtl' : 'ltr' }}>
-                                <NumberInput 
-                                    source="validity_value_virtual" 
-                                    label={translate('pages.voucher.create.validity')} 
-                                    placeholder="30" 
-                                    min={1} 
-                                    fullWidth 
+                                <NumberInput
+                                    source="validity_value_virtual"
+                                    label={translate('pages.voucher.create.validity')}
+                                    placeholder="30"
+                                    min={1}
+                                    fullWidth
                                     size="small"
-                                    inputProps={numInputProps} 
+                                    inputProps={numInputProps}
                                     InputLabelProps={{ sx: { transformOrigin: isRTL ? 'top right' : 'top left', left: isRTL ? 'auto' : 0, right: isRTL ? 24 : 'auto' } }}
                                 />
-                                <SelectInput 
-                                    source="validity_unit_virtual" 
-                                    label={translate('pages.voucher.create.validity_unit')} 
+                                <SelectInput
+                                    source="validity_unit_virtual"
+                                    label={translate('pages.voucher.create.validity_unit')}
                                     choices={[
                                         { id: 'minutes', name: translate('common.minutes') },
                                         { id: 'hours', name: translate('common.hours') },
                                         { id: 'days', name: translate('common.days') },
-                                    ]} 
-                                    defaultValue="days" 
-                                    fullWidth 
+                                    ]}
+                                    defaultValue="days"
+                                    fullWidth
                                     size="small"
                                     InputLabelProps={{ sx: { transformOrigin: isRTL ? 'top right' : 'top left', left: isRTL ? 'auto' : 0, right: isRTL ? 24 : 'auto' } }}
                                 />
@@ -584,8 +584,21 @@ export const VoucherBatchCreate = (props: CreateProps) => {
 
     if (isLoading) return null;
 
-    const nextId = (latestBatches && latestBatches.length > 0) ? latestBatches[0].id + 1 : 1;
-    const defaultName = `${translate('pages.voucher.batch.default_name_prefix')}${nextId}`;
+    // Extract batch number from the last batch name
+    // Supports both English format "Batch #12" and Arabic format "الباتش #12"
+    let nextNumber = 1;
+    if (latestBatches && latestBatches.length > 0 && latestBatches[0].name) {
+        const lastName = latestBatches[0].name;
+        // Match numbers at the end of the string or after #
+        const match = lastName.match(/(\d+)\s*$/);
+        if (match) {
+            nextNumber = parseInt(match[1], 10) + 1;
+        } else {
+            // Fallback to ID-based numbering if no number found in name
+            nextNumber = latestBatches[0].id + 1;
+        }
+    }
+    const defaultName = `${translate('pages.voucher.batch.default_name_prefix')}${nextNumber}`;
 
     return (
         <Create {...props} record={{ name: defaultName }}>
