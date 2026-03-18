@@ -34,8 +34,15 @@ export const ForecastChart = () => {
         const forecastValues = data.forecast?.map(p => Math.round(p.value)) || [];
 
         // Fill history with nulls for forecast period and vice versa
-        const historyData = [...historyValues, ...new Array(forecastValues.length).fill(null)];
-        const forecastData = [...new Array(historyValues.length - 1).fill(null), historyValues[historyValues.length - 1], ...forecastValues];
+        const historyNullPadding = new Array(Math.max(0, forecastValues.length)).fill(null);
+        const historyData = [...historyValues, ...historyNullPadding];
+
+        const forecastNullPadding = new Array(Math.max(0, historyValues.length - 1)).fill(null);
+        const forecastData = [
+            ...forecastNullPadding,
+            ...(historyValues.length > 0 ? [historyValues[historyValues.length - 1]] : []),
+            ...forecastValues,
+        ];
 
         return {
             tooltip: {
