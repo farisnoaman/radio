@@ -12,13 +12,13 @@ const translations = {
 // 从 localStorage 获取保存的语言设置，如果没有则使用默认语言
 const getDefaultLocale = () => {
   const savedLocale = localStorage.getItem('locale');
-  return savedLocale && translations[savedLocale as keyof typeof translations] 
-    ? savedLocale 
-    : 'zh-CN';
+  return savedLocale && translations[savedLocale as keyof typeof translations]
+    ? savedLocale
+    : 'ar';
 };
 
 const baseI18nProvider = polyglotI18nProvider(
-  (locale) => translations[locale as keyof typeof translations] || translations['zh-CN'],
+  (locale) => translations[locale as keyof typeof translations] || translations['ar'],
   getDefaultLocale(), // 使用保存的语言或默认语言
   [
     { locale: 'zh-CN', name: '简体中文' },
