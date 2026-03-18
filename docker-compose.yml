@@ -1,0 +1,38 @@
+version: '3.8'
+services:
+  toughradius:
+    image: farisnoaman/toughradius:latest
+    ports:
+      - "1816:1816"
+      - "1812:1812"
+      - "1813:1813"
+    environment:
+      - TOUGHRADIUS_SYSTEM_DOMAIN=https://your-domain.com
+      - TOUGHRADIUS_WEB_SECRET=change-this-to-random-secret
+      - TOUGHRADIUS_LOGGER_MODE=production
+      - TOUGHRADIUS_SYSTEM_DEBUG=false
+      - TOUGHRADIUS_DB_TYPE=postgres
+      - TOUGHRADIUS_DB_HOST=postgres
+      - TOUGHRADIUS_DB_PORT=5432
+      - TOUGHRADIUS_DB_NAME=toughradius
+      - TOUGHRADIUS_DB_USER=postgres
+      - TOUGHRADIUS_DB_PASSWD=strong_password_here
+    volumes:
+      - toughradius_data:/var/toughradius
+    depends_on:
+      - postgres
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16
+    environment:
+      - POSTGRES_DB=toughradius
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=strong_password_here
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    restart: unless-stopped
+
+volumes:
+  toughradius_data:
+  postgres_data:

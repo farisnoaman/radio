@@ -71,3 +71,8 @@ jobs:
         run: |
           echo "Docker image built and pushed successfully!"
           echo "Image: ${{ secrets.DOCKERHUB_USERNAME }}/toughradius:${{ steps.version.outputs.version }}"
+
+      - name: Trigger Coolify Redeploy
+        run: |
+          curl -X POST ${{ secrets.COOLIFY_WEBHOOK_URL }}
+        if: secrets.COOLIFY_WEBHOOK_URL != ''

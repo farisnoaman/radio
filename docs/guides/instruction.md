@@ -236,3 +236,58 @@ Vary: Accept-Encoding
 Date: Mon, 16 Feb 2026 12:52:39 GMT
 
 faris@faris:~/Downloads/toughradius/toughradius$ 
+
+--------------
+## Auto-Deploy to coolify
+Updated workflow with auto-deploy to Coolify.
+
+**To enable auto-deploy:**
+
+1. **Get Coolify Webhook URL:**
+   - Go to your Coolify dashboard
+   - Open your Radio project
+   - Click on **Deploy** tab
+   - Find **Webhook** section
+   - Copy the webhook URL
+
+2. **Add to GitHub Secrets:**
+   - Go to your GitHub repository → Settings → Secrets → Actions
+   - Add new secret:
+     - **Name**: `COOLIFY_WEBHOOK_URL`
+     - **Secret**: `https://your-coolify-domain/api/deploy/some-id`
+
+3. **Push to trigger deployment:**
+   ```bash
+   git add .
+   git commit -m "feat: add auto-deploy to coolify"
+   git push origin main
+   ```
+
+After push, GitHub will:
+1. Build Docker image
+2. Push to Docker Hub (`farisnoaman/toughradius`)
+3. Trigger Coolify to pull new image and redeploy
+
+---
+## Docker Compose
+Updated `docker-compose.yml` for production with PostgreSQL.
+
+**Changes made:**
+- Uses your custom image: `farisnoaman/toughradius:latest`
+- Added required environment variables (domain, web secret, logging)
+- Added `restart: unless-stopped` for both services
+- Added `depends_on` to ensure Postgres starts first
+- Added proper volume definitions
+
+**To deploy:**
+```bash
+# Update the password in docker-compose.yml first
+# Then run:
+docker-compose up -d
+```
+
+**Update these values before running:**
+- `TOUGHRADIUS_SYSTEM_DOMAIN` - your domain
+- `TOUGHRADIUS_WEB_SECRET` - generate a random secret
+- `TOUGHRADIUS_DB_PASSWD` - strong password
+- `POSTGRES_PASSWORD` - strong password (should match DB password)
