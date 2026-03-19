@@ -1490,3 +1490,1137 @@ runtime.goexit
 2026-03-20T02:52:03.079+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
 runtime.goexit
 	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T02:52:17.932+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T02:52:18.977+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T02:53:03.110+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T02:53:03.110+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T02:53:19.063+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T02:53:20.076+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T02:54:03.078+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T02:54:03.078+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T02:54:20.093+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T02:54:21.130+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T02:54:29.844+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/analytics/forecast, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T02:54:29.844+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T02:54:31.014+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/analytics/forecast, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T02:54:31.014+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T02:54:33.030+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/analytics/forecast, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T02:54:37.067+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/analytics/forecast, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T02:55:03.110+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T02:55:03.110+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T02:55:31.102+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T02:55:32.449+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T02:56:03.078+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T02:56:03.078+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T02:56:32.496+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T02:56:33.568+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T02:57:03.110+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T02:57:03.110+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T02:57:33.587+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T02:57:34.656+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T02:58:03.078+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T02:58:03.078+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T02:58:34.669+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T02:58:35.707+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T02:59:03.110+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T02:59:03.110+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T02:59:35.721+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T02:59:36.757+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:00:03.079+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:00:03.079+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:00:36.773+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:00:37.807+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:01:03.111+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:01:03.111+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:01:37.823+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:01:38.857+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:02:03.078+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:02:03.078+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:02:38.875+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:02:39.903+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:03:03.110+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:03:03.110+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:03:39.916+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:03:40.950+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:04:03.078+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:04:03.078+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:04:40.966+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:04:41.999+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:05:03.110+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:05:03.110+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:05:42.015+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:05:43.048+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:06:03.078+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:06:03.078+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:06:43.063+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:06:44.087+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:07:03.110+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:07:03.110+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:07:44.102+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:07:45.132+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:08:03.079+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:08:03.079+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:08:45.143+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:08:46.172+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:09:03.110+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:09:03.110+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:09:46.188+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:09:47.218+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:10:03.078+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:10:03.078+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:10:47.235+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:10:48.263+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:11:03.110+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:11:03.110+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:11:48.277+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:11:49.308+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:12:03.078+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:12:03.078+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:12:49.321+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:12:50.352+0800	WARN	v4@v4.3.1/jwt.go:250	JWT validation failed: token has invalid claims: token is expired, Path: /api/v1/dashboard/stats, Auth Header: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE3NzM5MTE5NDAsImlhdCI6MTc3Mzg2ODc0MCwiaXNzIjoidG91Z2hyYWRpdXMiLCJuYmYiOjE3NzM4Njg2ODAsInJvbGUiOiJzdXBlciIsInN1YiI6IjIwMzExMjk3NzczMjAxODk5NTIiLCJ1c2VybmFtZSI6ImFkbWluIn0.Dc7QiWmpP1vScvDg--C8UGpiTd1Hzr0EbeSz1Ac4E3Q
+github.com/labstack/echo-jwt/v4.Config.ToMiddleware.func2.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo-jwt/v4@v4.3.1/jwt.go:250
+github.com/labstack/echo/v4.(*Echo).add.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:589
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.func3.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:108
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.ServerRecover.func4.1
+	/home/faris/Documents/lamees/radio/internal/webserver/server.go:330
+github.com/labstack/echo/v4/middleware.GzipWithConfig.func1.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/compress.go:139
+github.com/labstack/echo/v4.(*Echo).ServeHTTP.func1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:670
+github.com/talkincode/toughradius/v9/internal/webserver.NewAdminServer.RemoveTrailingSlash.RemoveTrailingSlashWithConfig.func8.1
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/middleware/slash.go:117
+github.com/labstack/echo/v4.(*Echo).ServeHTTP
+	/home/faris/go/pkg/mod/github.com/labstack/echo/v4@v4.15.0/echo.go:676
+net/http.serverHandler.ServeHTTP
+	/home/faris/go/go/src/net/http/server.go:3301
+net/http.(*conn).serve
+	/home/faris/go/go/src/net/http/server.go:2102
+2026-03-20T03:13:03.110+0800	WARN	runtime/asm_amd64.s:1700	Failed to connect to Mikrotik router ghg at 192.168.1.10:8727: dial tcp 192.168.1.10:8727: connect: no route to host
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700
+2026-03-20T03:13:03.110+0800	ERROR	runtime/asm_amd64.s:1700	Failed to update status for server ghg: SQL logic error: no such column: online_pppoe (1)
+runtime.goexit
+	/home/faris/go/go/src/runtime/asm_amd64.s:1700

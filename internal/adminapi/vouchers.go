@@ -15,6 +15,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/coa"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/auth/checkers"
+	"github.com/talkincode/toughradius/v9/internal/tenant"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"go.uber.org/zap"
@@ -34,6 +35,11 @@ import (
 // @Success 200 {object} ListResponse
 // @Router /api/v1/voucher-batches [get]
 func ListVoucherBatches(c echo.Context) error {
+	tenantID := tenant.GetTenantIDOrDefault(c.Request().Context())
+	if tenantID == 0 {
+		return fail(c, http.StatusBadRequest, "NO_TENANT", "Missing tenant context", nil)
+	}
+
 	db := GetDB(c)
 
 	page, _ := strconv.Atoi(c.QueryParam("page"))
@@ -63,7 +69,7 @@ func ListVoucherBatches(c echo.Context) error {
 		return fail(c, http.StatusUnauthorized, "UNAUTHORIZED", "Authentication failed", err.Error())
 	}
 
-	query := db.Model(&domain.VoucherBatch{})
+	query := db.Model(&domain.VoucherBatch{}).Where("tenant_id = ?", tenantID)
 
 	// Filter by agent: Agents can only see their own batches
 	if currentUser.Level == "agent" {
@@ -100,6 +106,11 @@ func ListVoucherBatches(c echo.Context) error {
 // @Success 200 {object} ListResponse
 // @Router /api/v1/vouchers [get]
 func ListVouchers(c echo.Context) error {
+	tenantID := tenant.GetTenantIDOrDefault(c.Request().Context())
+	if tenantID == 0 {
+		return fail(c, http.StatusBadRequest, "NO_TENANT", "Missing tenant context", nil)
+	}
+
 	db := GetDB(c)
 
 	page, _ := strconv.Atoi(c.QueryParam("page"))
@@ -114,7 +125,7 @@ func ListVouchers(c echo.Context) error {
 	var total int64
 	var vouchers []domain.Voucher
 
-	query := db.Model(&domain.Voucher{})
+	query := db.Model(&domain.Voucher{}).Where("tenant_id = ?", tenantID)
 
 	if batchID := c.QueryParam("batch_id"); batchID != "" {
 		query = query.Where("batch_id = ?", batchID)

@@ -11,6 +11,7 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/talkincode/toughradius/v9/internal/domain"
+	"github.com/talkincode/toughradius/v9/internal/tenant"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 )
@@ -258,6 +259,11 @@ func registerUserRoutes() {
 }
 
 func listRadiusUsers(c echo.Context) error {
+	tenantID := tenant.GetTenantIDOrDefault(c.Request().Context())
+	if tenantID == 0 {
+		return fail(c, http.StatusBadRequest, "NO_TENANT", "Missing tenant context", nil)
+	}
+
 	page, pageSize := parsePagination(c)
 
 	// Validate and sanitize sort field
@@ -272,7 +278,8 @@ func listRadiusUsers(c echo.Context) error {
 
 	base := GetDB(c).Model(&domain.RadiusUser{}).
 		Select("radius_user.*, COALESCE(ro.count, 0) AS online_count").
-		Joins("LEFT JOIN (SELECT username, COUNT(1) AS count FROM radius_online GROUP BY username) ro ON radius_user.username = ro.username")
+		Joins("LEFT JOIN (SELECT username, COUNT(1) AS count FROM radius_online WHERE tenant_id = ? GROUP BY username) ro ON radius_user.username = ro.username", tenantID).
+		Where("radius_user.tenant_id = ?", tenantID)
 
 	base = applyUserFilters(base, c)
 
@@ -299,12 +306,17 @@ func listRadiusUsers(c echo.Context) error {
 }
 
 func getRadiusUser(c echo.Context) error {
+	tenantID := tenant.GetTenantIDOrDefault(c.Request().Context())
+	if tenantID == 0 {
+		return fail(c, http.StatusBadRequest, "NO_TENANT", "Missing tenant context", nil)
+	}
+
 	id, err := parseIDParam(c, "id")
 	if err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid user ID", nil)
 	}
 	var user domain.RadiusUser
-	if err := GetDB(c).Where("id = ?", id).First(&user).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := GetDB(c).Where("tenant_id = ? AND id = ?", tenantID, id).First(&user).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		return fail(c, http.StatusNotFound, "USER_NOT_FOUND", "User not found", nil)
 	} else if err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query users", err.Error())
@@ -314,6 +326,11 @@ func getRadiusUser(c echo.Context) error {
 }
 
 func createRadiusUser(c echo.Context) error {
+	tenantID := tenant.GetTenantIDOrDefault(c.Request().Context())
+	if tenantID == 0 {
+		return fail(c, http.StatusBadRequest, "NO_TENANT", "Missing tenant context", nil)
+	}
+
 	var req UserRequest
 	if err := c.Bind(&req); err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_REQUEST", "Unable to parse user parameters", err.Error())
@@ -326,6 +343,7 @@ func createRadiusUser(c echo.Context) error {
 
 	// Convert to RadiusUser
 	user := req.toRadiusUser()
+	user.TenantID = tenantID // Set tenant from context
 
 	// Additional business logic validation
 	if user.Username == "" {
@@ -338,16 +356,16 @@ func createRadiusUser(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "MISSING_PROFILE_ID", "Billing profile is required", nil)
 	}
 
-	// CheckUsernamealready exists
+	// CheckUsername already exists (within tenant)
 	var exists int64
-	GetDB(c).Model(&domain.RadiusUser{}).Where("username = ?", user.Username).Count(&exists)
+	GetDB(c).Model(&domain.RadiusUser{}).Where("tenant_id = ? AND username = ?", tenantID, user.Username).Count(&exists)
 	if exists > 0 {
 		return fail(c, http.StatusConflict, "USERNAME_EXISTS", "Username already exists", nil)
 	}
 
-	// Validate if accounting profile exists
+	// Validate if accounting profile exists (within tenant)
 	var profile domain.RadiusProfile
-	if err := GetDB(c).Where("id = ?", user.ProfileId).First(&profile).Error; err != nil {
+	if err := GetDB(c).Where("tenant_id = ? AND id = ?", tenantID, user.ProfileId).First(&profile).Error; err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			return fail(c, http.StatusBadRequest, "PROFILE_NOT_FOUND", "Associated billing profile not found", nil)
 		}
@@ -420,6 +438,11 @@ func createRadiusUser(c echo.Context) error {
 }
 
 func updateRadiusUser(c echo.Context) error {
+	tenantID := tenant.GetTenantIDOrDefault(c.Request().Context())
+	if tenantID == 0 {
+		return fail(c, http.StatusBadRequest, "NO_TENANT", "Missing tenant context", nil)
+	}
+
 	id, err := parseIDParam(c, "id")
 	if err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid user ID", nil)
@@ -436,7 +459,7 @@ func updateRadiusUser(c echo.Context) error {
 	}
 
 	var user domain.RadiusUser
-	if err := GetDB(c).Where("id = ?", id).First(&user).Error; errors.Is(err, gorm.ErrRecordNotFound) {
+	if err := GetDB(c).Where("tenant_id = ? AND id = ?", tenantID, id).First(&user).Error; errors.Is(err, gorm.ErrRecordNotFound) {
 		return fail(c, http.StatusNotFound, "USER_NOT_FOUND", "User not found", nil)
 	} else if err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to query users", err.Error())
@@ -447,7 +470,7 @@ func updateRadiusUser(c echo.Context) error {
 	// Validate username uniqueness (if username modified)
 	if updateData.Username != "" && updateData.Username != user.Username {
 		var count int64
-		GetDB(c).Model(&domain.RadiusUser{}).Where("username = ? AND id != ?", updateData.Username, id).Count(&count)
+		GetDB(c).Model(&domain.RadiusUser{}).Where("tenant_id = ? AND username = ? AND id != ?", tenantID, updateData.Username, id).Count(&count)
 		if count > 0 {
 			return fail(c, http.StatusConflict, "USERNAME_EXISTS", "Username already exists", nil)
 		}
@@ -459,7 +482,7 @@ func updateRadiusUser(c echo.Context) error {
 	// If updated ProfileID，need toValidateand sync Profile configuration
 	if updateData.ProfileId != 0 && updateData.ProfileId != user.ProfileId {
 		var profile domain.RadiusProfile
-		if err := GetDB(c).Where("id = ?", updateData.ProfileId).First(&profile).Error; err != nil {
+		if err := GetDB(c).Where("tenant_id = ? AND id = ?", tenantID, updateData.ProfileId).First(&profile).Error; err != nil {
 			if errors.Is(err, gorm.ErrRecordNotFound) {
 				return fail(c, http.StatusBadRequest, "PROFILE_NOT_FOUND", "Associated billing profile not found", nil)
 			}
@@ -590,11 +613,16 @@ func updateRadiusUser(c echo.Context) error {
 }
 
 func deleteRadiusUser(c echo.Context) error {
+	tenantID := tenant.GetTenantIDOrDefault(c.Request().Context())
+	if tenantID == 0 {
+		return fail(c, http.StatusBadRequest, "NO_TENANT", "Missing tenant context", nil)
+	}
+
 	id, err := parseIDParam(c, "id")
 	if err != nil {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid user ID", nil)
 	}
-	if err := GetDB(c).Where("id = ?", id).Delete(&domain.RadiusUser{}).Error; err != nil {
+	if err := GetDB(c).Where("tenant_id = ? AND id = ?", tenantID, id).Delete(&domain.RadiusUser{}).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DATABASE_ERROR", "Failed to delete user", err.Error())
 	}
 	return ok(c, map[string]interface{}{

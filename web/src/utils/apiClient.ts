@@ -27,6 +27,20 @@ const buildHeaders = (rawHeaders?: HeadersInit) => {
   if (token) {
     headers.set('Authorization', `Bearer ${token}`);
   }
+  
+  // Add tenant ID header for multi-provider support
+  const userStr = localStorage.getItem('user');
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      if (user.tenant_id) {
+        headers.set('X-Tenant-ID', String(user.tenant_id));
+      }
+    } catch {
+      // ignore parse errors
+    }
+  }
+  
   return headers;
 };
 

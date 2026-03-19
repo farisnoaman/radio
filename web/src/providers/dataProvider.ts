@@ -9,6 +9,20 @@ import {
 } from 'react-admin';
 import { API_BASE, extractData, extractTotal, httpClient } from '../utils/apiClient';
 
+// Get current tenant ID from localStorage
+const getTenantID = (): string | null => {
+  const userStr = localStorage.getItem('user');
+  if (userStr) {
+    try {
+      const user = JSON.parse(userStr);
+      return user.tenant_id ? String(user.tenant_id) : null;
+    } catch {
+      return null;
+    }
+  }
+  return null;
+};
+
 const getIdentifier = (payload: unknown): string | number | undefined => {
   if (typeof payload === 'object' && payload !== null && 'id' in payload) {
     const value = (payload as { id?: string | number }).id;
