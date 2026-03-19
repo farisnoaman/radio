@@ -8,8 +8,9 @@ import (
 
 // RadiusProfile RADIUS billing profile
 type RadiusProfile struct {
-	ID             int64     `json:"id,string" form:"id"`                      // Primary key ID
-	NodeId         int64     `gorm:"index" json:"node_id,string" form:"node_id"`            // Node ID
+	ID             int64     `json:"id,string" form:"id"`                                  // Primary key ID
+	NodeId         int64     `gorm:"index" json:"node_id,string" form:"node_id"`          // Node ID
+	TenantID       int64     `gorm:"index" json:"tenant_id" form:"tenant_id"`             // Tenant/Provider ID
 
 	Name           string    `json:"name" form:"name"`                         // Profile name
 	Status         string    `gorm:"index" json:"status" form:"status"`        // Profile status: 0=disabled 1=enabled
@@ -35,6 +36,7 @@ func (RadiusProfile) TableName() string {
 // RadiusUser RADIUS Authentication account
 type RadiusUser struct {
 	ID              int64     `json:"id,string" form:"id"`                              // Primary key ID
+	TenantID        int64     `gorm:"index" json:"tenant_id" form:"tenant_id"`         // Tenant/Provider ID
 	NodeId          int64     `json:"node_id,string" form:"node_id"`                    // Node ID
 	ProfileId       int64     `gorm:"index" json:"profile_id,string" form:"profile_id"` // RADIUS profile ID
 	Realname        string    `gorm:"index" json:"realname" form:"realname"`                         // Contact name
@@ -101,6 +103,7 @@ func (RadiusUser) TableName() string {
 // Radius RadiusOnline Recode
 type RadiusOnline struct {
 	ID                  int64     `json:"id,string"` // Primary key ID
+	TenantID            int64     `gorm:"index" json:"tenant_id"`            // Tenant/Provider ID
 	Username            string    `gorm:"index" json:"username"`
 	NasId               string    `gorm:"index" json:"nas_id"`
 	NasAddr             string    `json:"nas_addr"`
@@ -137,6 +140,7 @@ func (RadiusOnline) TableName() string {
 // Radius Accounting Recode
 type RadiusAccounting struct {
 	ID                  int64     `json:"id,string"` // Primary key ID
+	TenantID            int64     `gorm:"index" json:"tenant_id"`            // Tenant/Provider ID
 	Username            string    `gorm:"index" json:"username"`
 	AcctSessionId       string    `gorm:"index" json:"acct_session_id"`
 	NasId               string    `gorm:"index" json:"nas_id"`

@@ -142,6 +142,11 @@ func (a *Application) Init(cfg *config.AppConfig) {
 		zap.S().Errorf("database migration failed: %v", err)
 	}
 
+	// Migrate tenant support (adds tenant_id to existing tables)
+	if err := a.MigrateTenantSupport(); err != nil {
+		zap.S().Warnf("tenant migration warning: %v", err)
+	}
+
 	// wait for database initialization to complete
 	go func() {
 		time.Sleep(3 * time.Second)

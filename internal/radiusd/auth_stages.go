@@ -79,6 +79,13 @@ func (s *AuthService) stageNasLookup(ctx *AuthPipelineContext) error {
 	}
 	ctx.NAS = nas
 
+	if nas != nil && s.TenantRouter != nil {
+		tenantCtx, err := s.TenantRouter.GetNASWithTenant(ctx.Context, ctx.RemoteIP, ctx.NasIdentifier)
+		if err == nil && tenantCtx != nil {
+			ctx.Context = tenantCtx.Tenant
+		}
+	}
+
 	if nas != nil {
 		secret := []byte(nas.Secret)
 		ctx.Request.Secret = secret

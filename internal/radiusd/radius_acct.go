@@ -7,6 +7,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/app"
 	radiuserrors "github.com/talkincode/toughradius/v9/internal/radiusd/errors"
 	vendorparserspkg "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/vendorparsers"
+	"github.com/talkincode/toughradius/v9/internal/tenant"
 	"go.uber.org/zap"
 	"layeh.com/radius"
 	"layeh.com/radius/rfc2865"
@@ -63,6 +64,15 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 		return
 	}
 
+	// Get tenant context from NAS
+	ctx := context.Background()
+	if s.TenantRouter != nil {
+		tc, tErr := s.TenantRouter.GetNASWithTenant(ctx, nasrip, identifier)
+		if tErr == nil && tc != nil {
+			ctx = tenant.WithTenantID(ctx, tc.TenantID)
+		}
+	}
+
 	// Reset packet secret
 	r.Secret = []byte(nas.Secret)
 	r.Secret = []byte(nas.Secret) //nolint:staticcheck
@@ -101,7 +111,6 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 			Vlanid2: vendorReq.Vlanid2,
 		}
 
-		ctx := context.Background()
 		err := s.HandleAccountingWithPlugins(ctx, r, vendorReqForPlugin, username, nas, nasrip)
 		if err != nil {
 			zap.L().Error("accounting plugin processing error",

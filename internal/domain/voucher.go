@@ -7,20 +7,9 @@ import (
 // VoucherBatch represents a batch of generated vouchers that can be sold
 // to customers. Each batch is linked to a Product which defines the actual
 // allocations (data quota, time validity) that vouchers will inherit.
-//
-// The batch controls printing/validity deadlines - vouchers cannot be printed
-// or activated after PrintExpireTime. The actual allocations come from the
-// Product at voucher creation time.
-//
-// Database table: voucher_batch
-//
-// Lifecycle:
-//   - Created via Admin API POST /api/v1/voucher-batches
-//   - Generates multiple Voucher records on creation
-//   - Can be activated/deactivated in bulk
-//   - Supports soft delete with restore capability
 type VoucherBatch struct {
 	ID           int64      `json:"id,string" form:"id"`
+	TenantID     int64      `gorm:"index" json:"tenant_id" form:"tenant_id"` // Tenant/Provider ID
 	Name         string     `json:"name" form:"name"`
 	ProductID    int64      `gorm:"index" json:"product_id,string" form:"product_id"`
 	AgentID      int64      `gorm:"index" json:"agent_id,string" form:"agent_id"`
@@ -44,20 +33,9 @@ func (VoucherBatch) TableName() string {
 // Voucher represents an individual prepaid access code that customers can
 // redeem to get internet access. Each voucher is linked to a Product which
 // defines the allocations (data quota, time validity) that this voucher provides.
-//
-// Vouchers track both their allocated quota and actual usage. Expiration can
-// occur via either: (1) time-based ExpireTime reached, or (2) quota-based
-// when DataUsed >= DataQuota or TimeUsed >= TimeQuota.
-//
-// Database table: voucher
-//
-// Lifecycle:
-//   - Created when batch is generated (inherits allocations from Product)
-//   - Status transitions: unused → active → used/expired
-//   - Quota usage tracked via RADIUS accounting
-//   - Soft-deleted after grace period when expired
 type Voucher struct {
 	ID              int64     `json:"id,string" form:"id"`
+	TenantID        int64     `gorm:"index" json:"tenant_id" form:"tenant_id"` // Tenant/Provider ID
 	BatchID         int64     `gorm:"index" json:"batch_id,string" form:"batch_id"`
 	Code            string    `json:"code" gorm:"uniqueIndex" form:"code"`
 	RadiusUsername  string    `gorm:"index" json:"radius_username" form:"radius_username"`
@@ -95,6 +73,7 @@ func (Voucher) TableName() string {
 // VoucherTopup represents additional data quota that can be added to an active voucher
 type VoucherTopup struct {
 	ID              int64     `json:"id,string" form:"id"`
+	TenantID        int64     `gorm:"index" json:"tenant_id" form:"tenant_id"` // Tenant/Provider ID
 	VoucherID       int64     `json:"voucher_id,string" form:"voucher_id"`
 	VoucherCode     string    `gorm:"index" json:"voucher_code" form:"voucher_code"`
 	AgentID         int64     `gorm:"index" json:"agent_id,string" form:"agent_id"`
@@ -117,6 +96,7 @@ func (VoucherTopup) TableName() string {
 // VoucherSubscription represents a recurring subscription for automatic voucher renewal
 type VoucherSubscription struct {
 	ID              int64     `json:"id,string" form:"id"`
+	TenantID        int64     `gorm:"index" json:"tenant_id" form:"tenant_id"` // Tenant/Provider ID
 	VoucherCode     string    `gorm:"index" json:"voucher_code" form:"voucher_code"`
 	ProductID       int64     `json:"product_id,string" form:"product_id"`
 	AgentID         int64     `gorm:"index" json:"agent_id,string" form:"agent_id"`
@@ -139,6 +119,7 @@ func (VoucherSubscription) TableName() string {
 // VoucherBundle represents a package of multiple vouchers sold together
 type VoucherBundle struct {
 	ID          int64     `json:"id,string" form:"id"`
+	TenantID    int64     `gorm:"index" json:"tenant_id" form:"tenant_id"` // Tenant/Provider ID
 	Name        string    `json:"name" form:"name"`
 	Description string    `json:"description" form:"description"`
 	AgentID     int64     `gorm:"index" json:"agent_id,string" form:"agent_id"`

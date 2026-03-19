@@ -5,6 +5,8 @@ var Tables = []interface{}{
 	&SysConfig{},
 	&SysOpr{},
 	&SysOprLog{},
+	// Multi-Tenant
+	&Provider{},
 	// Network
 	&NetNode{},
 	&NetNas{},

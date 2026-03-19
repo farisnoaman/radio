@@ -22,6 +22,7 @@ func (SysConfig) TableName() string {
 
 type SysOpr struct {
 	ID        int64     `json:"id,string" form:"id"`
+	TenantID  int64     `gorm:"index" json:"tenant_id" form:"tenant_id"` // Tenant/Provider ID (0 = platform-wide)
 	Realname  string    `json:"realname" form:"realname"`
 	Mobile    string    `json:"mobile" form:"mobile"`
 	Email     string    `json:"email" form:"email"`

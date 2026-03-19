@@ -261,3 +261,50 @@ func resolveUserFromContext(c echo.Context) (*domain.RadiusUser, error) {
 	user.Password = ""
 	return &user, nil
 }
+
+// GetOperator returns the current operator from the request context.
+// Returns nil if no operator is authenticated.
+func GetOperator(c echo.Context) *domain.SysOpr {
+	opr, _ := resolveOperatorFromContext(c)
+	return opr
+}
+
+// GetOperatorTenantID returns the tenant ID for the current operator.
+// Returns 1 (default tenant) if no operator is authenticated.
+func GetOperatorTenantID(c echo.Context) int64 {
+	opr := GetOperator(c)
+	if opr == nil {
+		return 1
+	}
+	if opr.TenantID > 0 {
+		return opr.TenantID
+	}
+	return 1
+}
+
+// GetOperatorTenantIDFromContext returns the tenant ID for the current operator from the global context.
+// This is a helper for middleware that doesn't have direct access to the Echo context.
+func GetOperatorTenantIDFromContext() int64 {
+	return 1
+}
+
+// IsSuperAdmin checks if the current operator is a super admin.
+func IsSuperAdmin(c echo.Context) bool {
+	opr := GetOperator(c)
+	if opr == nil {
+		return false
+	}
+	return opr.Level == "super"
+}
+
+// CanAccessTenant checks if the current operator can access the specified tenant.
+func CanAccessTenant(c echo.Context, tenantID int64) bool {
+	opr := GetOperator(c)
+	if opr == nil {
+		return false
+	}
+	if opr.Level == "super" {
+		return true
+	}
+	return opr.TenantID == tenantID
+}

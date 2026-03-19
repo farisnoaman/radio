@@ -38,6 +38,7 @@ func Init(appCtx app.AppContext) {
 	registerCoARoutes()
 	registerCPERoutes()
 	registerInvoiceRoutes()
+	registerProviderRoutes()
 }
 
 

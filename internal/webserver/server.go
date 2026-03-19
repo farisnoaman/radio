@@ -95,6 +95,12 @@ func NewAdminServer(appCtx app.AppContext) *AdminServer {
 	s.api.Use(echojwt.WithConfig(s.jwtConfig))
 	s.api.Use(MaintenanceMiddleware(s.appCtx))
 
+	// Add tenant middleware for multi-tenant support
+	tenantMiddleware := GetTenantMiddleware()
+	if tenantMiddleware != nil {
+		s.api.Use(tenantMiddleware)
+	}
+
 	// Add middleware to inject appCtx into each request context
 	s.root.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {

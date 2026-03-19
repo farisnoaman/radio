@@ -65,6 +65,7 @@ type EapState struct {
 }
 
 type RadiusService struct {
+	TenantRouter *TenantRouter
 	appCtx        app.AppContext // Use interface instead of concrete type
 	AuthRateCache map[string]AuthRateUser
 	EapStateCache map[string]EapState
@@ -106,6 +107,7 @@ func NewRadiusService(appCtx app.AppContext) *RadiusService {
 		AccountingRepo: repogorm.NewGormAccountingRepository(db),
 		NasRepo:        repogorm.NewGormNasRepository(db),
 		VoucherRepo:    repogorm.NewGormVoucherRepository(db),
+		TenantRouter: NewTenantRouter(repogorm.NewGormNasRepository(db)),
 	}
 
 	// Note: Plugin initialization is done externally after service creation

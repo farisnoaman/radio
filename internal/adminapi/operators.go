@@ -266,15 +266,16 @@ func createOperator(c echo.Context) error {
 
 	operator := domain.SysOpr{
 		ID:        common.UUIDint64(),
+		TenantID:  GetOperatorTenantID(c),
 		Username:  payload.Username,
-		Password:  hashedPassword,
+		Password: hashedPassword,
 		Realname:  payload.Realname,
 		Mobile:    payload.Mobile,
 		Email:     payload.Email,
 		Level:     payload.Level,
 		Status:    status,
 		Remark:    payload.Remark,
-		LastLogin: time.Time{}, // Initialize to zero value
+		LastLogin: time.Time{},
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 	}

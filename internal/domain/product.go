@@ -5,22 +5,9 @@ import (
 )
 
 // Product represents a commercial product/plan that wraps a RadiusProfile.
-// It defines the billing parameters including data quota, time validity,
-// pricing, and bandwidth limits that will be applied to vouchers created
-// from this product.
-//
-// The product serves as a template for voucher allocations - when a batch
-// is created, vouchers inherit the DataQuota and ValiditySeconds from
-// the selected product, not from the batch itself.
-//
-// Database table: product
-//
-// Lifecycle:
-//   - Created via Admin API POST /api/v1/products
-//   - Used as template when creating voucher batches
-//   - Can be disabled but not deleted (vouchers may reference it)
 type Product struct {
 	ID              int64     `json:"id,string" form:"id"`
+	TenantID        int64     `gorm:"index" json:"tenant_id" form:"tenant_id"` // Tenant/Provider ID
 	RadiusProfileID int64     `json:"radius_profile_id,string" form:"radius_profile_id"`
 	Name            string    `json:"name" form:"name"`
 	Price           float64   `json:"price" form:"price"`
