@@ -1,0 +1,210 @@
+# Production Docker Compose for Multi-Provider RADIO
+# Supports: 100 providers × 5000 users × 1500 concurrent per provider
+# 
+# Usage:
+#   docker-compose -f docker-compose.prod.yml up -d
+#   docker-compose -f docker-compose.prod.yml logs -f toughradius
+
+version: '3.8'
+
+services:
+  # Main RADIO Application
+  toughradius:
+    image: farisnoaman/toughradius:latest
+    container_name: radio-toughradius
+    ports:
+      - "1816:1816"   # Web/Admin API
+      - "1812:1812/udp"   # RADIUS Auth
+      - "1813:1813/udp"   # RADIUS Acct
+      - "2083:2083"   # RadSec
+    environment:
+      # System
+      - TOUGHRADIUS_SYSTEM_DOMAIN=${DOMAIN:-https://radius.example.com}
+      - TOUGHRADIUS_LOGGER_MODE=production
+      - TOUGHRADIUS_SYSTEM_DEBUG=false
+
+      # Database (PostgreSQL)
+      - TOUGHRADIUS_DB_TYPE=postgres
+      - TOUGHRADIUS_DB_HOST=postgres
+      - TOUGHRADIUS_DB_PORT=5432
+      - TOUGHRADIUS_DB_NAME=toughradius
+      - TOUGHRADIUS_DB_USER=toughradius
+      - TOUGHRADIUS_DB_PASSWD=${DB_PASSWORD}
+      - TOUGHRADIUS_DB_MAX_CONN=200
+      - TOUGHRADIUS_DB_IDLE_CONN=20
+
+      # Redis (L2 Cache)
+      - TOUGHRADIUS_REDIS_HOST=redis
+      - TOUGHRADIUS_REDIS_PORT=6379
+      - TOUGHRADIUS_CACHE_L2_ENABLED=true
+
+      # Multi-Tenant
+      - TOUGHRADIUS_MULTITENANT_ENABLED=true
+
+      # L1 Cache (Local Memory)
+      - TOUGHRADIUS_CACHE_L1_ENABLED=true
+      - TOUGHRADIUS_CACHE_L1_MAX_ENTRIES=10000
+
+      # Cache TTL
+      - TOUGHRADIUS_CACHE_USER_TTL=30
+      - TOUGHRADIUS_CACHE_NAS_TTL=300
+      - TOUGHRADIUS_CACHE_SESSION_TTL=5
+      - TOUGHRADIUS_CACHE_VOUCHER_TTL=120
+    volumes:
+      - toughradius_data:/var/toughradius
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:1816/ready"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - radio-network
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+        reservations:
+          memory: 1G
+
+  # PostgreSQL Database (Primary)
+  postgres:
+    image: postgres:16-alpine
+    container_name: radio-postgres
+    environment:
+      - POSTGRES_DB=toughradius
+      - POSTGRES_USER=toughradius
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./postgres.conf:/etc/postgresql/postgresql.conf:ro
+    command: postgres -c config_file=/etc/postgresql/postgresql.conf
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U toughradius -d toughradius"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - radio-network
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+
+  # PostgreSQL Replica (for read scaling - optional)
+  postgres-replica:
+    image: postgres:16-alpine
+    container_name: radio-postgres-replica
+    environment:
+      - POSTGRES_DB=toughradius
+      - POSTGRES_USER=toughradius
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - postgres_replica_data:/var/lib/postgresql/data
+    command: >
+      postgres
+      -c config_file=/etc/postgresql/postgresql.conf
+      -c primary_conninfo=host=postgres port=5432 user=toughradius password=${DB_PASSWORD}
+      -c hot_standby=on
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U toughradius -d toughradius"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - radio-network
+    deploy:
+      resources:
+        limits:
+          memory: 4G
+        reservations:
+          memory: 2G
+
+  # Redis (L2 Cache)
+  redis:
+    image: redis:7-alpine
+    container_name: radio-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: >
+      redis-server
+      --appendonly yes
+      --appendfsync everysec
+      --maxmemory 1gb
+      --maxmemory-policy allkeys-lru
+      --tcp-backlog 511
+      --timeout 0
+      --tcp-keepalive 300
+      --activerehashing yes
+      --hz 10
+      --dynamic-hz yes
+      --save 900 1
+      --save 300 10
+      --save 60 10000
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - radio-network
+    deploy:
+      resources:
+        limits:
+          memory: 1.5G
+        reservations:
+          memory: 512M
+
+  # Redis Sentinel (for HA - optional)
+  redis-sentinel:
+    image: redis:7-alpine
+    container_name: radio-redis-sentinel
+    command: >
+      redis-sentinel
+      /usr/local/etc/redis/sentinel.conf
+    volumes:
+      - ./redis-sentinel.conf:/usr/local/etc/redis/sentinel.conf:ro
+      - redis_sentinel_data:/data
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - radio-network
+
+# Networks
+networks:
+  radio-network:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 172.28.0.0/16
+
+# Volumes
+volumes:
+  toughradius_data:
+    driver: local
+  postgres_data:
+    driver: local
+  postgres_replica_data:
+    driver: local
+  redis_data:
+    driver: local
+  redis_sentinel_data:
+    driver: local

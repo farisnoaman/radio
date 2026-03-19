@@ -207,6 +207,7 @@ type AppConfig struct {
 	Backup   BackupConfig  `yaml:"backup" json:"backup"`
 	Tunnel   TunnelConfig  `yaml:"tunnel" json:"tunnel"`
 	Voucher  VoucherConfig `yaml:"voucher" json:"voucher"`
+	Cache    CacheConfig   `yaml:"cache" json:"cache"`
 }
 
 // TunnelConfig holds the configuration for tunnel services
@@ -227,6 +228,27 @@ type VoucherConfig struct {
 	CleanupEnabled      bool `yaml:"cleanup_enabled" json:"cleanup_enabled"`             // Enable/disable automatic voucher cleanup
 	CleanupGraceMinutes int  `yaml:"cleanup_grace_minutes" json:"cleanup_grace_minutes"` // Minutes to wait after quota exhaustion before marking expired
 	CleanupRetentionDays int  `yaml:"cleanup_retention_days" json:"cleanup_retention_days"` // Days to keep expired vouchers before soft-delete
+}
+
+// CacheConfig holds multi-layer caching configuration for high-concurrency scenarios.
+// Supports L1 (local memory) and L2 (Redis) caching tiers for 100 providers × 5000 users.
+type CacheConfig struct {
+	L1Enabled   bool `yaml:"l1_enabled" json:"l1_enabled"`     // Enable L1 local memory cache
+	L1MaxEntries int  `yaml:"l1_max_entries" json:"l1_max_entries"` // Max entries per L1 cache
+
+	L2Enabled bool   `yaml:"l2_enabled" json:"l2_enabled"` // Enable L2 Redis cache
+	L2RedisDB int    `yaml:"l2_redis_db" json:"l2_redis_db"` // Redis database number
+
+	// TTL settings (in seconds)
+	UserTTL     int `yaml:"user_ttl" json:"user_ttl"`         // User cache TTL
+	NasTTL      int `yaml:"nas_ttl" json:"nas_ttl"`           // NAS cache TTL
+	SessionTTL  int `yaml:"session_ttl" json:"session_ttl"`   // Session cache TTL
+	VoucherTTL  int `yaml:"voucher_ttl" json:"voucher_ttl"`   // Voucher cache TTL
+
+	// Scale settings
+	ProviderCount         int `yaml:"provider_count" json:"provider_count"`             // Expected provider count
+	UsersPerProvider      int `yaml:"users_per_provider" json:"users_per_provider"`     // Users per provider
+	ConcurrentPerProvider int `yaml:"concurrent_per_provider" json:"concurrent_per_provider"` // Concurrent users per provider
 }
 
 
@@ -537,6 +559,19 @@ var DefaultAppConfig = &AppConfig{
 		CleanupGraceMinutes: 60,
 		CleanupRetentionDays: 7,
 	},
+	Cache: CacheConfig{
+		L1Enabled:   true,
+		L1MaxEntries: 10000,
+		L2Enabled:    true,
+		L2RedisDB:   0,
+		UserTTL:     30,
+		NasTTL:      300,
+		SessionTTL:  5,
+		VoucherTTL:  120,
+		ProviderCount:         100,
+		UsersPerProvider:      5000,
+		ConcurrentPerProvider: 1500,
+	},
 }
 
 
@@ -642,6 +677,16 @@ func LoadConfig(cfile string) *AppConfig {
 	setEnvBoolValue("TOUGHRADIUS_TUNNEL_ENABLED", &cfg.Tunnel.Enabled)
 	setEnvValue("TOUGHRADIUS_TUNNEL_TYPE", &cfg.Tunnel.Type)
 	setEnvValue("TOUGHRADIUS_TUNNEL_TOKEN", &cfg.Tunnel.Token)
+
+	// Cache
+	setEnvBoolValue("TOUGHRADIUS_CACHE_L1_ENABLED", &cfg.Cache.L1Enabled)
+	setEnvIntValue("TOUGHRADIUS_CACHE_L1_MAX_ENTRIES", &cfg.Cache.L1MaxEntries)
+	setEnvBoolValue("TOUGHRADIUS_CACHE_L2_ENABLED", &cfg.Cache.L2Enabled)
+	setEnvIntValue("TOUGHRADIUS_CACHE_L2_REDIS_DB", &cfg.Cache.L2RedisDB)
+	setEnvIntValue("TOUGHRADIUS_CACHE_USER_TTL", &cfg.Cache.UserTTL)
+	setEnvIntValue("TOUGHRADIUS_CACHE_NAS_TTL", &cfg.Cache.NasTTL)
+	setEnvIntValue("TOUGHRADIUS_CACHE_SESSION_TTL", &cfg.Cache.SessionTTL)
+	setEnvIntValue("TOUGHRADIUS_CACHE_VOUCHER_TTL", &cfg.Cache.VoucherTTL)
 
 	return cfg
 

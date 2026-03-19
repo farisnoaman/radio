@@ -12,6 +12,8 @@ services:
       - TOUGHRADIUS_WEB_SECRET=change-this-to-random-secret-min-32-chars
       - TOUGHRADIUS_LOGGER_MODE=production
       - TOUGHRADIUS_SYSTEM_DEBUG=false
+      
+      # Database Configuration
       - TOUGHRADIUS_DB_TYPE=postgres
       - TOUGHRADIUS_DB_HOST=postgres
       - TOUGHRADIUS_DB_PORT=5432
@@ -20,12 +22,28 @@ services:
       - TOUGHRADIUS_DB_PASSWD=strong_password_here
       - TOUGHRADIUS_DB_MAX_CONN=200
       - TOUGHRADIUS_DB_IDLE_CONN=20
-      - TOUGHRADIUS_CACHE_TYPE=memory
+      
+      # Multi-Tenant & Cache Configuration
       - TOUGHRADIUS_MULTITENANT_ENABLED=true
+      - TOUGHRADIUS_CACHE_L1_ENABLED=true
+      - TOUGHRADIUS_CACHE_L1_MAX_ENTRIES=10000
+      - TOUGHRADIUS_CACHE_L2_ENABLED=true
+      - TOUGHRADIUS_REDIS_HOST=redis
+      - TOUGHRADIUS_REDIS_PORT=6379
+      - TOUGHRADIUS_CACHE_USER_TTL=30
+      - TOUGHRADIUS_CACHE_NAS_TTL=300
+      - TOUGHRADIUS_CACHE_SESSION_TTL=5
+      
+      # Scale Configuration
+      - TOUGHRADIUS_CACHE_PROVIDER_COUNT=100
+      - TOUGHRADIUS_CACHE_USERS_PER_PROVIDER=5000
+      - TOUGHRADIUS_CACHE_CONCURRENT_PER_PROVIDER=1500
     volumes:
       - toughradius_data:/var/toughradius
     depends_on:
       postgres:
+        condition: service_healthy
+      redis:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
@@ -52,6 +70,31 @@ services:
       timeout: 5s
       retries: 5
 
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: >
+      redis-server
+      --appendonly yes
+      --maxmemory 1gb
+      --maxmemory-policy allkeys-lru
+      --tcp-backlog 511
+      --timeout 0
+      --tcp-keepalive 300
+      --activerehashing yes
+      --hz 10
+      --dynamic-hz yes
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   toughradius_data:
   postgres_data:
+  redis_data:
