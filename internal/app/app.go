@@ -45,6 +45,7 @@ type Application struct {
 	tunnelManager tunnel.TunnelManager
 	envCollector  *device.EnvCollector
 	alertEngine   *device.AlertEngine
+	loyaltyService *service.LoyaltyService
 }
 
 
@@ -245,6 +246,9 @@ func (a *Application) Init(cfg *config.AppConfig) {
 		}
 	}()
 
+	// Initialize Loyalty Service
+	a.loyaltyService = service.NewLoyaltyService(a.gormDB)
+
 	a.initJob()
 
 }
@@ -352,6 +356,11 @@ func (a *Application) TunnelMgr() tunnel.TunnelManager {
 // ArchivalMgr returns the archival manager instance
 func (a *Application) ArchivalMgr() *logging.ArchivalManager {
 	return a.archivalMgr
+}
+
+// LoyaltyService returns the loyalty service instance
+func (a *Application) LoyaltyService() *service.LoyaltyService {
+	return a.loyaltyService
 }
 
 

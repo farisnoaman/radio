@@ -56,4 +56,10 @@ var Tables = []interface{}{
 	&RadiusProxyServer{},
 	&RadiusProxyRealm{},
 	&ProxyRequestLog{},
+	// Loyalty System
+	&LoyaltyProfile{},
+	&LoyaltyIdentity{},
+	&LoyaltyReward{},
+	&LoyaltyRule{},
+	&LoyaltyConfig{},
 }

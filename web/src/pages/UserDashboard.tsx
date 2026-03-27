@@ -7,6 +7,7 @@ import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined
 import SpeedIcon from '@mui/icons-material/Speed';
 import DevicesIcon from '@mui/icons-material/Devices';
 import DateRangeIcon from '@mui/icons-material/DateRange';
+import { LoyaltyStatusCard } from '../components/LoyaltyStatusCard';
 
 const UserDashboard = () => {
     const translate = useTranslate();
@@ -242,6 +243,8 @@ const UserDashboard = () => {
                 </Grid>
 
                 <Grid size={{ xs: 12, md: 4 }}>
+                    <LoyaltyStatusCard />
+
                     <Card sx={{ 
                         borderRadius: 6, 
                         mb: 3, 

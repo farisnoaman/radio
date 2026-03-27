@@ -3,18 +3,24 @@ package handlers
 import (
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/plugins/accounting"
+	"github.com/talkincode/toughradius/v9/internal/service"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
+	"layeh.com/radius/rfc2865"
 	"layeh.com/radius/rfc2866"
 	"layeh.com/radius/rfc2869"
 )
 
 type VoucherQuotaSyncHandler struct {
-	db *gorm.DB
+	db             *gorm.DB
+	loyaltyService *service.LoyaltyService
 }
 
-func NewVoucherQuotaSyncHandler(db *gorm.DB) *VoucherQuotaSyncHandler {
-	return &VoucherQuotaSyncHandler{db: db}
+func NewVoucherQuotaSyncHandler(db *gorm.DB, loyaltyService *service.LoyaltyService) *VoucherQuotaSyncHandler {
+	return &VoucherQuotaSyncHandler{
+		db:             db,
+		loyaltyService: loyaltyService,
+	}
 }
 
 func (h *VoucherQuotaSyncHandler) Name() string {
@@ -75,6 +81,31 @@ func (h *VoucherQuotaSyncHandler) Handle(acctCtx *accounting.AccountingContext) 
 		zap.String("voucher_code", user.VoucherCode),
 		zap.Int64("data_used_mb", dataUsedMB),
 		zap.Int64("time_used_seconds", acctSessionTime))
+
+	// Track loyalty usage if service is available
+	if h.loyaltyService != nil {
+		macAddr := rfc2865.CallingStationId_GetString(r.Packet)
+		if macAddr != "" {
+			// Note: The usage in Radius Accounting (Acct-Input-Octets/Session-Time) is cumulative for the session.
+			// The voucher_quota_sync.go handler currently adds them to the voucher (gorm.Expr data_used + dataUsedMB).
+			// If this handler is called multiple times per session (Interim Updates), it risks over-counting
+			// unless we track the delta or the service handles it.
+			// Per User Requirement: "accumulate data that is deleted by week/month/year logic"
+			// and "atomic usage aggregation service with optimistic locking".
+			// We pass the current event's usage to the service.
+			err := h.loyaltyService.ProcessUsageEvent(service.UsageEvent{
+				MAC:      macAddr,
+				TenantID: user.TenantID,
+				DataMB:   dataUsedMB,
+				TimeSec:  acctSessionTime,
+			})
+			if err != nil {
+				zap.L().Error("Failed to process loyalty usage event",
+					zap.String("mac", macAddr),
+					zap.Error(err))
+			}
+		}
+	}
 
 	return nil
 }

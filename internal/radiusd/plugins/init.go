@@ -14,6 +14,7 @@ import (
 	eaphandlers "github.com/talkincode/toughradius/v9/internal/radiusd/plugins/eap/handlers"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/registry"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/repository"
+	"github.com/talkincode/toughradius/v9/internal/service"
 	"gorm.io/gorm"
 )
 
@@ -24,9 +25,9 @@ func InitPlugins(
 	db *gorm.DB,
 	sessionRepo repository.SessionRepository,
 	accountingRepo repository.AccountingRepository,
-
 	voucherRepo repository.VoucherRepository,
 	userRepo repository.UserRepository,
+	loyaltyService *service.LoyaltyService,
 ) {
 	// Register password validators (stateless plugins)
 	registry.RegisterPasswordValidator(&validators.PAPValidator{})
@@ -90,7 +91,7 @@ func InitPlugins(
 		if db != nil {
 			registry.RegisterAccountingHandler(handlers.NewSessionLogHandler(db))
 			// Voucher quota sync - updates voucher usage from accounting
-			registry.RegisterAccountingHandler(handlers.NewVoucherQuotaSyncHandler(db))
+			registry.RegisterAccountingHandler(handlers.NewVoucherQuotaSyncHandler(db, loyaltyService))
 			// Quota enforcement - disconnects users when time/data quota is exceeded during active sessions
 			registry.RegisterAccountingHandler(handlers.NewQuotaEnforcementHandler(db, accountingRepo))
 		}

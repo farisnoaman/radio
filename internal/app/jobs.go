@@ -106,6 +106,22 @@ func (a *Application) initJob() {
 		zap.S().Errorf("init daily reporting snapshot job error %s", err.Error())
 	}
 
+	// Loyalty Daily Reset - resets per-profile daily redemption counters at midnight
+	_, err = a.sched.AddFunc("@daily", func() {
+		go a.SchedLoyaltyDailyResetTask()
+	})
+	if err != nil {
+		zap.S().Errorf("init loyalty daily reset job error %s", err.Error())
+	}
+
+	// Loyalty Points Expiry - expires points that have been inactive for too long
+	_, err = a.sched.AddFunc("@monthly", func() {
+		go a.SchedLoyaltyPointsExpiryTask()
+	})
+	if err != nil {
+		zap.S().Errorf("init loyalty expiry job error %s", err.Error())
+	}
+
 	a.sched.Start()
 }
 
@@ -711,4 +727,63 @@ func (a *Application) SchedDailyReportingSnapshotTask() {
 	} else {
 		zap.S().Info("daily reporting snapshot completed successfully")
 	}
+}
+
+// SchedLoyaltyDailyResetTask resets the per-profile daily redemption counter every midnight.
+// This is the authoritative reset; the endpoint also resets inline as a fallback.
+func (a *Application) SchedLoyaltyDailyResetTask() {
+	defer func() {
+		if err := recover(); err != nil {
+			zap.S().Error(err)
+		}
+	}()
+
+	result := a.gormDB.Model(&domain.LoyaltyProfile{}).
+		Where("daily_redeem_count > 0").
+		Update("daily_redeem_count", 0)
+
+	if result.Error != nil {
+		zap.S().Errorf("loyalty daily reset failed: %v", result.Error)
+		return
+	}
+	zap.S().Infof("loyalty daily reset: cleared counters on %d profiles", result.RowsAffected)
+}
+
+// SchedLoyaltyPointsExpiryTask expires points on profiles that have been dormant
+// for longer than the configured window (default 12 months of inactivity).
+// Profiles where points_expires_at is set and has passed will have their points zeroed.
+func (a *Application) SchedLoyaltyPointsExpiryTask() {
+	defer func() {
+		if err := recover(); err != nil {
+			zap.S().Error(err)
+		}
+	}()
+
+	now := time.Now()
+
+	// Zero out points on profiles where the expiry window has passed
+	result := a.gormDB.Model(&domain.LoyaltyProfile{}).
+		Where("points > 0 AND points_expires_at IS NOT NULL AND points_expires_at < ?", now).
+		Updates(map[string]interface{}{
+			"points":           0,
+			"points_expires_at": nil,
+		})
+
+	if result.Error != nil {
+		zap.S().Errorf("loyalty points expiry failed: %v", result.Error)
+		return
+	}
+	if result.RowsAffected > 0 {
+		zap.S().Infof("loyalty points expired: zeroed points on %d dormant profiles", result.RowsAffected)
+	}
+
+	// Now refresh the expiry window for profiles that earned points recently
+	// (updated in the last month = active) — push their expiry out 12 months from now
+	activityCutoff := now.AddDate(0, -1, 0) // active = updated in last month
+	newExpiry := now.AddDate(1, 0, 0)       // 12 months from today
+	a.gormDB.Model(&domain.LoyaltyProfile{}).
+		Where("points > 0 AND updated_at >= ?", activityCutoff).
+		Update("points_expires_at", newExpiry)
+
+	zap.S().Info("loyalty points expiry task completed")
 }

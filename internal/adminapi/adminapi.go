@@ -40,6 +40,7 @@ func Init(appCtx app.AppContext) {
 	registerPortalSessionRoutes()
 	registerPortalVoucherRoutes()
 	registerPortalUserRoutes()
+	registerPortalLoyaltyRoutes()
 	registerBackupRoutes()
 	registerMaintenanceRoutes()
 	registerWebsocketRoutes()
