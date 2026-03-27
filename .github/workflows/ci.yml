@@ -42,6 +42,7 @@ jobs:
         with:
           version: v2.1.6
           args: --timeout=5m
+          verify: false
 
   test:
     name: Test

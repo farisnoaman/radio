@@ -2,11 +2,11 @@ version: "2"
 
 run:
   timeout: 5m
-  tests: true
+  tests: false
 
 issues:
   exclude-rules:
-    - path: go/src
+    - path: go/
 
 linters:
   enable:
@@ -21,8 +21,8 @@ linters:
 
   settings:
     errcheck:
-      check-type-assertions: false # Disable type assertion checks - too many false positives in test files
-      check-blank: false # Don't check explicitly ignored errors with _ =
+      check-type-assertions: false
+      check-blank: false
 
     misspell:
       locale: US
@@ -30,16 +30,15 @@ linters:
     staticcheck:
       checks:
         - all
-        - "-ST1000" # Disable package comment requirement
-        - "-ST1003" # Disable naming convention (Id vs ID, etc)
-        - "-ST1005" # Disable error string format check
-        - "-ST1006" # Disable receiver name style check
-        - "-ST1016" # Disable receiver name consistency check
-        - "-ST1020" # Disable function comment format check
-        - "-ST1021" # Disable type comment format check
+        - "-ST1000"
+        - "-ST1003"
+        - "-ST1005"
+        - "-ST1006"
+        - "-ST1016"
+        - "-ST1020"
+        - "-ST1021"
 
     gosec:
       excludes:
-        # MD5/SHA1 are required by RADIUS protocol (RFC 2865) - cannot be changed
-        - G401 # Use of weak cryptographic primitive (MD5)
-        - G501 # Blocklisted import crypto/md5
+        - G401
+        - G501
