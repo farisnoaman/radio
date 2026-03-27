@@ -11,6 +11,7 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/radiusd/registry"
 	"go.uber.org/zap"
 	"layeh.com/radius"
+	"layeh.com/radius/rfc2866"
 )
 
 // HandleAccountingWithPlugins Use plugin system to handle accounting request
@@ -22,15 +23,11 @@ func (s *AcctService) HandleAccountingWithPlugins(
 	nas *domain.NetNas,
 	nasIP string,
 ) error {
-	// getAccounting-Status-Type
-	statusTypeAttr := r.Get(40) //nolint:staticcheck // Acct-Status-Type
-	if statusTypeAttr == nil {
-		return fmt.Errorf("missing Acct-Status-Type attribute")
-	}
-
-	// The status type is already available from the RADIUS packet; extract it directly
-	// RFC 2866 value constants: Start=1, Stop=2, InterimUpdate=3, AccountingOn=7, AccountingOff=8
-	statusType := statusTypeAttr[0]
+	// getAccounting-Status-Type using proper RFC 2866 decoder
+	// Acct-Status-Type is a 4-byte big-endian uint32 per RFC 2866.
+	// Reading raw bytes with statusTypeAttr[0] gives 0 for values 1-255
+	// because the value is in the last byte (e.g., [0,0,0,1] for Start).
+	statusType := rfc2866.AcctStatusType_Get(r.Packet)
 
 	// Build the AccountingContext
 	acctCtx := &accounting.AccountingContext{

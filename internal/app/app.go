@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"os"
 	"runtime/debug"
 	"time"
@@ -16,6 +17,9 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/app/websocket"
 	"github.com/talkincode/toughradius/v9/internal/acs"
 	"github.com/talkincode/toughradius/v9/internal/domain"
+	templates "github.com/talkincode/toughradius/v9/internal/domain/templates" // nolint:staticcheck
+	"github.com/talkincode/toughradius/v9/internal/device"
+	"github.com/talkincode/toughradius/v9/internal/service"
 
 	"github.com/talkincode/toughradius/v9/pkg/metrics"
 	"go.uber.org/zap"
@@ -39,6 +43,8 @@ type Application struct {
 	wsHub         *websocket.Hub
 	archivalMgr   *logging.ArchivalManager
 	tunnelManager tunnel.TunnelManager
+	envCollector  *device.EnvCollector
+	alertEngine   *device.AlertEngine
 }
 
 
@@ -147,6 +153,14 @@ func (a *Application) Init(cfg *config.AppConfig) {
 		zap.S().Warnf("tenant migration warning: %v", err)
 	}
 
+	// Seed default NAS templates
+	if err := seedDefaultTemplates(a.gormDB); err != nil {
+		zap.S().Error("Failed to seed default NAS templates", zap.Error(err))
+	}
+
+	// Suppress unused import warning for templates package
+	_ = templates.SeedDefaultTemplates
+
 	// wait for database initialization to complete
 	go func() {
 		time.Sleep(3 * time.Second)
@@ -187,6 +201,49 @@ func (a *Application) Init(cfg *config.AppConfig) {
 			}
 		}()
 	}
+
+	// Initialize Environment Monitoring Services
+	a.envCollector = device.NewEnvCollector(a.gormDB)
+
+	var emailProvider *service.SMTPEmailProvider
+	if cfg.Notification.SMTPHost != "" {
+		emailProvider = service.NewSMTPEmailProvider(service.SMTPConfig{
+			Host:     cfg.Notification.SMTPHost,
+			Port:     cfg.Notification.SMTPPort,
+			Username: cfg.Notification.SMTPUsername,
+			Password: cfg.Notification.SMTPPassword,
+			From:     cfg.Notification.SMTPFrom,
+		})
+	}
+	notifier := device.NewNotifier(a.gormDB, emailProvider)
+	a.alertEngine = device.NewAlertEngine(a.gormDB, notifier)
+
+	// Start background environment monitoring
+	go func() {
+		// Run immediately on startup
+		zap.S().Info("Running initial environment collection...")
+		if err := a.envCollector.CollectAllDevices(context.Background()); err != nil {
+			zap.S().Errorw("Initial environment collection failed", "error", err)
+		}
+		if err := a.alertEngine.ProcessAllMetrics(context.Background()); err != nil {
+			zap.S().Errorw("Initial alert processing failed", "error", err)
+		}
+		
+		// Then run every 5 minutes
+		ticker := time.NewTicker(5 * time.Minute)
+		defer ticker.Stop()
+		for {
+			select {
+			case <-ticker.C:
+				if err := a.envCollector.CollectAllDevices(context.Background()); err != nil {
+					zap.S().Errorw("Environment collection failed", "error", err)
+				}
+				if err := a.alertEngine.ProcessAllMetrics(context.Background()); err != nil {
+					zap.S().Errorw("Alert processing failed", "error", err)
+				}
+			}
+		}
+	}()
 
 	a.initJob()
 

@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/patrickmn/go-cache"
 	"github.com/talkincode/toughradius/v9/internal/domain"
+	"github.com/talkincode/toughradius/v9/internal/repository"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -68,7 +69,7 @@ const (
 // @Success 200 {object} DashboardStats
 // @Router /api/v1/dashboard/stats [get]
 func GetDashboardStats(c echo.Context) error {
-	db := GetDB(c).WithContext(c.Request().Context())
+	db := GetDB(c).WithContext(c.Request().Context()).Scopes(repository.TenantScope)
 	now := time.Now()
 	todayStart := startOfDay(now)
 
@@ -183,9 +184,63 @@ func GetDashboardStats(c echo.Context) error {
 
 }
 
+// GetEnvHealthOverview retrieves environment health overview for the tenant
+func GetEnvHealthOverview(c echo.Context) error {
+	db := GetDB(c)
+	tenantID := GetTenantID(c)
+
+	type HealthSummary struct {
+		TotalDevices   int64 `json:"total_devices"`
+		OnlineDevices  int64 `json:"online_devices"`
+		WarningAlerts  int64 `json:"warning_alerts"`
+		CriticalAlerts int64 `json:"critical_alerts"`
+	}
+
+	var summary HealthSummary
+
+	db.Model(&domain.NetNas{}).Where("tenant_id = ?", tenantID).Count(&summary.TotalDevices)
+
+	var alertCounts []struct {
+		Severity string
+		Count    int64
+	}
+	db.Model(&domain.EnvironmentAlert{}).
+		Where("tenant_id = ? AND status = ?", tenantID, domain.AlertStatusFiring).
+		Group("severity").
+		Select("severity, COUNT(*) as count").
+		Scan(&alertCounts)
+
+	for _, ac := range alertCounts {
+		if ac.Severity == domain.SeverityWarning {
+			summary.WarningAlerts = ac.Count
+		} else if ac.Severity == domain.SeverityCritical {
+			summary.CriticalAlerts = ac.Count
+		}
+	}
+
+	subQuery := db.Model(&domain.EnvironmentMetric{}).
+		Select("nas_id, MAX(collected_at) as max_collected").
+		Group("nas_id")
+
+	var latestCount int64
+	db.Table("environment_metrics", func(tx *gorm.DB) *gorm.DB {
+		return tx.Raw(`
+			SELECT COUNT(DISTINCT em.nas_id) 
+			FROM environment_metrics em
+			INNER JOIN (?) lm ON em.nas_id = lm.nas_id AND em.collected_at = lm.max_collected
+		`, subQuery).Scan(&latestCount)
+		return tx
+	})
+
+	summary.OnlineDevices = latestCount
+
+	return c.JSON(http.StatusOK, summary)
+}
+
 // registerDashboardRoutes registers the dashboard routes
 func registerDashboardRoutes() {
 	webserver.ApiGET("/dashboard/stats", GetDashboardStats)
+	webserver.ApiGET("/dashboard/env-health", GetEnvHealthOverview)
 }
 
 func fetchAuthTrend(db *gorm.DB, now time.Time) ([]DashboardAuthTrendPoint, error) {

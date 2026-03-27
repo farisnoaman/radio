@@ -11,6 +11,8 @@ import (
 	"gorm.io/gorm"
 
 	"github.com/talkincode/toughradius/v9/internal/domain"
+	"github.com/talkincode/toughradius/v9/internal/quota"
+	"github.com/talkincode/toughradius/v9/internal/repository"
 	"github.com/talkincode/toughradius/v9/internal/tenant"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 	"github.com/talkincode/toughradius/v9/pkg/common"
@@ -259,11 +261,6 @@ func registerUserRoutes() {
 }
 
 func listRadiusUsers(c echo.Context) error {
-	tenantID := tenant.GetTenantIDOrDefault(c.Request().Context())
-	if tenantID == 0 {
-		return fail(c, http.StatusBadRequest, "NO_TENANT", "Missing tenant context", nil)
-	}
-
 	page, pageSize := parsePagination(c)
 
 	// Validate and sanitize sort field
@@ -276,10 +273,18 @@ func listRadiusUsers(c echo.Context) error {
 		order = "ASC"
 	}
 
-	base := GetDB(c).Model(&domain.RadiusUser{}).
+	db := GetDB(c)
+
+	// Get tenant ID from context
+	tenantID, err := tenant.FromContext(c.Request().Context())
+	if err != nil {
+		return fail(c, http.StatusUnauthorized, "NO_TENANT", "Missing tenant context", nil)
+	}
+
+	base := db.Model(&domain.RadiusUser{}).
 		Select("radius_user.*, COALESCE(ro.count, 0) AS online_count").
 		Joins("LEFT JOIN (SELECT username, COUNT(1) AS count FROM radius_online WHERE tenant_id = ? GROUP BY username) ro ON radius_user.username = ro.username", tenantID).
-		Where("radius_user.tenant_id = ?", tenantID)
+		Scopes(repository.TenantScope)
 
 	base = applyUserFilters(base, c)
 
@@ -329,6 +334,17 @@ func createRadiusUser(c echo.Context) error {
 	tenantID := tenant.GetTenantIDOrDefault(c.Request().Context())
 	if tenantID == 0 {
 		return fail(c, http.StatusBadRequest, "NO_TENANT", "Missing tenant context", nil)
+	}
+
+	// Check quota before creating user
+	quotaService := getQuotaService(c)
+	if quotaService != nil {
+		if err := quotaService.CheckUserQuota(c.Request().Context(), tenantID); err != nil {
+			if errors.Is(err, quota.ErrQuotaExceeded) {
+				return fail(c, http.StatusForbidden, "QUOTA_EXCEEDED", "User quota exceeded for this provider", nil)
+			}
+			return fail(c, http.StatusInternalServerError, "QUOTA_ERROR", "Failed to check quota", nil)
+		}
 	}
 
 	var req UserRequest
@@ -716,4 +732,13 @@ func firstNotEmpty(values ...string) string {
 		}
 	}
 	return ""
+}
+
+// getQuotaService returns the quota service from application context
+// Returns nil if not configured (for backward compatibility)
+func getQuotaService(c echo.Context) *quota.QuotaService {
+	if svc, ok := c.Get("quotaService").(*quota.QuotaService); ok && svc != nil {
+		return svc
+	}
+	return nil
 }

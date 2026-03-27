@@ -18,7 +18,7 @@ import {
     Chip,
     Divider,
 } from '@mui/material';
-import Grid from '@mui/material/GridLegacy';
+import { Grid } from '@mui/material';
 import { useTheme, alpha } from '@mui/material/styles';
 import useMediaQuery from '@mui/material/useMediaQuery';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -279,7 +279,7 @@ const FinancialPerformance = () => {
             {/* Overview Tab */}
             {tabValue === 0 && (
                 <Grid container spacing={3}>
-                    <Grid item xs={12} md={4}>
+                    <Grid size={{ xs: 12, md: 4 }}>
                         <StatCard
                             title={translate('pages.financial.overview.total_agents')}
                             value={report.overview.total_agents}
@@ -287,7 +287,7 @@ const FinancialPerformance = () => {
                             color={theme.palette.primary.main}
                         />
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid size={{ xs: 12, md: 4 }}>
                         <StatCard
                             title={translate('pages.financial.overview.total_batches_system')}
                             value={report.overview.total_batches}
@@ -295,7 +295,7 @@ const FinancialPerformance = () => {
                             color={theme.palette.secondary.main}
                         />
                     </Grid>
-                    <Grid item xs={12} md={4}>
+                    <Grid size={{ xs: 12, md: 4 }}>
                         <StatCard
                             title={translate('pages.financial.overview.total_agent_balance')}
                             value={report.overview.total_balance}
@@ -316,7 +316,7 @@ const FinancialPerformance = () => {
                             {translate('pages.financial.agent.network_summary')}
                         </Typography>
                         <Grid container spacing={2}>
-                            <Grid item xs={12} md={4} lg={2}>
+                            <Grid size={{ xs: 12, md: 4, lg: 2 }}>
                                 <StatCard
                                     title={translate('pages.financial.agent.agents')}
                                     value={report.agent_summary.total_agents}
@@ -324,7 +324,7 @@ const FinancialPerformance = () => {
                                     color={theme.palette.primary.main}
                                 />
                             </Grid>
-                            <Grid item xs={12} md={4} lg={2}>
+                            <Grid size={{ xs: 12, md: 4, lg: 2 }}>
                                 <StatCard
                                     title={translate('pages.financial.agent.batches')}
                                     value={report.agent_summary.total_batches}
@@ -332,7 +332,7 @@ const FinancialPerformance = () => {
                                     color={theme.palette.info.main}
                                 />
                             </Grid>
-                            <Grid item xs={12} md={4} lg={2}>
+                            <Grid size={{ xs: 12, md: 4, lg: 2 }}>
                                 <StatCard
                                     title={translate('pages.financial.agent.vouchers')}
                                     value={report.agent_summary.total_vouchers}
@@ -340,7 +340,7 @@ const FinancialPerformance = () => {
                                     color={theme.palette.secondary.main}
                                 />
                             </Grid>
-                            <Grid item xs={12} md={4} lg={2}>
+                            <Grid size={{ xs: 12, md: 4, lg: 2 }}>
                                 <StatCard
                                     title={translate('pages.financial.agent.total_value')}
                                     value={report.agent_summary.total_cost}
@@ -349,7 +349,7 @@ const FinancialPerformance = () => {
                                     isCurrency={true}
                                 />
                             </Grid>
-                            <Grid item xs={12} md={4} lg={2}>
+                            <Grid size={{ xs: 12, md: 4, lg: 2 }}>
                                 <StatCard
                                     title={translate('pages.financial.agent.sold_value')}
                                     value={report.agent_summary.used_cost}
@@ -358,7 +358,7 @@ const FinancialPerformance = () => {
                                     isCurrency={true}
                                 />
                             </Grid>
-                            <Grid item xs={12} md={4} lg={2}>
+                            <Grid size={{ xs: 12, md: 4, lg: 2 }}>
                                 <StatCard
                                     title={translate('pages.financial.agent.unused_value')}
                                     value={report.agent_summary.unused_cost}
@@ -384,15 +384,15 @@ const FinancialPerformance = () => {
                                             </Stack>
                                             <Typography variant="body2" color="text.secondary" mb={2}>@{agent.username}</Typography>
                                             <Grid container spacing={1}>
-                                                <Grid item xs={4}>
+                                                <Grid size={{ xs: 4 }}>
                                                     <Typography variant="caption" color="text.secondary">{translate('pages.financial.agent.card.total')}</Typography>
                                                     <Typography variant="body2" fontWeight="bold">{agent.total_vouchers}</Typography>
                                                 </Grid>
-                                                <Grid item xs={4}>
+                                                <Grid size={{ xs: 4 }}>
                                                     <Typography variant="caption" color="text.secondary">{translate('pages.financial.agent.card.sold')}</Typography>
                                                     <Box><Chip label={agent.used_vouchers} color="success" size="small" variant="outlined" sx={{ fontWeight: 600, height: 20 }} /></Box>
                                                 </Grid>
-                                                <Grid item xs={4}>
+                                                <Grid size={{ xs: 4 }}>
                                                     <Typography variant="caption" color="text.secondary">{translate('pages.financial.agent.card.unused')}</Typography>
                                                     <Box><Chip label={agent.unused_vouchers} color="warning" size="small" variant="outlined" sx={{ fontWeight: 600, height: 20 }} /></Box>
                                                 </Grid>
@@ -454,7 +454,7 @@ const FinancialPerformance = () => {
                             {translate('pages.financial.admin.financial_metrics')}
                         </Typography>
                         <Grid container spacing={3}>
-                            <Grid item xs={12} md={4}>
+                            <Grid size={{ xs: 12, md: 4 }}>
                                 <StatCard
                                     title={translate('pages.financial.agent.total_value')}
                                     value={report.admin.total_cost}
@@ -463,7 +463,7 @@ const FinancialPerformance = () => {
                                     isCurrency={true}
                                 />
                             </Grid>
-                            <Grid item xs={12} md={4}>
+                            <Grid size={{ xs: 12, md: 4 }}>
                                 <StatCard
                                     title={translate('pages.financial.admin.value_of_sold')}
                                     value={report.admin.used_cost}
@@ -472,7 +472,7 @@ const FinancialPerformance = () => {
                                     isCurrency={true}
                                 />
                             </Grid>
-                            <Grid item xs={12} md={4}>
+                            <Grid size={{ xs: 12, md: 4 }}>
                                 <StatCard
                                     title={translate('pages.financial.admin.value_of_unused')}
                                     value={report.admin.unused_cost}
@@ -503,15 +503,15 @@ const FinancialPerformance = () => {
                                                     <Chip label={batch.product_name} size="small" sx={{ borderRadius: 1 }} />
                                                 </Box>
                                                 <Grid container spacing={1}>
-                                                    <Grid item xs={4}>
+                                                    <Grid size={{ xs: 4 }}>
                                                         <Typography variant="caption" color="text.secondary">{translate('pages.financial.agent.card.total')}</Typography>
                                                         <Typography variant="body2" fontWeight="bold">{batch.count}</Typography>
                                                     </Grid>
-                                                    <Grid item xs={4}>
+                                                    <Grid size={{ xs: 4 }}>
                                                         <Typography variant="caption" color="text.secondary">{translate('pages.financial.agent.card.sold')}</Typography>
                                                         <Typography variant="body2" color="success.main" fontWeight={600}>{batch.used_vouchers}</Typography>
                                                     </Grid>
-                                                    <Grid item xs={4}>
+                                                    <Grid size={{ xs: 4 }}>
                                                         <Typography variant="caption" color="text.secondary">{translate('pages.financial.agent.card.unused')}</Typography>
                                                         <Typography variant="body2" color="warning.main" fontWeight={600}>{batch.unused_vouchers}</Typography>
                                                     </Grid>

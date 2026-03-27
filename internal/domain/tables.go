@@ -5,8 +5,9 @@ var Tables = []interface{}{
 	&SysConfig{},
 	&SysOpr{},
 	&SysOprLog{},
-	// Multi-Tenant
+	// Multi-Tenant Platform
 	&Provider{},
+	&ProviderRegistration{},
 	// Network
 	&NetNode{},
 	&NetNas{},
@@ -35,5 +36,24 @@ var Tables = []interface{}{
 	&SessionLog{},
 	// Billing
 	&Invoice{},
+	// Backup
+	&BackupConfig{},
+	&BackupRecord{},
+	// NAS Templates (Phase 1)
+	&NASTemplate{},
+	// Device Management (Phase 1)
+	&DeviceConfigBackup{},
+	&SpeedTestResult{},
+	&Location{},
+	&NetworkDevice{},
+	&NetworkDeviceMetric{},
+	&NetworkDeviceAlert{},
+	// Environment Monitoring
+	&EnvironmentMetric{},
+	&EnvironmentAlert{},
+	&AlertConfig{},
+	// RADIUS Proxy (Phase 2)
+	&RadiusProxyServer{},
+	&RadiusProxyRealm{},
+	&ProxyRequestLog{},
 }
-

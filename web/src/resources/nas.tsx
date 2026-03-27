@@ -36,7 +36,7 @@ import {
   useLocale,
   RaRecord,
   FunctionField,
-  Button
+  Button,
 } from 'react-admin';
 import {
   Box,
@@ -52,9 +52,12 @@ import {
   useTheme,
   useMediaQuery,
   TextField as MuiTextField,
+  Tabs,
+  Tab,
   alpha
 } from '@mui/material';
 import { useMemo, useCallback, useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { ScanNetworkModal } from '../components/ScanNetworkModal';
 import {
   Router as NasIcon,
@@ -104,6 +107,8 @@ interface NASDevice extends RaRecord {
   node_id?: string;
   tags?: string;
   remark?: string;
+  api_user?: string;
+  api_pass?: string;
   created_at?: string;
   updated_at?: string;
 }
@@ -121,10 +126,10 @@ const VENDOR_CHOICES = [
   { id: '0', name: 'Standard' },
 ];
 
-// 状态选项
-const STATUS_CHOICES = [
-  { id: 'enabled', name: '启用' },
-  { id: 'disabled', name: '禁用' },
+// 获取状态选项（需要在组件中使用 translate）
+const getStatusChoices = (translate: (key: string, options?: object) => string) => [
+  { id: 'enabled', name: translate('resources.network/nas.status.enabled', { _: 'Enabled' }) },
+  { id: 'disabled', name: translate('resources.network/nas.status.disabled', { _: 'Disabled' }) },
 ];
 
 // 获取厂商名称
@@ -772,6 +777,43 @@ export const NASList = () => {
   );
 };
 
+// NAS with Tabs (Devices + Templates)
+export const NASWithTabs = () => {
+  const navigate = useNavigate();
+  const translate = useTranslate();
+
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
+    if (newValue === 1) {
+      navigate('/network/nas-templates');
+    }
+  };
+
+  return (
+    <Box>
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+        <Tabs
+          value={0}
+          onChange={handleTabChange}
+          sx={{
+            minHeight: 48,
+            '& .MuiTab-root': {
+              minHeight: 48,
+              textTransform: 'none',
+              fontWeight: 500,
+            },
+          }}
+        >
+          <Tab label={translate('resources.network/nas.tabs.devices', { _: 'Devices' })} />
+          <Tab label={translate('resources.network/nas-templates.name', { _: 'Templates' })} />
+        </Tabs>
+      </Box>
+      <Box sx={{ mt: 2 }}>
+        <NASList />
+      </Box>
+    </Box>
+  );
+};
+
 // ============ 编辑页面 ============
 
 export const NASEdit = () => {
@@ -873,7 +915,7 @@ export const NASEdit = () => {
                 source="status"
                 label={translate('resources.network/nas.fields.status', { _: '状态' })}
                 validate={[required()]}
-                choices={STATUS_CHOICES}
+                choices={getStatusChoices(translate)}
                 fullWidth
                 size="small"
                 InputLabelProps={rtlInputLabelProps}
@@ -959,6 +1001,38 @@ export const NASEdit = () => {
                 InputLabelProps={rtlInputLabelProps}
                 inputProps={rtlTextInputProps.inputProps}
                 sx={rtlTextInputProps.sx}
+              />
+            </FieldGridItem>
+          </FieldGrid>
+        </FormSection>
+
+        <FormSection
+          title={translate('resources.network/nas.sections.api.title', { _: 'API配置' })}
+          description={translate('resources.network/nas.sections.api.description', { _: '设备API认证信息，用于环境监控' })}
+        >
+          <FieldGrid columns={{ xs: 1, sm: 2 }}>
+            <FieldGridItem>
+              <TextInput
+                source="api_user"
+                label={translate('resources.network/nas.fields.api_user', { _: 'API用户名' })}
+                validate={[maxLength(100)]}
+                helperText={translate('resources.network/nas.helpers.api_user', { _: '设备API用户名，留空则使用admin' })}
+                fullWidth
+                size="small"
+                InputLabelProps={rtlInputLabelProps}
+                inputProps={rtlTextInputProps.inputProps}
+                sx={rtlTextInputProps.sx}
+              />
+            </FieldGridItem>
+            <FieldGridItem>
+              <PasswordInput
+                source="api_pass"
+                label={translate('resources.network/nas.fields.api_pass', { _: 'API密码' })}
+                validate={[maxLength(100)]}
+                helperText={translate('resources.network/nas.helpers.api_pass', { _: '设备API密码，留空则使用RADIUS密钥' })}
+                fullWidth
+                size="small"
+                InputLabelProps={rtlInputLabelProps}
               />
             </FieldGridItem>
           </FieldGrid>
@@ -1080,7 +1154,7 @@ export const NASCreate = () => {
                 source="status"
                 label={translate('resources.network/nas.fields.status', { _: '状态' })}
                 validate={[required()]}
-                choices={STATUS_CHOICES}
+                choices={getStatusChoices(translate)}
                 defaultValue="enabled"
                 fullWidth
                 size="small"
@@ -1174,6 +1248,38 @@ export const NASCreate = () => {
         </FormSection>
 
         <FormSection
+          title={translate('resources.network/nas.sections.api.title', { _: 'API配置' })}
+          description={translate('resources.network/nas.sections.api.description', { _: '设备API认证信息，用于环境监控' })}
+        >
+          <FieldGrid columns={{ xs: 1, sm: 2 }}>
+            <FieldGridItem>
+              <TextInput
+                source="api_user"
+                label={translate('resources.network/nas.fields.api_user', { _: 'API用户名' })}
+                validate={[maxLength(100)]}
+                helperText={translate('resources.network/nas.helpers.api_user', { _: '设备API用户名，留空则使用admin' })}
+                fullWidth
+                size="small"
+                InputLabelProps={rtlInputLabelProps}
+                inputProps={rtlTextInputProps.inputProps}
+                sx={rtlTextInputProps.sx}
+              />
+            </FieldGridItem>
+            <FieldGridItem>
+              <PasswordInput
+                source="api_pass"
+                label={translate('resources.network/nas.fields.api_pass', { _: 'API密码' })}
+                validate={[maxLength(100)]}
+                helperText={translate('resources.network/nas.helpers.api_pass', { _: '设备API密码，留空则使用RADIUS密钥' })}
+                fullWidth
+                size="small"
+                InputLabelProps={rtlInputLabelProps}
+              />
+            </FieldGridItem>
+          </FieldGrid>
+        </FormSection>
+
+        <FormSection
           title={translate('resources.network/nas.sections.remark.title', { _: '备注信息' })}
           description={translate('resources.network/nas.sections.remark.description', { _: '额外的说明和备注' })}
         >
@@ -1210,12 +1316,12 @@ const NASHeaderCard = () => {
 
   const handleCopy = useCallback((text: string, label: string) => {
     navigator.clipboard.writeText(text);
-    notify(`${label} 已复制到剪贴板`, { type: 'info' });
+    notify(translate('resources.network/nas.copied', { label, _: '%{label} copied to clipboard' }), { type: 'info' });
   }, [notify]);
 
   const handleRefresh = useCallback(() => {
     refresh();
-    notify('数据已刷新', { type: 'info' });
+    notify(translate('resources.network/nas.data_refreshed', { _: 'Data refreshed' }), { type: 'info' });
   }, [refresh, notify]);
 
   if (!record) return null;

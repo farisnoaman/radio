@@ -7,6 +7,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/talkincode/toughradius/v9/internal/domain"
+	"github.com/talkincode/toughradius/v9/internal/repository"
+	"github.com/talkincode/toughradius/v9/internal/tenant"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 )
 
@@ -43,7 +45,7 @@ func ListProfiles(c echo.Context) error {
 	var total int64
 	var profiles []domain.RadiusProfile
 
-	query := db.Model(&domain.RadiusProfile{})
+	query := db.Model(&domain.RadiusProfile{}).Scopes(repository.TenantScope)
 
 	// Support filtering by name (case-insensitive)
 	if name := strings.TrimSpace(c.QueryParam("name")); name != "" {
@@ -98,7 +100,7 @@ func GetProfile(c echo.Context) error {
 	}
 
 	var profile domain.RadiusProfile
-	if err := GetDB(c).First(&profile, id).Error; err != nil {
+	if err := GetDB(c).Scopes(repository.TenantScope).First(&profile, id).Error; err != nil {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "Profile not found", nil)
 	}
 
@@ -284,12 +286,16 @@ func CreateProfile(c echo.Context) error {
 		return err // Validation errors already formatted
 	}
 
+	// Get tenant ID from context
+	tenantID := tenant.GetTenantIDOrDefault(c.Request().Context())
+
 	// Convert to RadiusProfile
 	profile := req.toRadiusProfile()
+	profile.TenantID = tenantID // Set tenant from context
 
 	// Check whether a profile with the same name already exists (business logic validation)
 	var count int64
-	GetDB(c).Model(&domain.RadiusProfile{}).Where("name = ?", profile.Name).Count(&count)
+	GetDB(c).Model(&domain.RadiusProfile{}).Where("tenant_id = ? AND name = ?", tenantID, profile.Name).Count(&count)
 	if count > 0 {
 		return fail(c, http.StatusConflict, "NAME_EXISTS", "Profile name already exists", nil)
 	}
@@ -339,7 +345,7 @@ func UpdateProfile(c echo.Context) error {
 	// Validate name uniqueness (business logic validation)
 	if updateData.Name != "" && updateData.Name != profile.Name {
 		var count int64
-		GetDB(c).Model(&domain.RadiusProfile{}).Where("name = ? AND id != ?", updateData.Name, id).Count(&count)
+		GetDB(c).Model(&domain.RadiusProfile{}).Where("tenant_id = ? AND name = ? AND id != ?", profile.TenantID, updateData.Name, id).Count(&count)
 		if count > 0 {
 			return fail(c, http.StatusConflict, "NAME_EXISTS", "Profile name already exists", nil)
 		}

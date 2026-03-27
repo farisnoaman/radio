@@ -48,10 +48,35 @@ func (e *DefaultAcceptEnhancer) Enhance(ctx context.Context, authCtx *auth.AuthC
 		timeout = 0
 	}
 
+	// Session timeout is the minimum of (time until ExpireTime) and (remaining TimeQuota)
+	if authCtx.Metadata != nil {
+		if remaining, ok := authCtx.Metadata["remaining_time_quota"].(int64); ok && remaining >= 0 {
+			// Only reduce timeout if remaining quota is strictly less than current timeout
+			if remaining < timeout {
+				timeout = remaining
+			}
+		}
+	}
+
 	interim := getIntConfig(authCtx, app.ConfigRadiusAcctInterimInterval, 120)
+
+	// Inactive timeout (if user not active for X seconds, session ends)
+	idleTimeout := int64(user.IdleTimeout)
+	if idleTimeout <= 0 {
+		idleTimeout = getIntConfig(authCtx, "idle_timeout", 300) // Default 5 minutes
+	}
+
+	// Override session timeout if product session timeout is set and smaller than current calculated timeout
+	if user.SessionTimeout > 0 {
+		productSessionTimeout := int64(user.SessionTimeout)
+		if productSessionTimeout < timeout {
+			timeout = productSessionTimeout
+		}
+	}
 
 	_ = rfc2865.SessionTimeout_Set(response, rfc2865.SessionTimeout(timeout))           //nolint:errcheck,gosec // G115: timeout is validated
 	_ = rfc2869.AcctInterimInterval_Set(response, rfc2869.AcctInterimInterval(interim)) //nolint:errcheck,gosec // G115: interim is validated
+	_ = rfc2865.IdleTimeout_Set(response, rfc2865.IdleTimeout(idleTimeout))             //nolint:errcheck,gosec // G115: idleTimeout is validated
 
 	// Use getter method for AddrPool
 	addrPool := user.GetAddrPool(profileCache)

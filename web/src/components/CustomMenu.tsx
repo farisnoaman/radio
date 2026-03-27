@@ -17,7 +17,13 @@ import ConstructionIcon from '@mui/icons-material/Construction';
 import PrintIcon from '@mui/icons-material/Print';
 import StorageOutlinedIcon from '@mui/icons-material/StorageOutlined';
 import DevicesIcon from '@mui/icons-material/Devices';
+import BusinessIcon from '@mui/icons-material/Business';
+import NotificationsIcon from '@mui/icons-material/Notifications';
+import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import ThermostatIcon from '@mui/icons-material/Thermostat';
 
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import RouterIcon from '@mui/icons-material/Router';
 import { Box, useTheme } from '@mui/material';
 import { MenuItemLink, MenuProps, useGetIdentity, useTranslate, useLocale } from 'react-admin';
 
@@ -25,9 +31,17 @@ const RTL_LANGUAGES = ['ar', 'he', 'fa', 'ur'];
 
 const menuItems = [
   { to: '/', labelKey: 'menu.dashboard', icon: <DashboardOutlinedIcon />, permissions: ['super', 'admin', 'user', 'agent'] },
+  // Platform Administration (Super Admin Only)
+  { to: '/platform/', labelKey: 'menu.platform_admin', icon: <BusinessIcon />, permissions: ['super'] },
+  { to: '/platform/settings', labelKey: 'menu.platform_settings', icon: <SettingsOutlinedIcon />, permissions: ['super'] },
+  // Network Management
   { to: '/network/servers', labelKey: 'menu.servers', icon: <StorageOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/network/nodes', labelKey: 'menu.network_nodes', icon: <AccountTreeOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/network/nas', labelKey: 'menu.nas_devices', icon: <RouterOutlinedIcon />, permissions: ['super', 'admin'] },
+  // New devices and locations in network section
+  { to: '/network/devices', labelKey: 'menu.network_devices', icon: <RouterIcon />, permissions: ['super', 'admin'] },
+  { to: '/network/locations', labelKey: 'menu.network_locations', icon: <LocationOnIcon />, permissions: ['super', 'admin'] },
+  { to: '/environment', labelKey: 'menu.env_monitoring', icon: <ThermostatIcon />, permissions: ['super', 'admin'] },
   { to: '/cpes', labelKey: 'menu.cpe_devices', icon: <RouterOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/radius/users', labelKey: 'menu.radius_users', icon: <PeopleAltOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/radius/profiles', labelKey: 'menu.radius_profiles', icon: <SettingsSuggestOutlinedIcon />, permissions: ['super', 'admin'] },
@@ -40,12 +54,16 @@ const menuItems = [
   { to: '/products', labelKey: 'menu.products', icon: <Inventory2OutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/agents', labelKey: 'menu.agents', icon: <SupportAgentOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/financial/performance', labelKey: 'menu.financial_performance', icon: <AssessmentOutlinedIcon />, permissions: ['super', 'admin'] },
+  { to: '/reporting', labelKey: 'menu.reporting_dashboard', icon: <AssessmentOutlinedIcon />, permissions: ['super', 'admin'] },
+  { to: '/reporting/notifications', labelKey: 'menu.notification_settings', icon: <NotificationsActiveIcon />, permissions: ['super', 'admin'] },
   { to: '/settings/tunnel', labelKey: 'menu.tunnel_settings', icon: <VpnKeyOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/system/maintenance', labelKey: 'menu.maintenance', icon: <ConstructionIcon />, permissions: ['super', 'admin'] },
   { to: '/voucher-batches', labelKey: 'menu.vouchers', icon: <ConfirmationNumberOutlinedIcon />, permissions: ['super', 'admin', 'agent'] },
   { to: '/voucher-printing', labelKey: 'menu.print_vouchers', icon: <PrintIcon />, permissions: ['super', 'admin', 'agent'] },
   { to: '/portal/devices', labelKey: 'portal.my_devices', icon: <DevicesIcon />, permissions: ['user'] },
   { to: '/portal/vouchers/redeem', labelKey: 'portal.redeem_voucher', icon: <ConfirmationNumberOutlinedIcon />, permissions: ['user'] },
+  { to: '/portal/preferences/notifications', labelKey: 'menu.notification_preferences', icon: <NotificationsIcon />, permissions: ['user'] },
+  { to: '/portal/alerts/history', labelKey: 'menu.alert_history', icon: <HistoryOutlinedIcon />, permissions: ['user'] },
 ];
 
 export const CustomMenu = ({ dense, onMenuClick, logout }: MenuProps) => {
@@ -56,6 +74,16 @@ export const CustomMenu = ({ dense, onMenuClick, logout }: MenuProps) => {
   const translate = useTranslate();
   const locale = useLocale();
   const isRTL = RTL_LANGUAGES.includes(locale || '');
+
+  const footerSx = {
+    borderTop: '1px solid rgba(255, 255, 255, 0.1)',
+    textAlign: 'center' as const,
+    px: 2,
+    py: 3,
+    fontSize: 12,
+    color: 'rgba(255, 255, 255, 0.6)',
+    transition: 'all 0.3s ease',
+  };
 
   // Filter menu items based on user permissions
   const filteredMenuItems = menuItems.filter(item => {
@@ -98,22 +126,11 @@ export const CustomMenu = ({ dense, onMenuClick, logout }: MenuProps) => {
         ))}
       </Box>
 
-      <Box
-        sx={{
-          borderTop: '1px solid rgba(255, 255, 255, 0.1)',
-          textAlign: 'center',
-          px: 2,
-          py: 3,
-          fontSize: 12,
-          color: 'rgba(255, 255, 255, 0.6)',
-          transition: 'all 0.3s ease',
-        }}
-      >
-        <div style={{ fontWeight: 600, marginBottom: 4 }}>{translate('app.title')}</div>
-        <div>© {currentYear} ALL RIGHTS RESERVED</div>
+      <Box sx={footerSx}>
+        <Box component="div" sx={{ fontWeight: 600, mb: 0.5 }}>{translate('app.title')}</Box>
+        <Box component="div">© {currentYear} ALL RIGHTS RESERVED</Box>
         {logout && <Box sx={{ mt: 2 }}>{logout}</Box>}
       </Box>
     </Box>
   );
 };
-

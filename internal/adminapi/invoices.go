@@ -9,6 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/talkincode/toughradius/v9/internal/app/billing"
 	"github.com/talkincode/toughradius/v9/internal/domain"
+	"github.com/talkincode/toughradius/v9/internal/tenant"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -51,6 +52,9 @@ func ListInvoices(c echo.Context) error {
 
 	query := db.Model(&domain.Invoice{})
 
+	// Get tenant ID for admin role filtering
+	tenantID, _ := tenant.FromContext(c.Request().Context())
+
 	// Authentication context check
 	if userVal := c.Get("user"); userVal != nil {
 		if token, ok := userVal.(*jwt.Token); ok {
@@ -67,9 +71,12 @@ func ListInvoices(c echo.Context) error {
 						query = query.Where("username = ?", tokenUsername)
 					}
 				} else {
-					// Admin/Operator can filter by any username
+					// Admin/Operator: filter by tenant through radius_user join
+					query = query.Joins("JOIN radius_user ON radius_user.username = invoice.username").
+						Where("radius_user.tenant_id = ?", tenantID)
+					// Can further filter by username if specified
 					if username := strings.TrimSpace(c.QueryParam("username")); username != "" {
-						query = query.Where("username = ?", username)
+						query = query.Where("invoice.username = ?", username)
 					}
 				}
 			}
@@ -108,7 +115,7 @@ func GetInvoice(c echo.Context) error {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "Invoice not found", nil)
 	}
 
-	// Security: Verify ownership for RADIUS users
+	// Security: Verify ownership for RADIUS users and tenant isolation for admins
 	if userVal := c.Get("user"); userVal != nil {
 		if token, ok := userVal.(*jwt.Token); ok {
 			if claims, ok := token.Claims.(jwt.MapClaims); ok {
@@ -127,6 +134,14 @@ func GetInvoice(c echo.Context) error {
 						if invoice.Username != tokenUsername {
 							return fail(c, http.StatusForbidden, "FORBIDDEN", "You do not have permission to view this invoice", nil)
 						}
+					}
+				}
+				// Admin/Operator: verify tenant isolation
+				if role == "admin" || role == "operator" {
+					tenantID, _ := tenant.FromContext(c.Request().Context())
+					var user domain.RadiusUser
+					if err := GetDB(c).Where("username = ? AND tenant_id = ?", invoice.Username, tenantID).First(&user).Error; err != nil {
+						return fail(c, http.StatusForbidden, "FORBIDDEN", "You do not have permission to view this invoice", nil)
 					}
 				}
 			}

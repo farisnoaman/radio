@@ -4,7 +4,7 @@ import {
     Table, TableBody, TableCell, TableContainer, TableHead, TableRow, 
     Paper, Divider, useMediaQuery, useTheme, alpha 
 } from '@mui/material';
-import Grid from '@mui/material/GridLegacy';
+import { Grid } from '@mui/material';
 import { useTranslate, useLocale, useNotify } from 'react-admin';
 import DevicesIcon from '@mui/icons-material/Devices';
 import PowerSettingsNewIcon from '@mui/icons-material/PowerSettingsNew';
@@ -37,8 +37,8 @@ const MyDevices = () => {
             const sessionsData = await sessionsRes.json();
             const usageData = await usageRes.json();
 
-            if (sessionsData.code === 0) setSessions(sessionsData.data || []);
-            if (usageData.code === 0) setUsage(usageData.data);
+            setSessions(sessionsData.data || []);
+            if (usageData.data) setUsage(usageData.data);
         } catch (error) {
             console.error('Failed to fetch devices data:', error);
             notify('common.network_error', { type: 'error' });
@@ -57,12 +57,12 @@ const MyDevices = () => {
                 method: 'DELETE',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            const result = await response.json();
-            if (result.code === 0) {
+            if (response.ok) {
                 notify('portal.disconnect_success', { type: 'success' });
                 fetchData();
             } else {
-                notify(result.msg, { type: 'error' });
+                const result = await response.json();
+                notify(result.message || result.error || 'common.action_failed', { type: 'error' });
             }
         } catch (error) {
             notify('common.network_error', { type: 'error' });
@@ -75,16 +75,16 @@ const MyDevices = () => {
         setLoading(true);
         try {
             const token = localStorage.getItem('token');
-            const response = await fetch('/api/v1/portal/unbind-mac', {
+            const response = await fetch('/api/v1/portal/user/mac/unbind', {
                 method: 'POST',
                 headers: { 'Authorization': `Bearer ${token}` }
             });
-            const result = await response.json();
-            if (result.code === 0) {
+            if (response.ok) {
                 notify('portal.unbind_success', { type: 'success' });
                 fetchData();
             } else {
-                notify(result.msg, { type: 'error' });
+                const result = await response.json();
+                notify(result.message || result.error || 'common.action_failed', { type: 'error' });
             }
         } catch (error) {
             notify('common.network_error', { type: 'error' });
@@ -195,7 +195,7 @@ const MyDevices = () => {
             </Paper>
 
             <Grid container spacing={isMobile ? 2 : 3}>
-                <Grid item xs={12} md={8}>
+                <Grid size={{ xs: 12, md: 8 }}>
                     {isMobile ? (
                         <Box>
                             <Typography variant="h6" fontWeight={800} sx={{ mb: 2, px: 1 }}>
@@ -274,7 +274,7 @@ const MyDevices = () => {
                     )}
                 </Grid>
 
-                <Grid item xs={12} md={4}>
+                <Grid size={{ xs: 12, md: 4 }}>
                     <Card sx={{ 
                         borderRadius: { xs: 4, md: 6 }, 
                         mb: 3, 

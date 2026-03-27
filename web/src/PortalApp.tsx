@@ -10,6 +10,8 @@ import UserDashboard from './pages/UserDashboard';
 import { LoginPage } from './pages/LoginPage';
 import MyDevices from './pages/MyDevices';
 import VoucherRedeem from './pages/VoucherRedeem';
+import NotificationPreferences from './pages/NotificationPreferences';
+import AlertHistory from './pages/AlertHistory';
 
 const PortalApp = () => (
   <Admin
@@ -33,6 +35,8 @@ const PortalApp = () => (
     <CustomRoutes>
       <Route path="/portal/devices" element={<MyDevices />} />
       <Route path="/portal/vouchers/redeem" element={<VoucherRedeem />} />
+      <Route path="/portal/preferences/notifications" element={<NotificationPreferences />} />
+      <Route path="/portal/alerts/history" element={<AlertHistory />} />
     </CustomRoutes>
   </Admin>
 );

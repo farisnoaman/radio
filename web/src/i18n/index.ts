@@ -3,7 +3,7 @@ import zhCN from './zh-CN';
 import enUS from './en-US';
 import ar from './ar';
 
-const translations = {
+const translations: Record<string, typeof zhCN> = {
   'zh-CN': zhCN,
   'en-US': enUS,
   'ar': ar,
@@ -36,4 +36,27 @@ export const i18nProvider = {
     localStorage.setItem('locale', locale);
     return baseI18nProvider.changeLocale(locale);
   },
+};
+
+// 为公开页面创建的 i18nProvider（强制使用指定语言，不从 localStorage 读取）
+export const createPublicI18nProvider = (defaultLocale: string = 'ar') => {
+  // 强制使用指定的默认语言，忽略 localStorage
+  const publicI18nProvider = polyglotI18nProvider(
+    (locale) => translations[locale as keyof typeof translations] || translations[defaultLocale],
+    defaultLocale,
+    [
+      { locale: 'zh-CN', name: '简体中文' },
+      { locale: 'en-US', name: 'English' },
+      { locale: 'ar', name: 'العربية' },
+    ],
+    { allowMissing: true }
+  );
+
+  return {
+    ...publicI18nProvider,
+    changeLocale: (locale: string) => {
+      // 不保存到 localStorage，保持公开页面独立性
+      return publicI18nProvider.changeLocale(locale);
+    },
+  };
 };

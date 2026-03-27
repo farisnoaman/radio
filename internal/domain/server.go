@@ -7,6 +7,7 @@ import "time"
 // database connection info, and monitoring statistics.
 type Server struct {
 	ID            int64     `json:"id,string" form:"id"`
+	TenantID      int64     `gorm:"index" json:"tenant_id" form:"tenant_id"` // Tenant/Provider ID
 	Name          string    `json:"name" form:"name" gorm:"size:255;not null"`
 	PublicIP      string    `json:"public_ip" form:"public_ip" gorm:"size:64"`
 	Secret        string    `json:"secret" form:"secret" gorm:"size:128"`

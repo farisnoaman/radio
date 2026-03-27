@@ -3,18 +3,30 @@ package cache
 import (
 	"sync"
 	"time"
+
+	"github.com/talkincode/toughradius/v9/internal/domain"
+	"gorm.io/gorm"
 )
 
 type VoucherBatchCache struct {
 	ttl     time.Duration
 	mu      sync.RWMutex
 	batches map[int64]time.Time
+	db      *gorm.DB
 }
 
 func NewVoucherBatchCache(ttl time.Duration) *VoucherBatchCache {
 	return &VoucherBatchCache{
 		ttl:     ttl,
 		batches: make(map[int64]time.Time),
+	}
+}
+
+func NewVoucherBatchCacheWithDB(ttl time.Duration, db *gorm.DB) *VoucherBatchCache {
+	return &VoucherBatchCache{
+		ttl:     ttl,
+		batches: make(map[int64]time.Time),
+		db:      db,
 	}
 }
 
@@ -32,15 +44,23 @@ func (c *VoucherBatchCache) RemoveBatch(batchID int64) {
 
 func (c *VoucherBatchCache) IsActive(batchID int64) bool {
 	c.mu.RLock()
-	defer c.mu.RUnlock()
 	exp, ok := c.batches[batchID]
-	if !ok {
-		return false
+	c.mu.RUnlock()
+
+	if ok && !time.Now().After(exp) {
+		return true
 	}
-	if time.Now().After(exp) {
-		return false
+
+	if c.db != nil {
+		var batch domain.VoucherBatch
+		err := c.db.Where("id = ? AND activated_at IS NOT NULL AND is_deleted = ?", batchID, false).First(&batch).Error
+		if err == nil {
+			c.AddBatch(batchID)
+			return true
+		}
 	}
-	return true
+
+	return false
 }
 
 func (c *VoucherBatchCache) RemoveExpired() {

@@ -14,8 +14,11 @@ type Product struct {
 	CostPrice       float64   `json:"cost_price" form:"cost_price"`
 	UpRate          int       `json:"up_rate" form:"up_rate"`
 	DownRate        int       `json:"down_rate" form:"down_rate"`
-	DataQuota       int64     `json:"data_quota" form:"data_quota"`
-	ValiditySeconds int64     `json:"validity_seconds" form:"validity_seconds"`
+	DataQuota       int64     `json:"data_quota" form:"data_quota"`                    // Data quota in MB (0 = unlimited)
+	TimeQuota       int64     `json:"time_quota" form:"time_quota"`                    // Time quota in seconds (0 = unlimited)
+	ValiditySeconds int64     `json:"validity_seconds" form:"validity_seconds"`          // Account validity period in seconds
+	IdleTimeout     int       `json:"idle_timeout" form:"idle_timeout"`                  // Inactivity timeout in seconds
+	SessionTimeout  int       `json:"session_timeout" form:"session_timeout"`            // Max session duration in seconds
 	Status          string    `json:"status" form:"status"`
 	Color           string    `json:"color" form:"color"`
 	Remark          string    `json:"remark" form:"remark"`

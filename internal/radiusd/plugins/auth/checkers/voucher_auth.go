@@ -9,12 +9,17 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/radiusd/repository"
 	radiuserrors "github.com/talkincode/toughradius/v9/internal/radiusd/errors"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 var voucherBatchCache *cache.VoucherBatchCache
 
-func InitVoucherBatchCache(ttl time.Duration) {
-	voucherBatchCache = cache.NewVoucherBatchCache(ttl)
+func InitVoucherBatchCache(ttl time.Duration, db *gorm.DB) {
+	if db != nil {
+		voucherBatchCache = cache.NewVoucherBatchCacheWithDB(ttl, db)
+	} else {
+		voucherBatchCache = cache.NewVoucherBatchCache(ttl)
+	}
 }
 
 func GetVoucherBatchCache() *cache.VoucherBatchCache {

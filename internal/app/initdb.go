@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/talkincode/toughradius/v9/internal/domain"
+	"github.com/talkincode/toughradius/v9/internal/domain/templates"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"go.uber.org/zap"
 	"gorm.io/gorm"
@@ -118,4 +119,9 @@ func (a *Application) checkSettings() {
 				zap.String("default", schema.Default))
 		}
 	}
+}
+
+// seedDefaultTemplates seeds default NAS templates into the database.
+func seedDefaultTemplates(db *gorm.DB) error {
+	return templates.SeedDefaultTemplates(db)
 }

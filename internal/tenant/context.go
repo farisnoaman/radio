@@ -3,6 +3,8 @@ package tenant
 import (
 	"context"
 	"errors"
+
+	"gorm.io/gorm"
 )
 
 type contextKey string
@@ -105,4 +107,11 @@ func (c *TenantChecker) CanAccess(sourceTenantID, targetTenantID int64) bool {
 		return true
 	}
 	return sourceTenantID == targetTenantID
+}
+
+// TenantScope returns a GORM scope for tenant isolation.
+func TenantScope(tenantID int64) func(db *gorm.DB) *gorm.DB {
+	return func(db *gorm.DB) *gorm.DB {
+		return db.Where("tenant_id = ?", tenantID)
+	}
 }

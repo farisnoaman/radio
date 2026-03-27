@@ -59,6 +59,8 @@ func setupTestDB(t *testing.T) *gorm.DB {
 		&domain.PayoutLog{},
 		&domain.Invoice{},
 		&domain.Server{},
+		// Provider tables
+		&domain.Provider{},
 	)
 	require.NoError(t, err)
 
@@ -152,6 +154,8 @@ func CreateTestAppContext(t *testing.T) (*gorm.DB, *echo.Echo, app.AppContext) {
 		&domain.PayoutRequest{},
 		&domain.PayoutLog{},
 		&domain.Server{},
+		// Provider tables
+		&domain.Provider{},
 	)
 	require.NoError(t, err)
 

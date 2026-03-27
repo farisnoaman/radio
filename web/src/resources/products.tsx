@@ -483,7 +483,7 @@ const ProductHeaderCard = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <MoneyIcon sx={{ fontSize: '1.1rem', color: 'success.main' }} />
               <Typography variant="caption" color="text.secondary">
-                Price
+                {translate('resources.products.fields.price')}
               </Typography>
             </Box>
             <Typography variant="body2" sx={{ fontWeight: 600 }}>
@@ -502,7 +502,7 @@ const ProductHeaderCard = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <SpeedIcon sx={{ fontSize: '1.1rem', color: 'info.main' }} />
               <Typography variant="caption" color="text.secondary">
-                Upload
+                {translate('resources.products.fields.up_rate')}
               </Typography>
             </Box>
             <Typography variant="body2" sx={{ fontWeight: 600, fontFamily: 'monospace' }}>
@@ -521,7 +521,7 @@ const ProductHeaderCard = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <SpeedIcon sx={{ fontSize: '1.1rem', color: 'warning.main' }} />
               <Typography variant="caption" color="text.secondary">
-                Download
+                {translate('resources.products.fields.down_rate')}
               </Typography>
             </Box>
             <Typography variant="body2" sx={{ fontWeight: 600, fontFamily: 'monospace' }}>
@@ -540,7 +540,7 @@ const ProductHeaderCard = () => {
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 1 }}>
               <DataIcon sx={{ fontSize: '1.1rem', color: 'error.main' }} />
               <Typography variant="caption" color="text.secondary">
-                Data Quota
+                {translate('resources.products.fields.data_quota')}
               </Typography>
             </Box>
             <Typography variant="body2" sx={{ fontWeight: 600, fontFamily: 'monospace' }}>
@@ -629,6 +629,14 @@ const ProductDetails = () => {
               <DetailItem
                 label={translate('resources.products.fields.validity', { _: 'Validity' })}
                 value={validityDisplay}
+              />
+              <DetailItem
+                label={translate('resources.products.fields.idle_timeout', { _: 'Idle Timeout' })}
+                value={record.idle_timeout > 0 ? `${record.idle_timeout} ${translate('resources.products.units.seconds')}` : translate('resources.products.units.unlimited')}
+              />
+              <DetailItem
+                label={translate('resources.products.fields.session_timeout', { _: 'Session Timeout' })}
+                value={record.session_timeout > 0 ? `${record.session_timeout} ${translate('resources.products.units.seconds')}` : translate('resources.products.units.unlimited')}
               />
             </Box>
           </DetailSectionCard>
@@ -1006,9 +1014,35 @@ export const ProductCreate = (props: CreateProps) => {
           </FormSection>
 
           <FormSection
-            title={translate('resources.products.section.validity', { _: 'Validity Limit' })}
+            title={translate('resources.products.section.validity', { _: 'Validity & Session' })}
           >
             <ValidityInput />
+            <Box sx={{ mt: 2, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%', direction: isRtl ? 'rtl' : 'ltr' }}>
+              <Box>
+                <NumberInput 
+                  source="idle_timeout" 
+                  label={translate('resources.products.fields.idle_timeout', { _: 'Idle Timeout' })} 
+                  placeholder="0" 
+                  fullWidth 
+                  size="small"
+                  helperText={translate('resources.products.fields.idle_timeout_helper', { _: 'Seconds of inactivity before logout' })}
+                  inputProps={numInputProps} 
+                  InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+                />
+              </Box>
+              <Box>
+                <NumberInput 
+                  source="session_timeout" 
+                  label={translate('resources.products.fields.session_timeout', { _: 'Session Timeout' })} 
+                  placeholder="0" 
+                  fullWidth 
+                  size="small"
+                  helperText={translate('resources.products.fields.session_timeout_helper', { _: 'Maximum session duration in seconds' })}
+                  inputProps={numInputProps} 
+                  InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+                />
+              </Box>
+            </Box>
           </FormSection>
         </Box>
 
@@ -1180,9 +1214,35 @@ export const ProductEdit = (props: EditProps) => {
           </FormSection>
 
           <FormSection
-            title={translate('resources.products.section.validity', { _: 'Validity Limit' })}
+            title={translate('resources.products.section.validity', { _: 'Validity & Session' })}
           >
             <ValidityInput />
+            <Box sx={{ mt: 2, display: 'grid', gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' }, gap: 2, width: '100%', direction: isRtl ? 'rtl' : 'ltr' }}>
+              <Box>
+                <NumberInput 
+                  source="idle_timeout" 
+                  label={translate('resources.products.fields.idle_timeout', { _: 'Idle Timeout' })} 
+                  placeholder="0" 
+                  fullWidth 
+                  size="small"
+                  helperText={translate('resources.products.fields.idle_timeout_helper', { _: 'Seconds of inactivity before logout' })}
+                  inputProps={numInputProps} 
+                  InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+                />
+              </Box>
+              <Box>
+                <NumberInput 
+                  source="session_timeout" 
+                  label={translate('resources.products.fields.session_timeout', { _: 'Session Timeout' })} 
+                  placeholder="0" 
+                  fullWidth 
+                  size="small"
+                  helperText={translate('resources.products.fields.session_timeout_helper', { _: 'Maximum session duration in seconds' })}
+                  inputProps={numInputProps} 
+                  InputLabelProps={{ sx: { transformOrigin: isRtl ? 'top right' : 'top left', left: isRtl ? 'auto' : 0, right: isRtl ? 24 : 'auto' } }}
+                />
+              </Box>
+            </Box>
           </FormSection>
         </Box>
 

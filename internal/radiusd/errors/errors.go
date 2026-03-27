@@ -233,6 +233,11 @@ func NewUserQuotaError() error {
 	return NewAuthError(app.MetricsRadiusRejectLimit, "user data quota exceeded")
 }
 
+// NewTimeQuotaError creates an error for users who have exceeded their time quota
+func NewTimeQuotaError() error {
+	return NewAuthError(app.MetricsRadiusRejectQuota, "time quota exceeded")
+}
+
 // NewPasswordMismatchError creates an error for password validation failures
 func NewPasswordMismatchError() error {
 	return NewAuthError(app.MetricsRadiusRejectPasswdError, "password mismatch")

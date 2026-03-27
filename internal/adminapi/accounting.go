@@ -8,6 +8,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/talkincode/toughradius/v9/internal/domain"
+	"github.com/talkincode/toughradius/v9/internal/repository"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 )
 
@@ -59,7 +60,7 @@ func ListAccounting(c echo.Context) error {
 	var total int64
 	var records []domain.RadiusAccounting
 
-	query := db.Model(&domain.RadiusAccounting{})
+	query := db.Model(&domain.RadiusAccounting{}).Scopes(repository.TenantScope)
 
 	// Filter by username (使用转义防止 LIKE 通配符注入)
 	if username := c.QueryParam("username"); username != "" {
@@ -126,7 +127,7 @@ func GetAccounting(c echo.Context) error {
 	}
 
 	var record domain.RadiusAccounting
-	if err := GetDB(c).First(&record, id).Error; err != nil {
+	if err := GetDB(c).Scopes(repository.TenantScope).First(&record, id).Error; err != nil {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "Accounting record not found", nil)
 	}
 

@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Usage Alert</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .alert-box {
+            background: linear-gradient(135deg, #dc2626 0%, #f97316 100%);
+            color: white;
+            padding: 30px;
+            border-radius: 10px;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .alert-box h1 {
+            margin: 0 0 10px 0;
+            font-size: 32px;
+        }
+        .alert-box .percentage {
+            font-size: 48px;
+            font-weight: bold;
+            margin: 20px 0;
+        }
+        .usage-details {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+        .usage-details p {
+            margin: 10px 0;
+            font-size: 16px;
+        }
+        .usage-details strong {
+            color: #dc2626;
+        }
+        .cta-button {
+            display: inline-block;
+            background: #dc2626;
+            color: white;
+            padding: 15px 30px;
+            text-decoration: none;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #e9ecef;
+            color: #6c757d;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="alert-box">
+        <h1>⚠️ Usage Alert</h1>
+        <div class="percentage">{{.Percent}}%</div>
+        <p>Data Quota Used</p>
+    </div>
+
+    <p>Dear <strong>{{.Username}}</strong>,</p>
+
+    <p>You have reached <strong>{{.Percent}}%</strong> of your monthly data quota. Please monitor your usage to avoid service interruption.</p>
+
+    <div class="usage-details">
+        <p><strong>Username:</strong> {{.Username}}</p>
+        <p><strong>Data Used:</strong> {{.Used}}</p>
+        <p><strong>Monthly Quota:</strong> {{.Quota}}</p>
+        <p><strong>Remaining:</strong> {{.Remaining}}</p>
+    </div>
+
+    <p style="text-align: center;">
+        <a href="{{.PortalURL}}" class="cta-button">
+            View Usage Details
+        </a>
+    </p>
+
+    <p style="text-align: center; color: #6c757d; margin-top: 30px;">
+        You're receiving this alert because you've reached {{.Percent}}% of your monthly data quota.
+        Consider upgrading your plan or monitoring your usage to avoid service interruption.
+    </p>
+
+    <div class="footer">
+        <p>To stop receiving these alerts, <a href="{{.PreferencesURL}}">manage your notification preferences</a>.</p>
+        <p>© 2026 ToughRADIUS. All rights reserved.</p>
+    </div>
+</body>
+</html>

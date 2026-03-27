@@ -46,6 +46,7 @@ func InitPlugins(
 
 	if accountingRepo != nil {
 		registry.RegisterPolicyChecker(checkers.NewQuotaChecker(accountingRepo))
+		registry.RegisterPolicyChecker(checkers.NewTimeQuotaChecker(accountingRepo))
 	}
 
 	if voucherRepo != nil && userRepo != nil {
@@ -54,7 +55,11 @@ func InitPlugins(
 
 	// Initialize voucher batch cache and register voucher auth checker
 	if voucherRepo != nil {
-		checkers.InitVoucherBatchCache(2 * time.Minute)
+		var cacheDB *gorm.DB
+		if db != nil {
+			cacheDB = db
+		}
+		checkers.InitVoucherBatchCache(2*time.Minute, cacheDB)
 		registry.RegisterPolicyChecker(checkers.NewVoucherAuthChecker(voucherRepo, checkers.GetVoucherBatchCache()))
 	}
 
@@ -86,6 +91,8 @@ func InitPlugins(
 			registry.RegisterAccountingHandler(handlers.NewSessionLogHandler(db))
 			// Voucher quota sync - updates voucher usage from accounting
 			registry.RegisterAccountingHandler(handlers.NewVoucherQuotaSyncHandler(db))
+			// Quota enforcement - disconnects users when time/data quota is exceeded during active sessions
+			registry.RegisterAccountingHandler(handlers.NewQuotaEnforcementHandler(db, accountingRepo))
 		}
 	}
 
@@ -94,6 +101,11 @@ func InitPlugins(
 	registry.RegisterEAPHandler(eaphandlers.NewMD5Handler())
 	registry.RegisterEAPHandler(eaphandlers.NewOTPHandler())
 	registry.RegisterEAPHandler(eaphandlers.NewMSCHAPv2Handler())
+
+	// Register EAP-TLS handler (requires database for certificate validation)
+	if db != nil {
+		registry.RegisterEAPHandler(eaphandlers.NewTLSHandler(db))
+	}
 
 	// Vendor parsers under vendor/parsers register themselves via init()
 }

@@ -6,6 +6,7 @@ import (
 
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/repository"
+	"github.com/talkincode/toughradius/v9/internal/tenant"
 	"gorm.io/gorm"
 )
 
@@ -21,7 +22,11 @@ func NewGormUserRepository(db *gorm.DB) repository.UserRepository {
 
 func (r *GormUserRepository) GetByUsername(ctx context.Context, username string) (*domain.RadiusUser, error) {
 	var user domain.RadiusUser
-	err := r.db.WithContext(ctx).Where("username = ?", username).First(&user).Error
+	query := r.db.WithContext(ctx).Where("username = ?", username)
+	if tenantID, err := tenant.FromContext(ctx); err == nil && tenantID > 0 {
+		query = query.Where("tenant_id = ?", tenantID)
+	}
+	err := query.First(&user).Error
 	if err != nil {
 		return nil, err
 	}
@@ -30,7 +35,11 @@ func (r *GormUserRepository) GetByUsername(ctx context.Context, username string)
 
 func (r *GormUserRepository) GetByMacAddr(ctx context.Context, macAddr string) (*domain.RadiusUser, error) {
 	var user domain.RadiusUser
-	err := r.db.WithContext(ctx).Where("mac_addr = ?", macAddr).First(&user).Error
+	query := r.db.WithContext(ctx).Where("mac_addr = ?", macAddr)
+	if tenantID, err := tenant.FromContext(ctx); err == nil && tenantID > 0 {
+		query = query.Where("tenant_id = ?", tenantID)
+	}
+	err := query.First(&user).Error
 	if err != nil {
 		return nil, err
 	}
@@ -38,10 +47,12 @@ func (r *GormUserRepository) GetByMacAddr(ctx context.Context, macAddr string) (
 }
 
 func (r *GormUserRepository) UpdateMacAddr(ctx context.Context, username, macAddr string) error {
-	return r.db.WithContext(ctx).
-		Model(&domain.RadiusUser{}).
-		Where("username = ?", username).
-		Update("mac_addr", macAddr).Error
+	tenantID, _ := tenant.FromContext(ctx)
+	query := r.db.WithContext(ctx).Model(&domain.RadiusUser{}).Where("username = ?", username)
+	if tenantID > 0 {
+		query = query.Where("tenant_id = ?", tenantID)
+	}
+	return query.Update("mac_addr", macAddr).Error
 }
 
 func (r *GormUserRepository) UpdateVlanId(ctx context.Context, username string, vlanId1, vlanId2 int) error {
@@ -49,22 +60,28 @@ func (r *GormUserRepository) UpdateVlanId(ctx context.Context, username string, 
 		"vlanid1": vlanId1,
 		"vlanid2": vlanId2,
 	}
-	return r.db.WithContext(ctx).
-		Model(&domain.RadiusUser{}).
-		Where("username = ?", username).
-		Updates(updates).Error
+	tenantID, _ := tenant.FromContext(ctx)
+	query := r.db.WithContext(ctx).Model(&domain.RadiusUser{}).Where("username = ?", username)
+	if tenantID > 0 {
+		query = query.Where("tenant_id = ?", tenantID)
+	}
+	return query.Updates(updates).Error
 }
 
 func (r *GormUserRepository) UpdateLastOnline(ctx context.Context, username string) error {
-	return r.db.WithContext(ctx).
-		Model(&domain.RadiusUser{}).
-		Where("username = ?", username).
-		Update("last_online", time.Now()).Error
+	tenantID, _ := tenant.FromContext(ctx)
+	query := r.db.WithContext(ctx).Model(&domain.RadiusUser{}).Where("username = ?", username)
+	if tenantID > 0 {
+		query = query.Where("tenant_id = ?", tenantID)
+	}
+	return query.Update("last_online", time.Now()).Error
 }
 
 func (r *GormUserRepository) UpdateField(ctx context.Context, username string, field string, value interface{}) error {
-	return r.db.WithContext(ctx).
-		Model(&domain.RadiusUser{}).
-		Where("username = ?", username).
-		Update(field, value).Error
+	tenantID, _ := tenant.FromContext(ctx)
+	query := r.db.WithContext(ctx).Model(&domain.RadiusUser{}).Where("username = ?", username)
+	if tenantID > 0 {
+		query = query.Where("tenant_id = ?", tenantID)
+	}
+	return query.Update(field, value).Error
 }

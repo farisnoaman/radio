@@ -95,6 +95,99 @@ web:
   port: 1816 # Web management interface port
 ```
 
+### Database Setup (Multi-Tenant Architecture)
+
+RADIO now supports a multi-tenant architecture for managing multiple ISPs/providers from a single platform. Each provider gets their own isolated database schema while sharing the same application infrastructure.
+
+#### Architecture Overview
+
+- **Platform Schema**: Stores provider registry, registrations, and platform-wide settings
+- **Provider Schemas**: Each provider (`provider_1`, `provider_2`, etc.) gets isolated schema for users, sessions, NAS devices, etc.
+- **Tenant Isolation**: All queries automatically scoped to provider's tenant_id
+- **Scalability**: Supports 100+ providers with 5000 users each (500K+ total users)
+
+#### Database Migrations
+
+**Migration Tool:**
+```bash
+# Build migration tool
+cd cmd/migrate
+go build -o migrate .
+
+# Run migrations (create platform schema and tenant indexes)
+./migrate -action=up -dsn="host=localhost user=toughradius password=your_password dbname=toughradius port=5432"
+
+# Rollback last migration
+./migrate -action=down -dsn="..."
+```
+
+**Available Migrations:**
+- `001_create_platform_schema`: Creates provider registry tables
+- `002_add_tenant_indexes`: Adds performance indexes for tenant-scoped queries
+
+#### Provider Schema Management
+
+**Creating Provider Schema:**
+```go
+import "github.com/talkincode/toughradius/v9/internal/migration"
+
+migrator := migration.NewSchemaMigrator(db)
+err := migrator.CreateProviderSchema(tenantID)
+// Creates schema: provider_1 with all required tables
+```
+
+**Dropping Provider Schema:**
+```go
+err := migrator.DropProviderSchema(tenantID)
+// Drops schema: provider_1 CASCADE (all tables and data)
+```
+
+**Manual SQL:**
+```sql
+-- Create provider schema
+CREATE SCHEMA IF NOT EXISTS provider_1;
+
+-- Set search path
+SET search_path TO provider_1, public;
+
+-- Verify schema
+\dn provider_1
+
+-- Drop schema
+DROP SCHEMA IF EXISTS provider_1 CASCADE;
+```
+
+#### Backup & Restore
+
+**Backup Single Provider:**
+```bash
+pg_dump -h localhost -U toughradius -d toughradius \
+    -n provider_1 \
+    -f provider_1_backup_$(date +%Y%m%d).sql
+```
+
+**Restore Provider:**
+```bash
+psql -h localhost -U toughradius -d toughradius \
+    -f provider_1_backup_20260320.sql
+```
+
+**Backup All Providers:**
+```bash
+pg_dump -h localhost -U toughradius -d toughradius \
+    -n public -n provider_* \
+    -f full_backup_$(date +%Y%m%d).sql
+```
+
+#### Performance Considerations
+
+- **Indexes**: All multi-tenant tables have composite indexes on `(tenant_id, field)`
+- **Connection Pooling**: Each provider gets dedicated connection pool
+- **Query Optimization**: Queries automatically scoped to tenant_id for optimal performance
+- **Index Creation**: Uses `CREATE INDEX CONCURRENTLY` for production safety
+
+For detailed architecture documentation, see [Multi-Tenant Database Architecture](docs/database/multi-tenant-schema.md).
+
 ### EAP Configuration
 
 You can fine-tune authentication behavior via system configuration (`sys_config`):
@@ -123,10 +216,28 @@ Default Admin Account:
 
 ## 📖 Documentation
 
+**Architecture & Design:**
+- [Multi-Tenant Database Architecture](docs/database/multi-tenant-schema.md) - Schema-per-provider isolation, migrations, and performance
 - [Architecture](docs/v9-architecture.md) - v9 version architecture design
 - [React Admin Refactor](docs/react-admin-refactor.md) - Frontend management interface explanation
+
+**Configuration & Deployment:**
 - [SQLite Support](docs/sqlite-support.md) - SQLite database configuration
 - [Environment Variables](docs/environment-variables.md) - Environment variable configuration guide
+- [Coolify Deployment](docs/guides/coolify-deployment.md) - One-click deployment on Coolify
+- [Production Setup](docs/guides/production-setup.md) - Manual Linux deployment guide
+
+**Testing:**
+- [Phase 1 Integration Test Report](docs/testing/phase1-integration-test-report.md) - Database schema and migration test results
+
+**Implementation Plans:**
+- [Multi-Provider SaaS Design](docs/plans/2026-03-19-multi-provider-saas-design.md) - Master design document
+- [Phase 1: Database Schema](docs/plans/2026-03-20-phase1-database-schema-and-migration.md) - Database layer implementation
+- [Phase 2: Provider Management](docs/plans/2026-03-20-phase2-provider-management.md) - Provider lifecycle management
+- [Phase 3: Resource Quotas](docs/plans/2026-03-20-phase3-resource-quotas.md) - Quota enforcement system
+- [Phase 4: Tenant Monitoring](docs/plans/2026-03-20-phase4-tenant-monitoring.md) - Tenant-isolated monitoring
+- [Phase 5: Billing Engine](docs/plans/2026-03-20-phase5-billing-engine.md) - Automated billing system
+- [Phase 5: Backup System](docs/plans/2026-03-20-phase5-backup-system.md) - Provider-controlled backups
 
 ## 🏗️ Project Structure
 

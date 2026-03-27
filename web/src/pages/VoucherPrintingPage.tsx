@@ -187,7 +187,7 @@ interface TemplateVars {
     color: string;
     product: string;
     rtl: boolean;
-    t: (key: string, options?: any) => string;
+    t: (key: string, options?: Record<string, unknown>) => string;
 }
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -225,7 +225,7 @@ const replaceCustomVars = (html: string, vars: TemplateVars): string =>
         .replace(/\{\{product\}\}/g, vars.product)
         .replace(/\{\{color\}\}/g, vars.color);
 
-const getSampleTemplate = (t: (key: string, options?: any) => string, isRtl: boolean) => `
+const getSampleTemplate = (t: (key: string, options?: Record<string, unknown>) => string, isRtl: boolean) => `
 <div style="width:142px;height:120px;border:1px solid {{color}};margin:2px;padding:4px;box-sizing:border-box;direction:${isRtl ? 'rtl' : 'ltr'};display:flex;flex-direction:column;justify-content:space-between;page-break-inside:avoid;overflow:hidden;background:#fff;position:relative;">
   <div style="font-weight:bold;font-size:10px;text-align:${isRtl ? 'right' : 'left'};border-bottom:1px solid #ccc;padding-bottom:2px;">
     {{hotspot}}
@@ -302,8 +302,8 @@ const VoucherPrintingPage: React.FC = () => {
             setLoadingBatches(true);
             try {
                 const [batchData, templateData] = await Promise.all([
-                    apiRequest<any[]>('/voucher-batches?perPage=1000&sort=id&order=DESC'),
-                    apiRequest<any[]>('/voucher-templates'),
+                    apiRequest<VoucherBatch[]>('/voucher-batches?perPage=1000&sort=id&order=DESC'),
+                    apiRequest<VoucherTemplate[]>('/voucher-templates'),
                 ]);
                 setBatches(Array.isArray(batchData) ? batchData : []);
                 setCustomTemplates(Array.isArray(templateData) ? templateData : []);
@@ -319,7 +319,7 @@ const VoucherPrintingPage: React.FC = () => {
             setLoadingBatches(false);
         };
         loadData();
-    }, []);
+    }, [searchParams, notify]);
 
     // --- Fetch product info when batch changes ---
     useEffect(() => {
@@ -331,7 +331,7 @@ const VoucherPrintingPage: React.FC = () => {
         apiRequest<Product>(`/products/${batch.product_id}`)
             .then((p) => setProducts((prev) => ({ ...prev, [batch.product_id]: p })))
             .catch(() => { });
-    }, [selectedBatchId, batches]);
+    }, [selectedBatchId, batches, products]);
 
 
 
@@ -857,7 +857,7 @@ var total=images.length,loaded=0;
 function tryPrint(){loaded++;if(loaded>=total)setTimeout(function(){window.print();},300);}
 if(total===0){window.print();}
 else{for(var i=0;i<total;i++){if(images[i].complete){tryPrint();}else{images[i].onload=tryPrint;images[i].onerror=tryPrint;}}}
-<\/script>
+</script>
 </body></html>`;
 
                                     printWindow.document.write(html);
@@ -911,10 +911,11 @@ else{for(var i=0;i<total;i++){if(images[i].complete){tryPrint();}else{images[i].
                                 minHeight: 350,
                             }}
                         >
-                            <iframe
+                            <Box
+                                component="iframe"
                                 ref={previewRef}
                                 title="Voucher Preview"
-                                style={{
+                                sx={{
                                     width: '100%',
                                     height: '100%',
                                     border: 'none',

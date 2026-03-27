@@ -41,6 +41,16 @@ var JwtSkipPrefix = []string{
 	apiBasePath + "/auth/refresh",
 	apiBasePath + "/dashboard/ws",
 	"/dashboard/ws",
+	apiBasePath + "/providers/registrations",              // Public provider registration
+	apiBasePath + "/providers/registrations/status",       // Public registration status check
+}
+
+// backupServiceInstance holds the backup service for request context
+var backupServiceInstance interface{}
+
+// SetBackupService sets the backup service to be used in request context
+func SetBackupService(svc interface{}) {
+	backupServiceInstance = svc
 }
 
 var server *AdminServer
@@ -105,6 +115,10 @@ func NewAdminServer(appCtx app.AppContext) *AdminServer {
 	s.root.Use(func(next echo.HandlerFunc) echo.HandlerFunc {
 		return func(c echo.Context) error {
 			c.Set("appCtx", s.appCtx)
+			// Add backup service to context if initialized
+			if backupServiceInstance != nil {
+				c.Set("backupService", backupServiceInstance)
+			}
 			return next(c)
 		}
 	})

@@ -107,21 +107,26 @@ const formatDuration = (seconds?: number): string => {
   return parts.join(' ');
 };
 
-const formatBytes = (bytes?: number): string => {
-  if (bytes === undefined || bytes === null) {
+const formatBytes = (bytes?: number | string): string => {
+  if (bytes === undefined || bytes === null || bytes === '') {
     return '-';
   }
-  if (bytes === 0) {
+  
+  let numValue = Number(bytes);
+  if (isNaN(numValue)) {
+    return '-';
+  }
+
+  if (numValue === 0) {
     return '0 B';
   }
   const units = ['B', 'KB', 'MB', 'GB', 'TB'];
-  let value = bytes;
   let index = 0;
-  while (value >= 1024 && index < units.length - 1) {
-    value /= 1024;
+  while (numValue >= 1024 && index < units.length - 1) {
+    numValue /= 1024;
     index += 1;
   }
-  return `${parseFloat(value.toFixed(2))} ${units[index]}`;
+  return `${parseFloat(numValue.toFixed(2))} ${units[index]}`;
 };
 
 const formatTimestamp = (value?: string | number): string => {

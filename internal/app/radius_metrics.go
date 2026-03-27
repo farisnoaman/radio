@@ -12,6 +12,7 @@ const (
 	MetricsRadiusRejectExpire       = "radus_reject_expire"
 	MetricsRadiusRejectOther        = "radus_reject_other"
 	MetricsRadiusRejectLimit        = "radus_reject_limit"
+	MetricsRadiusRejectQuota        = "radus_reject_quota"
 	MetricsRadiusRejectBindError    = "radus_reject_bind_error"
 	MetricsRadiusRejectLdapError    = "radus_reject_ldap_error"
 	MetricsRadiusRejectPasswdError  = "radus_reject_passwd_error" //nolint:gosec // G101: this is a metric name, not a credential
@@ -30,6 +31,7 @@ var metricsNames = []string{
 	MetricsRadiusRejectExpire,
 	MetricsRadiusRejectOther,
 	MetricsRadiusRejectLimit,
+	MetricsRadiusRejectQuota,
 	MetricsRadiusRejectBindError,
 	MetricsRadiusRejectLdapError,
 	MetricsRadiusRejectPasswdError,

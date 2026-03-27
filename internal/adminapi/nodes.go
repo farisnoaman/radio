@@ -141,7 +141,7 @@ func updateNode(c echo.Context) error {
 		name := strings.TrimSpace(*payload.Name)
 		if name != "" && name != node.Name {
 			var exists int64
-			GetDB(c).Model(&domain.NetNode{}).Where("name = ? AND id != ?", name, id).Count(&exists)
+			GetDB(c).Model(&domain.NetNode{}).Where("tenant_id = ? AND name = ? AND id != ?", node.TenantID, name, id).Count(&exists)
 			if exists > 0 {
 				return fail(c, http.StatusConflict, "NODE_EXISTS", "Node name already exists", nil)
 			}

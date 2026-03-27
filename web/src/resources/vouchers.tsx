@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { useMediaQuery, Theme, Box, Card, CardContent, CardActions, TextField as MuiTextField, Button as MuiButton, IconButton, InputAdornment, Dialog, DialogTitle, DialogContent, DialogActions, Typography, Chip } from '@mui/material';
+import { useMediaQuery, Theme, Box, Card, CardContent, CardActions, TextField as MuiTextField, Button as MuiButton, IconButton, InputAdornment, Dialog, DialogTitle, DialogContent, DialogActions, Typography, Chip, Alert } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import ClearIcon from '@mui/icons-material/Clear';
 import RedeemIcon from '@mui/icons-material/Redeem';
@@ -16,6 +16,8 @@ import SettingsIcon from '@mui/icons-material/Settings';
 const LinkWrapper = React.forwardRef<HTMLAnchorElement, any>((props, ref) => (
     <RouterLink ref={ref} {...(props as any)} />
 ));
+
+import FactCheckIcon from '@mui/icons-material/FactCheck';
 
 import {
     List,
@@ -45,6 +47,7 @@ import {
     TopToolbar,
     ExportButton,
     SortButton,
+    CreateButton,
     useTranslate,
     useLocale
 } from 'react-admin';
@@ -53,6 +56,7 @@ import { useFormContext, useWatch } from 'react-hook-form';
 import { httpClient } from '../utils/apiClient';
 
 import VoucherTransferDialog from '../components/VoucherTransferDialog';
+import VoucherCheckDialog from '../components/VoucherCheckDialog';
 import { ServerPagination } from '../components/datagrid/ServerPagination';
 import PrintIcon from '@mui/icons-material/Print';
 import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
@@ -275,10 +279,31 @@ const VoucherBatchGrid = () => {
         </Box>
     );
 };
+const VoucherBatchListActions = () => {
+    const [open, setOpen] = useState(false);
+    return (
+        <TopToolbar>
+            <MuiButton
+                size="small"
+                variant="outlined"
+                startIcon={<FactCheckIcon />}
+                onClick={() => setOpen(true)}
+                sx={{ mr: 1, borderRadius: 2, textTransform: 'none' }}
+            >
+                Check Voucher
+            </MuiButton>
+            <SortButton fields={['id', 'name', 'count', 'expire_time', 'created_at']} />
+            <ExportButton />
+            <CreateButton variant="contained" sx={{ ml: 1, borderRadius: 2 }} />
+            <VoucherCheckDialog open={open} onClose={() => setOpen(false)} />
+        </TopToolbar>
+    );
+};
+
 export const VoucherBatchList = (props: ListProps) => {
     const isSmall = useMediaQuery((theme: Theme) => theme.breakpoints.down('sm'));
     return (
-        <List {...props} sort={{ field: 'id', order: 'DESC' }}>
+        <List {...props} actions={<VoucherBatchListActions />} sort={{ field: 'id', order: 'DESC' }}>
             {isSmall ? (
                 <VoucherBatchGrid />
             ) : (
@@ -476,7 +501,13 @@ const VoucherBatchInputs = () => {
                         label={translate('pages.voucher.create.expiry')}
                         helperText={translate('pages.voucher.create.expiry_helper')}
                         InputLabelProps={{ shrink: true, sx: { transformOrigin: isRTL ? 'top right' : 'top left', left: isRTL ? 'auto' : 0, right: isRTL ? 24 : 'auto' } }}
+                        validate={[required()]}
                     />
+                    <Alert severity="warning" sx={{ mt: 1 }}>
+                        <Typography variant="caption" fontWeight={600}>
+                            {translate('pages.voucher.create.expiry_warning')}
+                        </Typography>
+                    </Alert>
                 </Box>
                 <Box>
                     <TextInput
@@ -573,10 +604,30 @@ const VoucherBatchInputs = () => {
     );
 };
 
+// Transform virtual fields to validity_days (in HOURS) before saving
+const transformVoucherBatch = (data: any) => {
+    const transformed = { ...data };
+
+    // Convert validity_value_virtual + validity_unit_virtual → validity_days (HOURS)
+    if (data.validity_value_virtual !== undefined && data.validity_unit_virtual !== undefined) {
+        let multiplier = 1; // hours (default)
+        if (data.validity_unit_virtual === 'days') multiplier = 24;
+        if (data.validity_unit_virtual === 'minutes') multiplier = 1 / 60;
+        transformed.validity_days = data.validity_value_virtual * multiplier;
+    }
+
+    // Clean up virtual fields
+    delete transformed.validity_value_virtual;
+    delete transformed.validity_unit_virtual;
+
+    return transformed;
+};
+
 import { useGetList } from 'react-admin';
 
 export const VoucherBatchCreate = (props: CreateProps) => {
     const translate = useTranslate();
+    const notify = useNotify();
     const { data: latestBatches, isLoading } = useGetList('voucher-batches', {
         pagination: { page: 1, perPage: 1 },
         sort: { field: 'id', order: 'DESC' }
@@ -600,8 +651,19 @@ export const VoucherBatchCreate = (props: CreateProps) => {
     }
     const defaultName = `${translate('pages.voucher.batch.default_name_prefix')}${nextNumber}`;
 
+    const onSuccess = (data: any) => {
+        // Show success message with expiry warning from backend
+        if (data.expiry_warning) {
+            notify(data.expiry_warning, { type: 'warning', autoHideDuration: 10000 });
+        } else if (data.message) {
+            notify(data.message, { type: 'success' });
+        } else {
+            notify('Voucher batch created successfully', { type: 'success' });
+        }
+    };
+
     return (
-        <Create {...props} record={{ name: defaultName }}>
+        <Create {...props} record={{ name: defaultName }} transform={transformVoucherBatch} onSuccess={onSuccess}>
             <SimpleForm>
                 <VoucherBatchInputs />
             </SimpleForm>

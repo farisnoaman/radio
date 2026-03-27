@@ -1,0 +1,15 @@
+{
+  "version": 1,
+  "skills": {
+    "frontend-ui-ux": {
+      "source": "smithery.ai",
+      "sourceType": "well-known",
+      "computedHash": "05dc4644e0ba49533e2ae12332572563871b063a9cbcf0b1384acbc23b70d2e0"
+    },
+    "senior-fullstack": {
+      "source": "smithery.ai",
+      "sourceType": "well-known",
+      "computedHash": "ba1e155eb5772e59e4f4ce1805538940d5725c1edf14fbd0eb0e0ec249767194"
+    }
+  }
+}

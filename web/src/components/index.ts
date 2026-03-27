@@ -13,3 +13,6 @@ export * from './form';
 
 // Detail components
 export * from './detail';
+
+// Dashboard components
+export { QuotaMonitoringWidget } from './dashboard/QuotaMonitoringWidget';

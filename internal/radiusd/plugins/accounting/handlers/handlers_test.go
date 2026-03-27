@@ -149,6 +149,16 @@ func (m *mockAccountingRepository) GetTotalUsage(ctx context.Context, username s
 	return total, nil
 }
 
+func (m *mockAccountingRepository) GetTotalSessionTime(ctx context.Context, username string) (int64, error) {
+	var total int64
+	for _, acct := range m.records {
+		if acct.Username == username {
+			total += int64(acct.AcctSessionTime)
+		}
+	}
+	return total, nil
+}
+
 // Helper to create a mock accounting context
 func createMockAccountingContext(statusType int) *accounting.AccountingContext {
 	// Create a minimal RADIUS request with required attributes

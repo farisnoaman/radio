@@ -23,7 +23,7 @@ func (c *ExpireChecker) Check(ctx context.Context, authCtx *auth.AuthContext) er
 	user := authCtx.User
 
 	if user.ExpireTime.Before(time.Now()) {
-		return errors.NewUserExpiredError()
+		return errors.NewUserNotExistsError()
 	}
 
 	return nil

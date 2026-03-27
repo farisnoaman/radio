@@ -66,7 +66,7 @@ func (s *AcctService) ServeRADIUS(w radius.ResponseWriter, r *radius.Request) {
 
 	// Get tenant context from NAS
 	ctx := context.Background()
-	if s.TenantRouter != nil {
+	if nas != nil && s.TenantRouter != nil && nas.TenantID > 0 {
 		tc, tErr := s.TenantRouter.GetNASWithTenant(ctx, nasrip, identifier)
 		if tErr == nil && tc != nil {
 			ctx = tenant.WithTenantID(ctx, tc.TenantID)

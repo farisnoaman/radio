@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Box, Card, CardContent, Typography, Stack, LinearProgress, Divider, Paper, alpha, useTheme } from '@mui/material';
-import Grid from '@mui/material/GridLegacy';
+import { Grid } from '@mui/material';
 import { useTranslate, useGetIdentity, useLocale } from 'react-admin';
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import SpeedIcon from '@mui/icons-material/Speed';
 import TimerIcon from '@mui/icons-material/Timer';
+import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import DevicesIcon from '@mui/icons-material/Devices';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 
@@ -28,14 +29,18 @@ const UserDashboard = () => {
                     }
                 });
                 const result = await response.json();
-                if (result.code === 0) {
+                if (result.data) {
                     setUsage(result.data);
                 }
             } catch (error) {
                 console.error('Failed to fetch usage:', error);
             }
         };
+
         fetchUsage();
+        const interval = setInterval(fetchUsage, 30000);
+
+        return () => clearInterval(interval);
     }, []);
 
     const formatData = (bytes: number) => {
@@ -96,7 +101,7 @@ const UserDashboard = () => {
             </Paper>
             
             <Grid container spacing={3}>
-                <Grid item xs={12} md={8}>
+                <Grid size={{ xs: 12, md: 8 }}>
                     <Paper 
                         sx={{ 
                             p: 3, 
@@ -119,7 +124,7 @@ const UserDashboard = () => {
                         </Stack>
                         
                         <Grid container spacing={4}>
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <Typography variant="subtitle2" color="text.secondary" gutterBottom sx={{ fontWeight: 600 }}>
                                     {translate('portal.data_used')}
                                 </Typography>
@@ -148,30 +153,44 @@ const UserDashboard = () => {
                                 </Typography>
                             </Grid>
                             
-                            <Grid item xs={12} sm={6}>
+                            <Grid size={{ xs: 12, sm: 6 }}>
                                 <Typography variant="subtitle2" color="text.secondary" gutterBottom sx={{ fontWeight: 600 }}>
-                                    {translate('portal.time_used')}
+                                    {translate('portal.time_quota')}
                                 </Typography>
                                 <Typography variant="h3" fontWeight={800} color="secondary.main" sx={{ mb: 2 }}>
-                                    {formatTime(usage?.time_used)}
+                                    {usage?.time_quota > 0 ? formatTime(usage?.time_quota - usage?.time_used) : translate('resources.products.units.unlimited')}
                                 </Typography>
-                                <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 3, p: 2, bgcolor: alpha(theme.palette.secondary.main, 0.05), borderRadius: 3 }}>
-                                    <TimerIcon fontSize="medium" color="secondary" />
-                                    <Box>
-                                        <Typography variant="caption" sx={{ display: 'block', color: 'text.secondary' }}>
-                                            {translate('portal.active_sessions')}
-                                        </Typography>
-                                        <Typography variant="body1" fontWeight={700}>
-                                            {usage?.online_count || 0}
-                                        </Typography>
+                                <Box sx={{ mt: 2, mb: 1 }}>
+                                    <LinearProgress
+                                        variant="determinate"
+                                        value={usage?.time_quota > 0 ? Math.min(100, ((usage?.time_used || 0) / usage?.time_quota) * 100) : 0}
+                                        sx={{
+                                            height: 10,
+                                            borderRadius: 5,
+                                            bgcolor: isDark ? alpha(theme.palette.divider, 0.1) : 'action.hover',
+                                            '& .MuiLinearProgress-bar': {
+                                                borderRadius: 5,
+                                                background: isDark
+                                                    ? `linear-gradient(90deg, ${theme.palette.secondary.main} 0%, ${theme.palette.secondary.light} 100%)`
+                                                    : 'linear-gradient(90deg, #6366f1 0%, #9c27b0 100%)'
+                                            }
+                                        }}
+                                    />
+                                </Box>
+                                <Typography variant="body2" color="text.secondary" fontWeight={500}>
+                                    {translate('portal.remaining')}: <Box component="span" sx={{ color: 'text.primary', fontWeight: 700 }}>
+                                        {usage?.time_quota > 0
+                                            ? `${formatTime(usage?.time_quota - usage?.time_used)} / ${formatTime(usage?.time_quota)}`
+                                            : translate('resources.products.units.unlimited')
+                                        }
                                     </Box>
-                                </Stack>
+                                </Typography>
                             </Grid>
                         </Grid>
                     </Paper>
 
                     <Grid container spacing={3}>
-                        <Grid item xs={12} sm={6}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
                             <Card sx={{ 
                                 borderRadius: 6, 
                                 bgcolor: isDark ? alpha(theme.palette.primary.main, 0.1) : theme.palette.primary.main, 
@@ -196,7 +215,7 @@ const UserDashboard = () => {
                                 </CardContent>
                             </Card>
                         </Grid>
-                        <Grid item xs={12} sm={6}>
+                        <Grid size={{ xs: 12, sm: 6 }}>
                             <Card sx={{ 
                                 borderRadius: 6, 
                                 bgcolor: isDark ? alpha(theme.palette.secondary.main, 0.1) : theme.palette.secondary.main, 
@@ -224,7 +243,7 @@ const UserDashboard = () => {
                     </Grid>
                 </Grid>
 
-                <Grid item xs={12} md={4}>
+                <Grid size={{ xs: 12, md: 4 }}>
                     <Card sx={{ 
                         borderRadius: 6, 
                         mb: 3, 

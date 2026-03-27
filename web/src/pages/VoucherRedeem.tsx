@@ -3,7 +3,7 @@ import {
     Box, Card, CardContent, Typography, Stack, TextField, Button, 
     alpha, CircularProgress, useTheme, useMediaQuery
 } from '@mui/material';
-import Grid from '@mui/material/GridLegacy';
+import { Grid } from '@mui/material';
 import { useTranslate, useLocale, useNotify } from 'react-admin';
 import RedeemIcon from '@mui/icons-material/Redeem';
 
@@ -36,11 +36,11 @@ const VoucherRedeem = () => {
                 body: JSON.stringify({ code })
             });
             const result = await response.json();
-            if (result.code === 0) {
+            if (response.ok && result.data) {
                 notify('portal.redeem_success', { type: 'success' });
                 setCode('');
             } else {
-                notify(result.msg || 'portal.redeem_error', { type: 'error' });
+                notify(result.message || result.error || 'portal.redeem_error', { type: 'error' });
             }
         } catch (error) {
             notify('common.network_error', { type: 'error' });
@@ -79,7 +79,7 @@ const VoucherRedeem = () => {
             </Typography>
 
             <Grid container spacing={isMobile ? 3 : 6} justifyContent="center" alignItems="stretch">
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                     <Card sx={{ 
                         borderRadius: 8, 
                         p: { xs: 1, md: 3 }, 
@@ -157,7 +157,7 @@ const VoucherRedeem = () => {
                     </Card>
                 </Grid>
 
-                <Grid item xs={12} md={6}>
+                <Grid size={{ xs: 12, md: 6 }}>
                     <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center', p: { xs: 1, md: 4 } }}>
                          <Typography variant="h5" fontWeight={800} sx={{ mb: 4 }}>
                             {translate('portal.how_it_works')}

@@ -8,6 +8,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
+	"go.uber.org/zap"
 )
 
 func registerPortalSessionRoutes() {
@@ -24,17 +25,18 @@ func GetPortalUsage(c echo.Context) error {
 	}
 
 	var stats struct {
-		DataUsed      int64     `json:"data_used"`      // Bytes
-		TimeUsed      int       `json:"time_used"`      // Seconds
-		DataQuota     int64     `json:"data_quota"`     // MB
-		ExpireTime    time.Time `json:"expire_time"`
-		Status        string    `json:"status"`
-		Username      string    `json:"username"`
-		MonthlyFee    float64   `json:"monthly_fee"`
-		NextBillDate  time.Time `json:"next_bill_date"`
-		OnlineCount   int       `json:"online_count"`
-		MacAddr       string    `json:"mac_addr"`
-		BindMac       int       `json:"bind_mac"`
+		DataUsed     int64     `json:"data_used"`   // Bytes
+		TimeUsed     int       `json:"time_used"`   // Seconds consumed
+		TimeQuota    int64     `json:"time_quota"`  // Seconds allocated (from product)
+		DataQuota    int64     `json:"data_quota"`  // MB
+		ExpireTime   time.Time `json:"expire_time"` // Validity window end date
+		Status       string    `json:"status"`
+		Username     string    `json:"username"`
+		MonthlyFee   float64   `json:"monthly_fee"`
+		NextBillDate time.Time `json:"next_bill_date"`
+		OnlineCount  int       `json:"online_count"`
+		MacAddr      string    `json:"mac_addr"`
+		BindMac      int       `json:"bind_mac"`
 	}
 
 	db := GetDB(c)
@@ -56,6 +58,7 @@ func GetPortalUsage(c echo.Context) error {
 
 	stats.DataUsed = usage.TotalInput + usage.TotalOutput
 	stats.TimeUsed = usage.TotalTime
+	stats.TimeQuota = user.TimeQuota // ← ADD THIS: Total time allocated by product
 	stats.DataQuota = user.DataQuota
 	stats.ExpireTime = user.ExpireTime
 	stats.Status = user.Status
@@ -65,6 +68,13 @@ func GetPortalUsage(c echo.Context) error {
 	stats.OnlineCount = int(onlineCount)
 	stats.MacAddr = user.MacAddr
 	stats.BindMac = user.BindMac
+
+	zap.L().Info("GetPortalUsage: Returning stats",
+		zap.String("username", user.Username),
+		zap.Int64("user.TimeQuota", user.TimeQuota),
+		zap.Int64("stats.TimeQuota", stats.TimeQuota),
+		zap.Int("stats.TimeUsed", stats.TimeUsed),
+		zap.Time("user.ExpireTime", user.ExpireTime))
 
 	return ok(c, stats)
 }

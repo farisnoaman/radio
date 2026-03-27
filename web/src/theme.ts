@@ -95,12 +95,14 @@ const darkPalette = {
 /**
  * 创建主题配置
  * @param mode 主题模式：'light' | 'dark'
+ * @param direction 文字方向：'rtl' | 'ltr'
  */
-export const createAppTheme = (mode: PaletteMode) => {
+export const createAppTheme = (mode: PaletteMode, direction: 'rtl' | 'ltr' = 'ltr') => {
   const isDark = mode === 'dark';
   const palette = isDark ? darkPalette : lightPalette;
 
   return createTheme({
+    direction,
     palette: {
       mode,
       ...palette,

@@ -55,6 +55,7 @@ func (s *AuthService) AuthenticateUserWithPlugins(
 		IsMacAuth:     isMacAuth,
 		Metadata: map[string]interface{}{
 			"profile_cache": s.AppContext().ProfileCache(), // Add profile cache for dynamic attribute resolution
+			"config_mgr":    s.AppContext().ConfigMgr(),    // Add config manager for reading RADIUS settings
 		},
 	}
 

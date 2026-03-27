@@ -438,3 +438,160 @@ func (r *DiscoveryResult) ToNAS(secret string) *domain.NetNas {
 
 	return nas
 }
+
+// NeighborInfo represents a network neighbor discovered via routing protocols.
+type NeighborInfo struct {
+	IP        string `json:"ip"`
+	MAC       string `json:"mac,omitempty"`
+	Interface string `json:"interface"`
+	Protocol  string `json:"protocol"` // OSPF, BGP, PPP, static
+	RemoteID  string `json:"remote_id"`
+	State     string `json:"state"` // full, active, established
+}
+
+// PPPProfileInfo represents a PPP profile configuration.
+type PPPProfileInfo struct {
+	Name                string `json:"name"`
+	LocalAddress        string `json:"local_address"`
+	RemoteAddressRange  string `json:"remote_address_range"`
+	UsesCount           int    `json:"uses_count"`
+}
+
+// OSPFInfo represents OSPF routing information.
+type OSPFInfo struct {
+	InstanceID string         `json:"instance_id"`
+	AreaID     string         `json:"area_id"`
+	RouterID   string         `json:"router_id"`
+	Neighbors  []NeighborInfo `json:"neighbors"`
+	State      string         `json:"state"`
+}
+
+// DiscoverNeighbors discovers network neighbors via Mikrotik RouterOS API.
+// This retrieves routing neighbor information (OSPF, BGP, PPP connections).
+func (s *Scanner) DiscoverNeighbors(
+	ctx context.Context,
+	ip, username, password string,
+) ([]NeighborInfo, error) {
+	client := routeros.NewClient(routeros.Config{
+		Address:  ip,
+		Port:     "8728",
+		Username: username,
+		Password: password,
+		Timeout:  s.timeout,
+	})
+
+	if err := client.Connect(ctx); err != nil {
+		return nil, fmt.Errorf("connect failed: %w", err)
+	}
+	defer client.Close()
+
+	if err := client.Login(ctx); err != nil {
+		return nil, fmt.Errorf("login failed: %w", err)
+	}
+
+	var neighbors []NeighborInfo
+
+	// Discover OSPF neighbors
+	ospfNeighbors, err := s.getOSPFNeighbors(ctx, client)
+	if err == nil {
+		neighbors = append(neighbors, ospfNeighbors...)
+	}
+
+	// Discover PPP connections
+	pppNeighbors, err := s.getPPPConnections(ctx, client)
+	if err == nil {
+		neighbors = append(neighbors, pppNeighbors...)
+	}
+
+	return neighbors, nil
+}
+
+// DiscoverPPPProfiles retrieves PPP profile configurations from Mikrotik.
+func (s *Scanner) DiscoverPPPProfiles(
+	ctx context.Context,
+	ip, username, password string,
+) ([]PPPProfileInfo, error) {
+	client := routeros.NewClient(routeros.Config{
+		Address:  ip,
+		Port:     "8728",
+		Username: username,
+		Password: password,
+		Timeout:  s.timeout,
+	})
+
+	if err := client.Connect(ctx); err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	if err := client.Login(ctx); err != nil {
+		return nil, err
+	}
+
+	profiles, err := s.getPPPProfiles(ctx, client)
+	if err != nil {
+		return nil, err
+	}
+
+	return profiles, nil
+}
+
+// DiscoverOSPF retrieves OSPF routing information from Mikrotik.
+func (s *Scanner) DiscoverOSPF(
+	ctx context.Context,
+	ip, username, password string,
+) (*OSPFInfo, error) {
+	client := routeros.NewClient(routeros.Config{
+		Address:  ip,
+		Port:     "8728",
+		Username: username,
+		Password: password,
+		Timeout:  s.timeout,
+	})
+
+	if err := client.Connect(ctx); err != nil {
+		return nil, err
+	}
+	defer client.Close()
+
+	if err := client.Login(ctx); err != nil {
+		return nil, err
+	}
+
+	ospf, err := s.getOSPFInstance(ctx, client)
+	if err != nil {
+		return nil, err
+	}
+
+	return ospf, nil
+}
+
+// getOSPFNeighbors retrieves OSPF neighbors from RouterOS device.
+// TODO: Implement actual RouterOS API command /routing/ospf/neighbor/print
+func (s *Scanner) getOSPFNeighbors(ctx context.Context, client *routeros.Client) ([]NeighborInfo, error) {
+	// Stub implementation - returns empty list for now
+	return []NeighborInfo{}, nil
+}
+
+// getPPPConnections retrieves active PPP connections from RouterOS device.
+// TODO: Implement actual RouterOS API command /ppp/active/print
+func (s *Scanner) getPPPConnections(ctx context.Context, client *routeros.Client) ([]NeighborInfo, error) {
+	// Stub implementation - returns empty list for now
+	return []NeighborInfo{}, nil
+}
+
+// getPPPProfiles retrieves PPP profiles from RouterOS device.
+// TODO: Implement actual RouterOS API command /ppp/profile/print
+func (s *Scanner) getPPPProfiles(ctx context.Context, client *routeros.Client) ([]PPPProfileInfo, error) {
+	// Stub implementation - returns empty list for now
+	return []PPPProfileInfo{}, nil
+}
+
+// getOSPFInstance retrieves OSPF instance information from RouterOS device.
+// TODO: Implement actual RouterOS API command /routing/ospf/instance/print
+func (s *Scanner) getOSPFInstance(ctx context.Context, client *routeros.Client) (*OSPFInfo, error) {
+	// Stub implementation - returns empty OSPF info for now
+	return &OSPFInfo{
+		Neighbors: []NeighborInfo{},
+	}, nil
+}

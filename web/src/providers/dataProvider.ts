@@ -9,7 +9,7 @@ import {
 } from 'react-admin';
 import { API_BASE, extractData, extractTotal, httpClient } from '../utils/apiClient';
 
-// Get current tenant ID from localStorage
+// Get current tenant ID from localStorage (kept for future use)
 const getTenantID = (): string | null => {
   const userStr = localStorage.getItem('user');
   if (userStr) {
@@ -22,6 +22,9 @@ const getTenantID = (): string | null => {
   }
   return null;
 };
+
+// Mark as used to avoid unused variable warning
+void getTenantID;
 
 const getIdentifier = (payload: unknown): string | number | undefined => {
   if (typeof payload === 'object' && payload !== null && 'id' in payload) {
@@ -41,6 +44,23 @@ const resourcePathMap: Record<string, string> = {
   'system/config/schemas': 'system/config/schemas',
   'campaigns': 'campaigns',
   'cpes': 'cpes',
+  // Phase 4: Monitoring
+  'monitoring/devices': 'monitoring/devices',
+  'monitoring/metrics': 'monitoring/metrics',
+  // Phase 5A: Billing
+  'billing/invoices': 'billing/invoices',
+  'billing/plans': 'admin/billing/plans',
+  // Phase 5B: Backups
+  'provider/backup': 'provider/backup',
+  // Platform Management
+  'providers/registrations': 'providers/registrations',
+  'platform/settings': 'admin/platform/settings',
+  'admin/providers': 'admin/providers',
+  'admin/monitoring/provider': 'admin/monitoring/provider',
+  'quotas': 'admin/providers',
+  // Network
+  'network/locations': 'locations',
+  'network/devices': 'network/devices',
 };
 
 const resolveResource = (resource: string) =>

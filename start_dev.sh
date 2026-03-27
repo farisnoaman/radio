@@ -98,8 +98,12 @@ echo -e "${GREEN}Starting Backend and Frontend...${NC}"
 # Trap Ctrl+C to kill both processes
 trap 'kill $(jobs -p)' EXIT
 
+# Build and start Backend
+echo -e "${GREEN}Building backend...${NC}"
+/home/faris/go/go/bin/go build -o toughradius .
+
 # Start Backend in background
-nohup go run main.go -c $CONFIG_FILE > backend.log 2>&1 &
+nohup ./toughradius -c $CONFIG_FILE > backend.log 2>&1 &
 BACKEND_PID=$!
 
 # Wait for backend to be ready

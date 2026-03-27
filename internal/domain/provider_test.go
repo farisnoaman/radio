@@ -3,6 +3,7 @@ package domain
 import (
 	"encoding/json"
 	"testing"
+	"time"
 )
 
 func TestProviderTableName(t *testing.T) {
@@ -186,5 +187,133 @@ func TestProvider_IsSuspended(t *testing.T) {
 		if got != tt.want {
 			t.Errorf("IsSuspended() for status %q = %v, want %v", tt.status, got, tt.want)
 		}
+	}
+}
+
+func TestProviderRegistrationTableName(t *testing.T) {
+	reg := ProviderRegistration{}
+	if got := reg.TableName(); got != "mst_provider_registration" {
+		t.Errorf("TableName() = %v, want mst_provider_registration", got)
+	}
+}
+
+func TestProviderRegistrationModel(t *testing.T) {
+	now := time.Now()
+	reg := &ProviderRegistration{
+		ID:            1,
+		CompanyName:   "Test ISP LLC",
+		ContactName:   "John Doe",
+		Email:         "john@testisp.com",
+		Phone:         "+1234567890",
+		Address:       "123 Main St, City, Country",
+		BusinessType:  "ISP",
+		ExpectedUsers: 500,
+		ExpectedNas:   10,
+		Country:       "US",
+		Message:       "We would like to join your platform",
+		Status:        "pending",
+		CreatedAt:     now,
+		UpdatedAt:     now,
+	}
+
+	if reg.CompanyName != "Test ISP LLC" {
+		t.Errorf("Expected CompanyName 'Test ISP LLC', got '%s'", reg.CompanyName)
+	}
+
+	if reg.Email != "john@testisp.com" {
+		t.Errorf("Expected Email 'john@testisp.com', got '%s'", reg.Email)
+	}
+
+	if reg.Status != "pending" {
+		t.Errorf("Expected Status 'pending', got '%s'", reg.Status)
+	}
+
+	if reg.TableName() != "mst_provider_registration" {
+		t.Errorf("Expected table name 'mst_provider_registration', got '%s'", reg.TableName())
+	}
+}
+
+func TestProviderRegistrationWithReview(t *testing.T) {
+	now := time.Now()
+	reviewTime := now.Add(24 * time.Hour)
+	reg := &ProviderRegistration{
+		ID:              1,
+		CompanyName:     "Test ISP LLC",
+		ContactName:     "John Doe",
+		Email:           "john@testisp.com",
+		Status:          "approved",
+		ReviewedBy:      100,
+		ReviewedAt:      &reviewTime,
+		RejectionReason: "",
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}
+
+	if reg.Status != "approved" {
+		t.Errorf("Expected Status 'approved', got '%s'", reg.Status)
+	}
+
+	if reg.ReviewedBy != 100 {
+		t.Errorf("Expected ReviewedBy 100, got %d", reg.ReviewedBy)
+	}
+
+	if reg.ReviewedAt == nil {
+		t.Error("Expected ReviewedAt to be set, got nil")
+	}
+
+	if reg.RejectionReason != "" {
+		t.Errorf("Expected empty RejectionReason, got '%s'", reg.RejectionReason)
+	}
+}
+
+func TestProviderRegistrationRejected(t *testing.T) {
+	now := time.Now()
+	reviewTime := now.Add(24 * time.Hour)
+	reg := &ProviderRegistration{
+		ID:              2,
+		CompanyName:     "Bad ISP",
+		ContactName:     "Jane Doe",
+		Email:           "jane@badisp.com",
+		Status:          "rejected",
+		ReviewedBy:      100,
+		ReviewedAt:      &reviewTime,
+		RejectionReason: "Incomplete documentation",
+		CreatedAt:       now,
+		UpdatedAt:       now,
+	}
+
+	if reg.Status != "rejected" {
+		t.Errorf("Expected Status 'rejected', got '%s'", reg.Status)
+	}
+
+	if reg.RejectionReason != "Incomplete documentation" {
+		t.Errorf("Expected RejectionReason 'Incomplete documentation', got '%s'", reg.RejectionReason)
+	}
+}
+
+func TestProviderBrandingSerialization(t *testing.T) {
+	provider := &Provider{}
+
+	branding := &ProviderBranding{
+		LogoURL:        "https://example.com/logo.png",
+		PrimaryColor:   "#007bff",
+		SecondaryColor: "#6c757d",
+		CompanyName:    "Test ISP",
+		SupportEmail:   "support@testisp.com",
+		SupportPhone:   "+1234567890",
+	}
+
+	err := provider.SetBranding(branding)
+	if err != nil {
+		t.Fatalf("Failed to set branding: %v", err)
+	}
+
+	retrieved, err := provider.GetBranding()
+	if err != nil {
+		t.Fatalf("Failed to get branding: %v", err)
+	}
+
+	if retrieved.LogoURL != branding.LogoURL {
+		t.Errorf("LogoURL mismatch: got '%s', want '%s'", retrieved.LogoURL, branding.LogoURL)
 	}
 }

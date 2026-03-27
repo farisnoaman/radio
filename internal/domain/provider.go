@@ -122,3 +122,30 @@ type ProviderStats struct {
 	TotalVouchers int64 `json:"total_vouchers"`
 	UsedVouchers  int64 `json:"used_vouchers"`
 }
+
+// ProviderRegistration holds registration requests for new providers.
+// It stores information about ISPs/providers who want to join the platform,
+// including their business details and the review status.
+type ProviderRegistration struct {
+	ID              int64      `json:"id" gorm:"primaryKey"`
+	CompanyName     string     `json:"company_name" gorm:"not null"`
+	ContactName     string     `json:"contact_name" gorm:"not null"`
+	Email           string     `json:"email" gorm:"not null"`
+	Phone           string     `json:"phone"`
+	Address         string     `json:"address"`
+	BusinessType    string     `json:"business_type"`
+	ExpectedUsers   int        `json:"expected_users"`
+	ExpectedNas     int        `json:"expected_nas"`
+	Country         string     `json:"country"`
+	Message         string     `json:"message"`
+	Status          string     `json:"status" gorm:"default:'pending'"`
+	ReviewedBy      int64      `json:"reviewed_by"`
+	ReviewedAt      *time.Time `json:"reviewed_at"`
+	RejectionReason string     `json:"rejection_reason"`
+	CreatedAt       time.Time  `json:"created_at"`
+	UpdatedAt       time.Time  `json:"updated_at"`
+}
+
+func (ProviderRegistration) TableName() string {
+	return "mst_provider_registration"
+}

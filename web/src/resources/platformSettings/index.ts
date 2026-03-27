@@ -1,0 +1,1 @@
+export { ProviderRegistrationList } from './ProviderRegistrationList';

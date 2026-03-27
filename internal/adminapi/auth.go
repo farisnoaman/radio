@@ -127,13 +127,14 @@ func portalLoginHandler(c echo.Context) error {
 func issueToken(c echo.Context, op domain.SysOpr) (string, error) {
 	now := time.Now()
 	claims := jwt.MapClaims{
-		"sub":      fmt.Sprintf("%d", op.ID),
-		"username": op.Username,
-		"role":     op.Level,
-		"exp":      now.Add(tokenTTL).Unix(),
-		"iat":      now.Unix(),
-		"nbf":      now.Add(-1 * time.Minute).Unix(),
-		"iss":      "toughradius",
+		"sub":       fmt.Sprintf("%d", op.ID),
+		"username":  op.Username,
+		"role":      op.Level,
+		"tenant_id": op.TenantID, // Include tenant_id in JWT claims
+		"exp":       now.Add(tokenTTL).Unix(),
+		"iat":       now.Unix(),
+		"nbf":       now.Add(-1 * time.Minute).Unix(),
+		"iss":       "toughradius",
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(GetAppContext(c).Config().Web.Secret))
@@ -142,13 +143,14 @@ func issueToken(c echo.Context, op domain.SysOpr) (string, error) {
 func issueUserToken(c echo.Context, user domain.RadiusUser) (string, error) {
 	now := time.Now()
 	claims := jwt.MapClaims{
-		"sub":      fmt.Sprintf("%d", user.ID),
-		"username": user.Username,
-		"role":     "user",
-		"exp":      now.Add(tokenTTL).Unix(),
-		"iat":      now.Unix(),
-		"nbf":      now.Add(-1 * time.Minute).Unix(),
-		"iss":      "toughradius",
+		"sub":       fmt.Sprintf("%d", user.ID),
+		"username":  user.Username,
+		"role":      "user",
+		"tenant_id": user.TenantID, // Include tenant_id in JWT claims
+		"exp":       now.Add(tokenTTL).Unix(),
+		"iat":       now.Unix(),
+		"nbf":       now.Add(-1 * time.Minute).Unix(),
+		"iss":       "toughradius",
 	}
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString([]byte(GetAppContext(c).Config().Web.Secret))

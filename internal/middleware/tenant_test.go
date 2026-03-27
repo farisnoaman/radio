@@ -52,7 +52,7 @@ func TestTenantMiddleware(t *testing.T) {
 			headerValue:    "",
 			defaultTenant:  0,
 			expectedTenant: 0,
-			expectError:    false,
+			expectError:    true, // Now returns error when no tenant context
 		},
 	}
 
@@ -86,8 +86,13 @@ func TestTenantMiddleware(t *testing.T) {
 				if !ok {
 					t.Errorf("Expected HTTPError, got %T", err)
 				}
-				if he.Code != http.StatusBadRequest {
-					t.Errorf("Expected status 400, got %d", he.Code)
+				// "empty header no default" returns 401, others return 400
+				expectedStatus := http.StatusBadRequest
+				if tt.name == "empty header no default" {
+					expectedStatus = http.StatusUnauthorized
+				}
+				if he.Code != expectedStatus {
+					t.Errorf("Expected status %d, got %d", expectedStatus, he.Code)
 				}
 			} else {
 				if err != nil {
@@ -203,6 +208,59 @@ func TestTenantMiddlewareFromOperator(t *testing.T) {
 		err := handler(c)
 		if err != nil {
 			t.Errorf("Unexpected error: %v", err)
+		}
+	})
+}
+
+func TestRequireTenant(t *testing.T) {
+	e := echo.New()
+
+	t.Run("with tenant context", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/test", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		// Add tenant to context
+		ctx := tenant.WithTenantID(req.Context(), 789)
+		c.SetRequest(req.WithContext(ctx))
+
+		middleware := RequireTenant()
+		var called bool
+		handler := middleware(func(c echo.Context) error {
+			called = true
+			return c.String(http.StatusOK, "OK")
+		})
+
+		err := handler(c)
+		if err != nil {
+			t.Errorf("Unexpected error: %v", err)
+		}
+		if !called {
+			t.Error("Handler should have been called")
+		}
+	})
+
+	t.Run("without tenant context", func(t *testing.T) {
+		req := httptest.NewRequest(http.MethodGet, "/test", nil)
+		rec := httptest.NewRecorder()
+		c := e.NewContext(req, rec)
+
+		middleware := RequireTenant()
+		handler := middleware(func(c echo.Context) error {
+			return c.String(http.StatusOK, "OK")
+		})
+
+		err := handler(c)
+		if err == nil {
+			t.Error("Expected error when no tenant context")
+		}
+
+		he, ok := err.(*echo.HTTPError)
+		if !ok {
+			t.Errorf("Expected HTTPError, got %T", err)
+		}
+		if he.Code != http.StatusUnauthorized {
+			t.Errorf("Expected status 401, got %d", he.Code)
 		}
 	})
 }

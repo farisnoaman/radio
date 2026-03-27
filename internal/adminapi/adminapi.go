@@ -2,10 +2,22 @@ package adminapi
 
 import (
 	"github.com/talkincode/toughradius/v9/internal/app"
+	"github.com/talkincode/toughradius/v9/internal/backup"
+	"github.com/talkincode/toughradius/v9/internal/webserver"
 )
+
+// backupService is the global backup service instance
+var backupService *backup.BackupService
 
 // Init registers all admin API routes
 func Init(appCtx app.AppContext) {
+	// Initialize backup service
+	db := appCtx.DB()
+	backupService = backup.NewBackupService(db, nil)
+
+	// Add backup service to the app context for retrieval in handlers
+	webserver.SetBackupService(backupService)
+
 	registerAuthRoutes()
 	registerUserRoutes()
 	registerDashboardRoutes()
@@ -39,6 +51,17 @@ func Init(appCtx app.AppContext) {
 	registerCPERoutes()
 	registerInvoiceRoutes()
 	registerProviderRoutes()
+	registerProviderRegistrationRoutes()
+	registerBillingRoutes()
+	registerMonitoringRoutes()
+	registerProviderBackupRoutes()
+	registerPortalNotificationRoutes()
+	registerReportingRoutes(appCtx)
+	registerNASTemplateRoutes()
+	registerDeviceManagementRoutes()
+	registerDeviceRoutes()
+	registerProxyRoutes()
+	registerCertificateRoutes()
+	registerTrafficAnalysisRoutes()
+	registerEnvMonitoringRoutes()
 }
-
-

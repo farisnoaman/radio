@@ -64,6 +64,8 @@ type AccountingRepository interface {
 	UpdateStop(ctx context.Context, sessionId string, accounting *domain.RadiusAccounting) error
 	// GetTotalUsage calculates total traffic usage for a user (input + output total)
 	GetTotalUsage(ctx context.Context, username string) (int64, error)
+	// GetTotalSessionTime retrieves total accumulated session time for a user
+	GetTotalSessionTime(ctx context.Context, username string) (int64, error)
 }
 
 // NasRepository manages NAS devices

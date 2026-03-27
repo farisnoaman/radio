@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useLogin, useNotify, useTranslate } from 'react-admin';
+import { useNavigate } from 'react-router-dom';
 import {
   Box,
   Card,
@@ -21,6 +22,7 @@ export const LoginPage = () => {
   const login = useLogin();
   const notify = useNotify();
   const translate = useTranslate();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,9 +59,17 @@ export const LoginPage = () => {
             <Typography variant="h4" sx={{ fontWeight: 700, color: '#1e40af', mb: 1 }}>
               {translate('app.title')}
             </Typography>
-            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+            <Typography variant="body2" sx={{ color: 'text.secondary', mb: 2 }}>
               {translate('app.subtitle')}
             </Typography>
+            <Button
+              color="inherit"
+              size="small"
+              onClick={() => navigate('/landing')}
+              sx={{ textTransform: 'none' }}
+            >
+              {translate('landing.learn_more')} →
+            </Button>
           </Box>
 
           <form onSubmit={handleSubmit}>

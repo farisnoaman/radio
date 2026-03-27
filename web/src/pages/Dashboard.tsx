@@ -2,7 +2,8 @@ import PeopleAltOutlinedIcon from '@mui/icons-material/PeopleAltOutlined';
 import OnlinePredictionOutlinedIcon from '@mui/icons-material/OnlinePredictionOutlined';
 import VerifiedUserOutlinedIcon from '@mui/icons-material/VerifiedUserOutlined';
 import SwapVertOutlinedIcon from '@mui/icons-material/SwapVertOutlined';
-import Grid from '@mui/material/GridLegacy';
+import DevicesOutlinedIcon from '@mui/icons-material/DevicesOutlined';
+import { Grid } from '@mui/material';
 import {
   Box,
   Card,
@@ -54,6 +55,13 @@ interface DashboardProfileSlice {
   value: number;
 }
 
+interface EnvHealthStats {
+  total_devices: number;
+  online_devices: number;
+  warning_alerts: number;
+  critical_alerts: number;
+}
+
 const emptyStats: DashboardStats = {
   total_users: 0,
   online_users: 0,
@@ -76,6 +84,12 @@ const Dashboard = () => {
   const { data: identity, isLoading: identityLoading } = useGetIdentity();
 
   const [stats, setStats] = useState<DashboardStats>(emptyStats);
+  const [envHealth, setEnvHealth] = useState<EnvHealthStats>({
+    total_devices: 0,
+    online_devices: 0,
+    warning_alerts: 0,
+    critical_alerts: 0,
+  });
 
   const { data: statsPayload, isFetching } = useApiQuery<DashboardStats>({
     path: '/dashboard/stats',
@@ -86,11 +100,26 @@ const Dashboard = () => {
     enabled: identity?.level !== 'agent', // Only fetch if not an agent
   });
 
+  const { data: envHealthPayload } = useApiQuery<EnvHealthStats>({
+    path: '/dashboard/env-health',
+    queryKey: ['dashboard', 'env-health'],
+    staleTime: 300 * 1000,
+    refetchInterval: 300 * 1000,
+    retry: 1,
+    enabled: identity?.level !== 'agent',
+  });
+
   useEffect(() => {
     if (statsPayload) {
       setStats(statsPayload);
     }
   }, [statsPayload]);
+
+  useEffect(() => {
+    if (envHealthPayload) {
+      setEnvHealth(envHealthPayload);
+    }
+  }, [envHealthPayload]);
 
   // WebSocket Integration
   const { realtimeStats } = useDashboardWebSocket();
@@ -191,6 +220,16 @@ const Dashboard = () => {
       icon: <SwapVertOutlinedIcon fontSize="large" />,
       accent: '#f97316',
       highlights: [{ label: translate('dashboard.unit_gb'), value: 'GB' }],
+    },
+    {
+      title: translate('dashboard.env_health') || 'Device Health',
+      value: `${envHealth.online_devices}/${envHealth.total_devices}`,
+      icon: <DevicesOutlinedIcon fontSize="large" />,
+      accent: envHealth.critical_alerts > 0 ? '#ef4444' : envHealth.warning_alerts > 0 ? '#f59e0b' : '#34d399',
+      highlights: [
+        { label: translate('dashboard.warning_alerts') || 'Warnings', value: envHealth.warning_alerts, color: envHealth.warning_alerts > 0 ? '#f59e0b' : undefined },
+        { label: translate('dashboard.critical_alerts') || 'Critical', value: envHealth.critical_alerts, color: envHealth.critical_alerts > 0 ? '#ef4444' : undefined },
+      ],
     },
   ];
 
@@ -427,7 +466,7 @@ const Dashboard = () => {
 
       <Grid container spacing={3}>
         {statCards.map((card) => (
-          <Grid item xs={12} sm={6} lg={3} key={card.title}>
+          <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={card.title}>
             <Card
               sx={{
                 height: '100%',
@@ -475,7 +514,7 @@ const Dashboard = () => {
       </Grid>
 
       <Grid container spacing={3}>
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ borderRadius: 4, height: '100%' }}>
             <CardContent sx={{ height: '100%' }}>
               <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
@@ -486,7 +525,7 @@ const Dashboard = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12} md={6}>
+        <Grid size={{ xs: 12, md: 6 }}>
           <Card sx={{ borderRadius: 4, height: '100%' }}>
             <CardContent sx={{ height: '100%' }}>
               <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
@@ -497,7 +536,7 @@ const Dashboard = () => {
           </Card>
         </Grid>
 
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <Card sx={{ borderRadius: 4 }}>
             <CardContent>
               <Typography variant="h6" sx={{ fontWeight: 700, mb: 2 }}>
@@ -507,7 +546,7 @@ const Dashboard = () => {
             </CardContent>
           </Card>
         </Grid>
-        <Grid item xs={12}>
+        <Grid size={{ xs: 12 }}>
           <ForecastChart />
         </Grid>
       </Grid >

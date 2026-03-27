@@ -8,6 +8,8 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/talkincode/toughradius/v9/internal/domain"
+	"github.com/talkincode/toughradius/v9/internal/repository"
+	"github.com/talkincode/toughradius/v9/internal/tenant"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 )
 
@@ -44,7 +46,7 @@ func ListProducts(c echo.Context) error {
 	var total int64
 	var products []domain.Product
 
-	query := db.Model(&domain.Product{})
+	query := db.Model(&domain.Product{}).Scopes(repository.TenantScope)
 
 	// Filter by name
 	if name := strings.TrimSpace(c.QueryParam("name")); name != "" {
@@ -81,7 +83,7 @@ func GetProduct(c echo.Context) error {
 	}
 
 	var product domain.Product
-	if err := GetDB(c).First(&product, id).Error; err != nil {
+	if err := GetDB(c).Scopes(repository.TenantScope).First(&product, id).Error; err != nil {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "Product not found", nil)
 	}
 
@@ -98,6 +100,8 @@ type ProductRequest struct {
 	DownRate        int     `json:"down_rate" validate:"gte=0"`
 	DataQuota       int64   `json:"data_quota" validate:"gte=0"`
 	ValiditySeconds int64   `json:"validity_seconds" validate:"gte=0"`
+	IdleTimeout     int     `json:"idle_timeout" validate:"gte=0"`
+	SessionTimeout  int     `json:"session_timeout" validate:"gte=0"`
 	Status          string  `json:"status"`
 	Color           string  `json:"color"`
 	Remark          string  `json:"remark" validate:"omitempty,max=500"`
@@ -119,17 +123,28 @@ func CreateProduct(c echo.Context) error {
 		return err
 	}
 
+	// Get tenant ID from context
+	tenantID := tenant.GetTenantIDOrDefault(c.Request().Context())
+
 	profileID, _ := strconv.ParseInt(req.RadiusProfileID, 10, 64)
 
-	// Validate Profile Exists
+	// Validate Profile Exists and belongs to same tenant
 	var profileCount int64
-	GetDB(c).Model(&domain.RadiusProfile{}).Where("id = ?", profileID).Count(&profileCount)
+	GetDB(c).Model(&domain.RadiusProfile{}).Where("tenant_id = ? AND id = ?", tenantID, profileID).Count(&profileCount)
 	if profileCount == 0 {
-		return fail(c, http.StatusBadRequest, "INVALID_PROFILE", "Radius Profile not found", nil)
+		return fail(c, http.StatusBadRequest, "INVALID_PROFILE", "Radius Profile not found or not accessible", nil)
+	}
+
+	// Check whether a product with the same name already exists (business logic validation)
+	var count int64
+	GetDB(c).Model(&domain.Product{}).Where("tenant_id = ? AND name = ?", tenantID, req.Name).Count(&count)
+	if count > 0 {
+		return fail(c, http.StatusConflict, "NAME_EXISTS", "Product name already exists", nil)
 	}
 
 	product := domain.Product{
 		Name:            req.Name,
+		TenantID:        tenantID,
 		RadiusProfileID: profileID,
 		Price:           req.Price,
 		CostPrice:       req.CostPrice,
@@ -137,6 +152,8 @@ func CreateProduct(c echo.Context) error {
 		DownRate:        req.DownRate,
 		DataQuota:       req.DataQuota,
 		ValiditySeconds: req.ValiditySeconds,
+		IdleTimeout:     req.IdleTimeout,
+		SessionTimeout:  req.SessionTimeout,
 		Status:          req.Status,
 		Color:           req.Color,
 		Remark:          req.Remark,
@@ -172,8 +189,11 @@ func UpdateProduct(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid product ID", nil)
 	}
 
+	// Get tenant ID from context
+	tenantID := tenant.GetTenantIDOrDefault(c.Request().Context())
+
 	var product domain.Product
-	if err := GetDB(c).First(&product, id).Error; err != nil {
+	if err := GetDB(c).Scopes(repository.TenantScope).First(&product, id).Error; err != nil {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "Product not found", nil)
 	}
 
@@ -187,14 +207,21 @@ func UpdateProduct(c echo.Context) error {
 	}
 
 	profileID, _ := strconv.ParseInt(req.RadiusProfileID, 10, 64)
-	
-	// Validate Profile Exists if changed
+
+	// Validate Profile Exists and belongs to same tenant if changed
 	if profileID != product.RadiusProfileID {
 		var profileCount int64
-		GetDB(c).Model(&domain.RadiusProfile{}).Where("id = ?", profileID).Count(&profileCount)
+		GetDB(c).Model(&domain.RadiusProfile{}).Where("tenant_id = ? AND id = ?", tenantID, profileID).Count(&profileCount)
 		if profileCount == 0 {
-			return fail(c, http.StatusBadRequest, "INVALID_PROFILE", "Radius Profile not found", nil)
+			return fail(c, http.StatusBadRequest, "INVALID_PROFILE", "Radius Profile not found or not accessible", nil)
 		}
+	}
+
+	// Check whether another product with the same name already exists (business logic validation)
+	var count int64
+	GetDB(c).Model(&domain.Product{}).Where("tenant_id = ? AND name = ? AND id != ?", tenantID, req.Name, id).Count(&count)
+	if count > 0 {
+		return fail(c, http.StatusConflict, "NAME_EXISTS", "Product name already exists", nil)
 	}
 
 	product.Name = req.Name
@@ -205,6 +232,8 @@ func UpdateProduct(c echo.Context) error {
 	product.DownRate = req.DownRate
 	product.DataQuota = req.DataQuota
 	product.ValiditySeconds = req.ValiditySeconds
+	product.IdleTimeout = req.IdleTimeout
+	product.SessionTimeout = req.SessionTimeout
 	product.Status = req.Status
 	product.Color = req.Color
 	product.Remark = req.Remark
@@ -229,9 +258,17 @@ func DeleteProduct(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid product ID", nil)
 	}
 
+	// Get tenant ID from context
+	tenantID := tenant.GetTenantIDOrDefault(c.Request().Context())
+
+	var product domain.Product
+	if err := GetDB(c).Scopes(repository.TenantScope).First(&product, id).Error; err != nil {
+		return fail(c, http.StatusNotFound, "NOT_FOUND", "Product not found", nil)
+	}
+
 	// Check usage in Vouchers
 	var voucherCount int64
-	GetDB(c).Model(&domain.VoucherBatch{}).Where("product_id = ?", id).Count(&voucherCount)
+	GetDB(c).Model(&domain.VoucherBatch{}).Where("product_id = ? AND tenant_id = ?", id, tenantID).Count(&voucherCount)
 	if voucherCount > 0 {
 		return fail(c, http.StatusConflict, "IN_USE", "Product is used by voucher batches", nil)
 	}

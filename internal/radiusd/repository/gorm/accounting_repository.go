@@ -7,6 +7,7 @@ import (
 
 	"github.com/talkincode/toughradius/v9/internal/domain"
 	"github.com/talkincode/toughradius/v9/internal/radiusd/repository"
+	"github.com/talkincode/toughradius/v9/internal/tenant"
 	"github.com/talkincode/toughradius/v9/pkg/common"
 	"gorm.io/gorm"
 )
@@ -56,10 +57,35 @@ func (r *GormAccountingRepository) UpdateStop(ctx context.Context, sessionId str
 
 func (r *GormAccountingRepository) GetTotalUsage(ctx context.Context, username string) (int64, error) {
 	var total int64
-	err := r.db.WithContext(ctx).
+	query := r.db.WithContext(ctx).
 		Model(&domain.RadiusAccounting{}).
-		Where("username = ?", username).
-		Select("SUM(acct_input_total + acct_output_total)").
+		Where("username = ?", username)
+
+	// Add tenant filtering
+	if tenantID, err := tenant.FromContext(ctx); err == nil && tenantID > 0 {
+		query = query.Where("tenant_id = ?", tenantID)
+	}
+
+	err := query.
+		Select("COALESCE(SUM(acct_input_total + acct_output_total), 0)").
+		Scan(&total).Error
+	return total, err
+}
+
+// GetTotalSessionTime retrieves the total accumulated session time for a user
+func (r *GormAccountingRepository) GetTotalSessionTime(ctx context.Context, username string) (int64, error) {
+	var total int64
+	query := r.db.WithContext(ctx).
+		Model(&domain.RadiusAccounting{}).
+		Where("username = ?", username)
+
+	// Add tenant filtering
+	if tenantID, err := tenant.FromContext(ctx); err == nil && tenantID > 0 {
+		query = query.Where("tenant_id = ?", tenantID)
+	}
+
+	err := query.
+		Select("COALESCE(SUM(acct_session_time), 0)").
 		Scan(&total).Error
 	return total, err
 }

@@ -12,6 +12,7 @@ import (
 
 // nasPayload represents the NAS device request structure
 type nasPayload struct {
+	TenantID   int64  `json:"tenant_id,string" validate:"gte=0"`
 	NodeId     int64  `json:"node_id,string" validate:"gte=0"`
 	Name       string `json:"name" validate:"required,min=1,max=100"`
 	Identifier string `json:"identifier" validate:"omitempty,max=100"`
@@ -24,10 +25,13 @@ type nasPayload struct {
 	Status     string `json:"status" validate:"omitempty,oneof=enabled disabled"`
 	Tags       string `json:"tags" validate:"omitempty,max=200"`
 	Remark     string `json:"remark" validate:"omitempty,max=500"`
+	ApiUser    string `json:"api_user" validate:"omitempty,max=100"`
+	ApiPass    string `json:"api_pass" validate:"omitempty,max=100"`
 }
 
 // nasUpdatePayload relaxes validation rules for partial updates
 type nasUpdatePayload struct {
+	TenantID   int64  `json:"tenant_id,string" validate:"omitempty,gte=0"`
 	NodeId     int64  `json:"node_id,string" validate:"omitempty,gte=0"`
 	Name       string `json:"name" validate:"omitempty,min=1,max=100"`
 	Identifier string `json:"identifier" validate:"omitempty,max=100"`
@@ -40,6 +44,8 @@ type nasUpdatePayload struct {
 	Status     string `json:"status" validate:"omitempty,oneof=enabled disabled"`
 	Tags       string `json:"tags" validate:"omitempty,max=200"`
 	Remark     string `json:"remark" validate:"omitempty,max=500"`
+	ApiUser    string `json:"api_user" validate:"omitempty,max=100"`
+	ApiPass    string `json:"api_pass" validate:"omitempty,max=100"`
 }
 
 // ListNAS retrieves the NAS device list
@@ -55,6 +61,7 @@ type nasUpdatePayload struct {
 // @Router /api/v1/network/nas [get]
 func ListNAS(c echo.Context) error {
 	db := GetDB(c)
+	tenantID := GetTenantID(c)
 
 	page, _ := strconv.Atoi(c.QueryParam("page"))
 	perPage, _ := strconv.Atoi(c.QueryParam("perPage"))
@@ -77,7 +84,7 @@ func ListNAS(c echo.Context) error {
 	var total int64
 	var devices []domain.NetNas
 
-	query := db.Model(&domain.NetNas{})
+	query := db.Model(&domain.NetNas{}).Where("tenant_id = ?", tenantID)
 
 	// Filter by name (case-insensitive)
 	if name := strings.TrimSpace(c.QueryParam("name")); name != "" {
@@ -121,8 +128,10 @@ func GetNAS(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid NAS ID", nil)
 	}
 
+	tenantID := GetTenantID(c)
+
 	var device domain.NetNas
-	if err := GetDB(c).First(&device, id).Error; err != nil {
+	if err := GetDB(c).Where("id = ? AND tenant_id = ?", id, tenantID).First(&device).Error; err != nil {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "NAS device not found", nil)
 	}
 
@@ -146,9 +155,14 @@ func CreateNAS(c echo.Context) error {
 		return handleValidationError(c, err)
 	}
 
-	// Check whether the IP address already exists
+	// Check whether the IP address already exists for this tenant
+	tenantIDStr := GetTenantID(c)
+	tenantID, err := strconv.ParseInt(tenantIDStr, 10, 64)
+	if err != nil {
+		return fail(c, http.StatusBadRequest, "INVALID_TENANT", "Invalid tenant ID", err.Error())
+	}
 	var count int64
-	GetDB(c).Model(&domain.NetNas{}).Where("ipaddr = ?", payload.Ipaddr).Count(&count)
+	GetDB(c).Model(&domain.NetNas{}).Where("tenant_id = ? AND ipaddr = ?", tenantID, payload.Ipaddr).Count(&count)
 	if count > 0 {
 		return fail(c, http.StatusConflict, "IPADDR_EXISTS", "IP address already exists", nil)
 	}
@@ -163,6 +177,7 @@ func CreateNAS(c echo.Context) error {
 	}
 
 	device := domain.NetNas{
+		TenantID:   tenantID,
 		NodeId:     payload.NodeId,
 		Name:       payload.Name,
 		Identifier: payload.Identifier,
@@ -175,6 +190,8 @@ func CreateNAS(c echo.Context) error {
 		Status:     payload.Status,
 		Tags:       payload.Tags,
 		Remark:     payload.Remark,
+		ApiUser:    payload.ApiUser,
+		ApiPass:    payload.ApiPass,
 	}
 
 	if err := GetDB(c).Create(&device).Error; err != nil {
@@ -197,8 +214,10 @@ func UpdateNAS(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid NAS ID", nil)
 	}
 
+	tenantID := GetTenantID(c)
+
 	var device domain.NetNas
-	if err := GetDB(c).First(&device, id).Error; err != nil {
+	if err := GetDB(c).Where("id = ? AND tenant_id = ?", id, tenantID).First(&device).Error; err != nil {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "NAS device not found", nil)
 	}
 
@@ -215,7 +234,7 @@ func UpdateNAS(c echo.Context) error {
 	// Validate IP uniqueness (e.g., if the IP was modified)
 	if payload.Ipaddr != "" && payload.Ipaddr != device.Ipaddr {
 		var count int64
-		GetDB(c).Model(&domain.NetNas{}).Where("ipaddr = ? AND id != ?", payload.Ipaddr, id).Count(&count)
+		GetDB(c).Model(&domain.NetNas{}).Where("tenant_id = ? AND ipaddr = ? AND id != ?", device.TenantID, payload.Ipaddr, id).Count(&count)
 		if count > 0 {
 			return fail(c, http.StatusConflict, "IPADDR_EXISTS", "IP address already exists", nil)
 		}
@@ -256,6 +275,12 @@ func UpdateNAS(c echo.Context) error {
 	if payload.NodeId > 0 {
 		device.NodeId = payload.NodeId
 	}
+	if payload.ApiUser != "" {
+		device.ApiUser = payload.ApiUser
+	}
+	if payload.ApiPass != "" {
+		device.ApiPass = payload.ApiPass
+	}
 
 	if err := GetDB(c).Save(&device).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "UPDATE_FAILED", "Failed to update NAS device", err.Error())
@@ -276,6 +301,8 @@ func DeleteNAS(c echo.Context) error {
 		return fail(c, http.StatusBadRequest, "INVALID_ID", "Invalid NAS ID", nil)
 	}
 
+	tenantID := GetTenantID(c)
+
 	// Check whether there are active online sessions
 	var onlineCount int64
 	GetDB(c).Model(&domain.RadiusOnline{}).Joins("JOIN net_vpe ON radius_online.nas_addr = net_vpe.ipaddr").Where("net_vpe.id = ?", id).Count(&onlineCount)
@@ -285,7 +312,7 @@ func DeleteNAS(c echo.Context) error {
 		})
 	}
 
-	if err := GetDB(c).Delete(&domain.NetNas{}, id).Error; err != nil {
+	if err := GetDB(c).Where("id = ? AND tenant_id = ?", id, tenantID).Delete(&domain.NetNas{}).Error; err != nil {
 		return fail(c, http.StatusInternalServerError, "DELETE_FAILED", "Failed to delete NAS device", err.Error())
 	}
 

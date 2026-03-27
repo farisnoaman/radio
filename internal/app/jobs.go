@@ -11,8 +11,10 @@ import (
 	"github.com/shirou/gopsutil/v4/process"
 	"github.com/talkincode/toughradius/v9/internal/app/billing"
 	"github.com/talkincode/toughradius/v9/internal/domain"
+	"github.com/talkincode/toughradius/v9/internal/service"
 	"github.com/talkincode/toughradius/v9/pkg/metrics"
 	"go.uber.org/zap"
+	"gorm.io/gorm"
 )
 
 var cronParser = cron.NewParser(
@@ -80,6 +82,28 @@ func (a *Application) initJob() {
 	})
 	if err != nil {
 		zap.S().Errorf("init postpaid billing job error %s", err.Error())
+	}
+
+	// Usage Alert Task - checks user usage thresholds and sends notifications
+	if a.appConfig.Notification.Enabled {
+		cronExpr := a.appConfig.Notification.AlertCheckCron
+		if cronExpr == "" {
+			cronExpr = "0 */6 * * *" // Default: every 6 hours
+		}
+		_, err = a.sched.AddFunc(cronExpr, func() {
+			go a.SchedUsageAlertTask()
+		})
+		if err != nil {
+			zap.S().Errorf("init usage alert job error %s", err.Error())
+		}
+	}
+
+	// Daily Reporting Snapshot Task - aggregates metrics for all providers
+	_, err = a.sched.AddFunc("@daily", func() {
+		go a.SchedDailyReportingSnapshotTask()
+	})
+	if err != nil {
+		zap.S().Errorf("init daily reporting snapshot job error %s", err.Error())
 	}
 
 	a.sched.Start()
@@ -508,4 +532,183 @@ func (a *Application) SchedPostpaidBillingTask() {
 
 	engine := billing.NewBillingEngine(a.gormDB, dueDateDays)
 	engine.ProcessDailyBillingCycle()
+}
+
+// SchedUsageAlertTask checks all users for usage threshold violations and sends notifications.
+func (a *Application) SchedUsageAlertTask() {
+	defer func() {
+		if err := recover(); err != nil {
+			zap.S().Error(err)
+		}
+	}()
+
+	if !a.appConfig.Notification.Enabled {
+		return
+	}
+
+	zap.S().Info("Starting usage alert check...")
+
+	var users []domain.RadiusUser
+	if err := a.gormDB.Where("status = ? AND data_quota > ?", "active", 0).Find(&users).Error; err != nil {
+		zap.S().Errorf("Failed to fetch users: %v", err)
+		return
+	}
+
+	var checker *service.UsageAlertChecker
+	if a.appConfig.Notification.SMTPHost != "" {
+		emailProvider := service.NewSMTPEmailProvider(service.SMTPConfig{
+			Host:     a.appConfig.Notification.SMTPHost,
+			Port:     a.appConfig.Notification.SMTPPort,
+			Username: a.appConfig.Notification.SMTPUsername,
+			Password: a.appConfig.Notification.SMTPPassword,
+			From:     a.appConfig.Notification.SMTPFrom,
+		})
+		notifier := &emailNotifierAdapter{emailProvider: emailProvider}
+		checker = service.NewUsageAlertChecker(notifier)
+	} else {
+		checker = service.NewUsageAlertChecker(nil)
+	}
+
+	alertCount := 0
+	for _, user := range users {
+		a.processUserUsageAlert(user, checker, &alertCount)
+	}
+
+	zap.S().Infof("Usage alert check completed: %d alerts sent", alertCount)
+}
+
+type emailNotifierAdapter struct {
+	emailProvider *service.SMTPEmailProvider
+}
+
+func (e *emailNotifierAdapter) SendUsageAlertEmail(data *service.NotificationData) error {
+	subject := fmt.Sprintf("Usage Alert: %d%% Data Quota Used", data.Threshold)
+	remaining := data.QuotaGB - data.UsedGB
+	if remaining < 0 {
+		remaining = 0
+	}
+	body := fmt.Sprintf(`Dear %s,
+
+You have used %d%% of your monthly data quota.
+
+Usage Details:
+- Data Used: %.2f GB
+- Monthly Quota: %.2f GB
+- Remaining: %.2f GB
+
+Please monitor your usage to avoid service interruption.
+
+Best regards,
+Your Service Provider
+`, data.Username, data.Threshold, data.UsedGB, data.QuotaGB, remaining)
+	return e.emailProvider.SendEmail(data.Email, subject, body)
+}
+
+func (e *emailNotifierAdapter) SendUsageAlertSMS(data *service.NotificationData) error {
+	return fmt.Errorf("SMS not implemented")
+}
+
+func (a *Application) processUserUsageAlert(user domain.RadiusUser, checker *service.UsageAlertChecker, alertCount *int) {
+	pref, err := a.getOrCreateNotificationPreferences(user.ID)
+	if err != nil {
+		zap.S().Errorf("Failed to get notification preferences for user %d: %v", user.ID, err)
+		return
+	}
+
+	if !pref.EmailEnabled && !pref.SMSEnabled {
+		return
+	}
+
+	usage, err := a.getUserUsageFromAccounting(&user)
+	if err != nil {
+		zap.S().Errorf("Failed to get usage for user %s: %v", user.Username, err)
+		return
+	}
+
+	alerts := checker.CheckUserThresholds(&user, usage, pref)
+
+	for _, alert := range alerts {
+		if a.shouldSendAlert(alert) {
+			if err := checker.SendAlert(&user, alert, usage); err != nil {
+				zap.S().Errorf("Failed to send alert for user %s: %v", user.Username, err)
+				continue
+			}
+
+			now := time.Now()
+			alert.SentAt = &now
+			if err := a.gormDB.Create(alert).Error; err != nil {
+				zap.S().Errorf("Failed to save alert: %v", err)
+			} else {
+				*alertCount++
+				zap.S().Infof("Sent %s alert at %d%% to user %s", alert.AlertType, alert.Threshold, user.Username)
+			}
+		}
+	}
+}
+
+func (a *Application) getOrCreateNotificationPreferences(userID int64) (*domain.NotificationPreference, error) {
+	var pref domain.NotificationPreference
+	err := a.gormDB.Where("user_id = ?", userID).First(&pref).Error
+
+	if err == gorm.ErrRecordNotFound {
+		pref = domain.NotificationPreference{
+			UserID:              userID,
+			EmailEnabled:        true,
+			SMSEnabled:          false,
+			EmailThresholds:     "80,90,100",
+			SMSThresholds:       "100",
+			DailySummaryEnabled: false,
+		}
+		err = a.gormDB.Create(&pref).Error
+	}
+
+	return &pref, err
+}
+
+func (a *Application) getUserUsageFromAccounting(user *domain.RadiusUser) (*service.UserUsage, error) {
+	now := time.Now()
+	startOfMonth := time.Date(now.Year(), now.Month(), 1, 0, 0, 0, 0, time.UTC)
+
+	var dataUsed int64
+	err := a.gormDB.Table("radacct").
+		Select("COALESCE(SUM(acctinputoctets + acctoutputoctets), 0) as total").
+		Where("username = ? AND acctstarttime >= ?", user.Username, startOfMonth).
+		Scan(&dataUsed).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return &service.UserUsage{
+		UserID:    user.ID,
+		DataUsed:  dataUsed,
+		DataQuota: user.DataQuota * 1024 * 1024,
+	}, nil
+}
+
+func (a *Application) shouldSendAlert(alert *domain.UsageAlert) bool {
+	var lastAlert domain.UsageAlert
+	twentyFourHoursAgo := time.Now().Add(-24 * time.Hour)
+
+	err := a.gormDB.Where(
+		"user_id = ? AND threshold = ? AND alert_type = ? AND sent_at > ?",
+		alert.UserID, alert.Threshold, alert.AlertType, twentyFourHoursAgo,
+	).First(&lastAlert).Error
+
+	return err == gorm.ErrRecordNotFound
+}
+
+func (a *Application) SchedDailyReportingSnapshotTask() {
+	defer func() {
+		if err := recover(); err != nil {
+			zap.S().Error(err)
+		}
+	}()
+
+	reportingSvc := service.NewReportingService(a.gormDB)
+	if err := reportingSvc.AggregateDailySnapshots(); err != nil {
+		zap.S().Errorf("daily reporting snapshot task error: %s", err.Error())
+	} else {
+		zap.S().Info("daily reporting snapshot completed successfully")
+	}
 }

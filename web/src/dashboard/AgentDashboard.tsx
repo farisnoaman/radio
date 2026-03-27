@@ -18,7 +18,7 @@ import {
     LinearProgress,
 } from '@mui/material';
 import { alpha, useTheme } from '@mui/material/styles';
-import Grid from '@mui/material/GridLegacy';
+import { Grid } from '@mui/material';
 import { useState, useEffect } from 'react';
 import { useGetIdentity, useTranslate } from 'react-admin';
 import { httpClient } from '../utils/apiClient';
@@ -157,7 +157,7 @@ const AgentDashboard = () => {
 
             <Grid container spacing={3}>
                 {statCards.map((card) => (
-                    <Grid item xs={12} sm={6} lg={3} key={card.title}>
+                    <Grid size={{ xs: 12, sm: 6, lg: 3 }} key={card.title}>
                         <Card sx={{ height: '100%', borderRadius: 4 }}>
                             <CardContent>
                                 <Stack direction="row" justifyContent="space-between" alignItems="center">

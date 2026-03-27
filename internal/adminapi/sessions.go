@@ -10,6 +10,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 	"github.com/talkincode/toughradius/v9/internal/domain"
+	"github.com/talkincode/toughradius/v9/internal/repository"
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 	"go.uber.org/zap"
 	"layeh.com/radius"
@@ -97,7 +98,7 @@ func ListOnlineSessions(c echo.Context) error {
 	var total int64
 	var sessions []domain.RadiusOnline
 
-	query := db.Model(&domain.RadiusOnline{})
+	query := db.Model(&domain.RadiusOnline{}).Scopes(repository.TenantScope)
 
 	// Filter by username (LIKE with escaped pattern)
 	if username := c.QueryParam("username"); username != "" {
@@ -169,7 +170,7 @@ func GetOnlineSession(c echo.Context) error {
 	}
 
 	var session domain.RadiusOnline
-	if err := GetDB(c).First(&session, id).Error; err != nil {
+	if err := GetDB(c).Scopes(repository.TenantScope).First(&session, id).Error; err != nil {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "Session not found", nil)
 	}
 
@@ -190,12 +191,12 @@ func DeleteOnlineSession(c echo.Context) error {
 
 	// Fetch session before deletion for CoA
 	var session domain.RadiusOnline
-	if err := GetDB(c).First(&session, id).Error; err != nil {
+	if err := GetDB(c).Scopes(repository.TenantScope).First(&session, id).Error; err != nil {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "Session not found", nil)
 	}
 
 	// Delete online session record
-	if err := GetDB(c).Delete(&domain.RadiusOnline{}, id).Error; err != nil {
+	if err := GetDB(c).Scopes(repository.TenantScope).Delete(&domain.RadiusOnline{}, id).Error; err != nil {
 		zap.L().Error("Failed to delete session from database", zap.Error(err))
 		return fail(c, http.StatusInternalServerError, "DELETE_FAILED", "Failed to terminate session", err.Error())
 	}

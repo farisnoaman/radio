@@ -234,6 +234,16 @@ func TestNewError(t *testing.T) {
 	assert.False(t, IsAuthError(err))
 }
 
+func TestNewTimeQuotaError(t *testing.T) {
+	err := NewTimeQuotaError()
+	assert.NotNil(t, err)
+
+	authErr, ok := GetAuthError(err)
+	assert.True(t, ok)
+	assert.Equal(t, app.MetricsRadiusRejectQuota, authErr.MetricsType)
+	assert.Equal(t, "time quota exceeded", authErr.Message)
+}
+
 func TestAuthError_ErrorInterface(t *testing.T) {
 	// Verify AuthError implements error interface
 	var _ error = &AuthError{}

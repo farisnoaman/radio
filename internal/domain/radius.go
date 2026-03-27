@@ -51,6 +51,7 @@ type RadiusUser struct {
 	UpRate          int       `json:"up_rate" form:"up_rate"`                           // Upload rate
 	DownRate        int       `json:"down_rate" form:"down_rate"`                       // Download rate
 	DataQuota       int64     `json:"data_quota" form:"data_quota"`                     // Data quota in MB (0 = unlimited)
+	TimeQuota       int64     `json:"time_quota" form:"time_quota"`                     // Time quota in seconds (0 = unlimited)
 	Vlanid1         int       `json:"vlanid1" form:"vlanid1"`                           // VLAN ID 1
 	Vlanid2         int       `json:"vlanid2" form:"vlanid2"`                           // VLAN ID 2
 	IpAddr          string    `json:"ip_addr" form:"ip_addr"`                           // Static IP
@@ -61,6 +62,8 @@ type RadiusUser struct {
 	BindVlan        int       `json:"bind_vlan" form:"bind_vlan"`                       // Bind VLAN
 	BindMac         int       `json:"bind_mac" form:"bind_mac"`                         // Bind MAC
 	ProfileLinkMode int       `json:"profile_link_mode" form:"profile_link_mode"`       // 0=static (snapshot), 1=dynamic (real-time from profile)
+	IdleTimeout     int       `json:"idle_timeout" form:"idle_timeout"`                  // Inactivity timeout in seconds
+	SessionTimeout  int       `json:"session_timeout" form:"session_timeout"`            // Max session duration in seconds
 	ExpireTime      time.Time `gorm:"index" json:"expire_time"`                         // Expiration time
 	Status          string    `gorm:"index" json:"status" form:"status"`                // Status: enabled | disabled
 	Remark          string    `json:"remark" form:"remark"`                             // Remark
@@ -92,6 +95,12 @@ type RadiusUser struct {
 	// These fields link a RadiusUser to a voucher for batch-level control
 	VoucherBatchID int64  `json:"voucher_batch_id,string" gorm:"index" form:"voucher_batch_id"`
 	VoucherCode    string `json:"voucher_code" gorm:"index" form:"voucher_code"`
+
+	// Reverse relationships
+	// UsageAlerts is the list of alerts sent to this user
+	UsageAlerts []*UsageAlert `json:"usage_alerts,omitempty" gorm:"foreignKey:UserID"`
+	// NotificationPreference holds this user's notification settings
+	NotificationPreference *NotificationPreference `json:"notification_preference,omitempty" gorm:"foreignKey:UserID"`
 }
 
 // TableName Specify table name
@@ -111,9 +120,12 @@ type RadiusOnline struct {
 	SessionTimeout      int       `json:"session_timeout"`
 	FramedIpaddr        string    `gorm:"index" json:"framed_ipaddr"`
 	FramedNetmask       string    `json:"framed_netmask"`
-	FramedIpv6Prefix    string    `json:"framed_ipv6_prefix"`
-	FramedIpv6Address   string    `json:"framed_ipv6_address"`
-	DelegatedIpv6Prefix string    `json:"delegated_ipv6_prefix"`
+	// IPv6 fields (RFC 3162)
+	FramedIpv6Prefix     string    `json:"framed_ipv6_prefix"`     // RFC 3162 attribute 97
+	FramedIpv6PrefixLen  int       `json:"framed_ipv6_prefix_len"`  // Prefix length
+	FramedInterfaceId    string    `json:"framed_interface_id"`     // RFC 3162 attribute 96
+	FramedIpv6Address    string    `json:"framed_ipv6_address"`     // Delegated address
+	DelegatedIpv6Prefix  string    `json:"delegated_ipv6_prefix"`   // Delegated prefix
 	MacAddr             string    `gorm:"index" json:"mac_addr"`
 
 	NasPort             int64     `json:"nas_port,string"`
@@ -149,9 +161,12 @@ type RadiusAccounting struct {
 	SessionTimeout      int       `json:"session_timeout"`
 	FramedIpaddr        string    `gorm:"index" json:"framed_ipaddr"`
 	FramedNetmask       string    `json:"framed_netmask"`
-	FramedIpv6Prefix    string    `json:"framed_ipv6_prefix"`
-	FramedIpv6Address   string    `json:"framed_ipv6_address"`
-	DelegatedIpv6Prefix string    `json:"delegated_ipv6_prefix"`
+	// IPv6 fields (RFC 3162)
+	FramedIpv6Prefix     string    `json:"framed_ipv6_prefix"`     // RFC 3162 attribute 97
+	FramedIpv6PrefixLen  int       `json:"framed_ipv6_prefix_len"`  // Prefix length
+	FramedInterfaceId    string    `json:"framed_interface_id"`     // RFC 3162 attribute 96
+	FramedIpv6Address    string    `json:"framed_ipv6_address"`     // Delegated address
+	DelegatedIpv6Prefix  string    `json:"delegated_ipv6_prefix"`   // Delegated prefix
 	MacAddr             string    `gorm:"index" json:"mac_addr"`
 
 	NasPort             int64     `json:"nas_port,string"`

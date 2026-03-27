@@ -199,15 +199,16 @@ type GoogleDriveConfig struct {
 // The configuration is loaded once at application startup via LoadConfig()
 // and accessed globally through app.GApp().
 type AppConfig struct {
-	System   SysConfig     `yaml:"system" json:"system"`
-	Web      WebConfig     `yaml:"web" json:"web"`
-	Database DBConfig      `yaml:"database" json:"database"`
-	Radiusd  RadiusdConfig `yaml:"radiusd" json:"radiusd"`
-	Logger   LogConfig     `yaml:"logger" json:"logger"`
-	Backup   BackupConfig  `yaml:"backup" json:"backup"`
-	Tunnel   TunnelConfig  `yaml:"tunnel" json:"tunnel"`
-	Voucher  VoucherConfig `yaml:"voucher" json:"voucher"`
-	Cache    CacheConfig   `yaml:"cache" json:"cache"`
+	System       SysConfig          `yaml:"system" json:"system"`
+	Web          WebConfig          `yaml:"web" json:"web"`
+	Database     DBConfig           `yaml:"database" json:"database"`
+	Radiusd      RadiusdConfig      `yaml:"radiusd" json:"radiusd"`
+	Logger       LogConfig          `yaml:"logger" json:"logger"`
+	Backup       BackupConfig       `yaml:"backup" json:"backup"`
+	Tunnel       TunnelConfig       `yaml:"tunnel" json:"tunnel"`
+	Voucher      VoucherConfig      `yaml:"voucher" json:"voucher"`
+	Cache        CacheConfig        `yaml:"cache" json:"cache"`
+	Notification NotificationConfig `yaml:"notification" json:"notification"`
 }
 
 // TunnelConfig holds the configuration for tunnel services
@@ -228,6 +229,20 @@ type VoucherConfig struct {
 	CleanupEnabled      bool `yaml:"cleanup_enabled" json:"cleanup_enabled"`             // Enable/disable automatic voucher cleanup
 	CleanupGraceMinutes int  `yaml:"cleanup_grace_minutes" json:"cleanup_grace_minutes"` // Minutes to wait after quota exhaustion before marking expired
 	CleanupRetentionDays int  `yaml:"cleanup_retention_days" json:"cleanup_retention_days"` // Days to keep expired vouchers before soft-delete
+}
+
+// NotificationConfig holds notification settings for usage alerts.
+type NotificationConfig struct {
+	Enabled          bool   `yaml:"enabled" json:"enabled"`
+	AlertCheckCron   string `yaml:"alert_check_cron" json:"alert_check_cron"`
+	SMTPHost         string `yaml:"smtp_host" json:"smtp_host"`
+	SMTPPort         int    `yaml:"smtp_port" json:"smtp_port"`
+	SMTPUsername     string `yaml:"smtp_username" json:"smtp_username"`
+	SMTPPassword     string `yaml:"smtp_password" json:"smtp_password"`
+	SMTPFrom         string `yaml:"smtp_from" json:"smtp_from"`
+	TwilioAccountSID string `yaml:"twilio_account_sid" json:"twilio_account_sid"`
+	TwilioAuthToken  string `yaml:"twilio_auth_token" json:"twilio_auth_token"`
+	TwilioFromNumber string `yaml:"twilio_from_number" json:"twilio_from_number"`
 }
 
 // CacheConfig holds multi-layer caching configuration for high-concurrency scenarios.
@@ -572,6 +587,12 @@ var DefaultAppConfig = &AppConfig{
 		UsersPerProvider:      5000,
 		ConcurrentPerProvider: 1500,
 	},
+	Notification: NotificationConfig{
+		Enabled:        false,
+		AlertCheckCron: "0 */6 * * *",
+		SMTPPort:       587,
+		SMTPFrom:       "noreply@toughradius.local",
+	},
 }
 
 
@@ -688,8 +709,17 @@ func LoadConfig(cfile string) *AppConfig {
 	setEnvIntValue("TOUGHRADIUS_CACHE_SESSION_TTL", &cfg.Cache.SessionTTL)
 	setEnvIntValue("TOUGHRADIUS_CACHE_VOUCHER_TTL", &cfg.Cache.VoucherTTL)
 
-	return cfg
-
+	// Notification
+	setEnvBoolValue("TOUGHRADIUS_NOTIFICATION_ENABLED", &cfg.Notification.Enabled)
+	setEnvValue("TOUGHRADIUS_NOTIFICATION_ALERT_CHECK_CRON", &cfg.Notification.AlertCheckCron)
+	setEnvValue("TOUGHRADIUS_NOTIFICATION_SMTP_HOST", &cfg.Notification.SMTPHost)
+	setEnvIntValue("TOUGHRADIUS_NOTIFICATION_SMTP_PORT", &cfg.Notification.SMTPPort)
+	setEnvValue("TOUGHRADIUS_NOTIFICATION_SMTP_USERNAME", &cfg.Notification.SMTPUsername)
+	setEnvValue("TOUGHRADIUS_NOTIFICATION_SMTP_PASSWORD", &cfg.Notification.SMTPPassword)
+	setEnvValue("TOUGHRADIUS_NOTIFICATION_SMTP_FROM", &cfg.Notification.SMTPFrom)
+	setEnvValue("TOUGHRADIUS_NOTIFICATION_TWILIO_ACCOUNT_SID", &cfg.Notification.TwilioAccountSID)
+	setEnvValue("TOUGHRADIUS_NOTIFICATION_TWILIO_AUTH_TOKEN", &cfg.Notification.TwilioAuthToken)
+	setEnvValue("TOUGHRADIUS_NOTIFICATION_TWILIO_FROM_NUMBER", &cfg.Notification.TwilioFromNumber)
 
 	return cfg
 }

@@ -65,7 +65,7 @@ func TestExpireChecker_Check(t *testing.T) {
 				require.Error(t, err)
 				authErr, ok := errors.GetAuthError(err)
 				assert.True(t, ok)
-				assert.Contains(t, authErr.Message, "expired")
+				assert.Contains(t, authErr.Message, "not exists")
 			} else {
 				require.NoError(t, err)
 			}

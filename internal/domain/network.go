@@ -38,6 +38,8 @@ type NetNas struct {
 	Status     string    `json:"status" form:"status"`           // Device status
 	Tags       string    `json:"tags" form:"tags"`               // Tags
 	Remark     string    `json:"remark" form:"remark"`           // Remark
+	ApiUser    string    `json:"api_user" form:"api_user"`       // API username for environment monitoring
+	ApiPass    string    `json:"api_pass" form:"api_pass"`       // API password for environment monitoring
 	CreatedAt  time.Time `json:"created_at"`
 	UpdatedAt  time.Time `json:"updated_at"`
 }

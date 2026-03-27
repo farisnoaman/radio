@@ -79,7 +79,7 @@ func (s *AuthService) stageNasLookup(ctx *AuthPipelineContext) error {
 	}
 	ctx.NAS = nas
 
-	if nas != nil && s.TenantRouter != nil {
+	if nas != nil && s.TenantRouter != nil && nas.TenantID > 0 {
 		tenantCtx, err := s.TenantRouter.GetNASWithTenant(ctx.Context, ctx.RemoteIP, ctx.NasIdentifier)
 		if err == nil && tenantCtx != nil {
 			ctx.Context = tenantCtx.Tenant
