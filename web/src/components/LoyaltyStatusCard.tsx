@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Box, Card, CardContent, Typography, Stack, LinearProgress, alpha, useTheme, Button, Tooltip, CircularProgress } from '@mui/material';
-import { useNotify } from 'react-admin';
+import { useNotify, useTranslate } from 'react-admin';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import RedeemIcon from '@mui/icons-material/Redeem';
 import StarsIcon from '@mui/icons-material/Stars';
@@ -8,6 +8,7 @@ import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
 
 export const LoyaltyStatusCard = () => {
     const notify = useNotify();
+    const translate = useTranslate();
     const theme = useTheme();
     const isDark = theme.palette.mode === 'dark';
     
@@ -53,10 +54,10 @@ export const LoyaltyStatusCard = () => {
             const result = await response.json();
             
             if (response.ok) {
-                notify(result.data?.message || 'Points redeemed perfectly!', { type: 'success' });
+                notify(result.data?.message || translate('portal.loyalty.redeem_success'), { type: 'success' });
                 fetchLoyalty();
             } else {
-                notify(result.message || 'Failed to redeem points', { type: 'error' });
+                notify(result.message || translate('portal.loyalty.redeem_error'), { type: 'error' });
             }
         } catch (error) {
             notify('Failed to connect to server', { type: 'error' });
@@ -75,14 +76,11 @@ export const LoyaltyStatusCard = () => {
         );
     }
 
-    if (!loyaltyData || !loyaltyData.profile) {
-        return null;
-    }
-
-    const { profile, rules } = loyaltyData;
+    // Even if no profile is found yet (new user), we show the points card with 0 points
+    // This ensures visibility as soon as they login
+    const profile = loyaltyData?.profile || { points: 0, badge: 'None', milestone_data_used: 0 };
+    const rules = loyaltyData?.rules || [];
     
-    // Determine the next goal based on the first rule for simplicity, or hardcoded for the demo
-    // The main rule (points threshold)
     const nextRule = rules && rules.length > 0 ? rules[0] : null;
     let dataProgress = 0;
     if (nextRule && nextRule.data_threshold > 0) {
@@ -93,6 +91,10 @@ export const LoyaltyStatusCard = () => {
     let badgeColor = theme.palette.text.secondary;
     let BadgeIcon = StarsIcon;
     let bgGradient = 'transparent';
+
+    const getBadgeLabel = (badge: string) => {
+        return translate(`portal.loyalty.badges.${badge}`);
+    };
 
     switch (profile.badge) {
         case 'Gold':
@@ -127,7 +129,7 @@ export const LoyaltyStatusCard = () => {
             overflow: 'hidden'
         }}>
             {profile.badge !== 'None' && (
-                <Box sx={{ position: 'absolute', top: -15, right: -15, opacity: 0.1 }}>
+                <Box sx={{ position: 'absolute', top: -15, right: -15, opacity: 0.1, pointerEvents: 'none' }}>
                     <EmojiEventsIcon sx={{ fontSize: 120, color: badgeColor }} />
                 </Box>
             )}
@@ -138,22 +140,26 @@ export const LoyaltyStatusCard = () => {
                         <BadgeIcon sx={{ color: badgeColor }} />
                     </Box>
                     <Typography variant="h6" fontWeight={800}>
-                        Loyalty Status
+                        {translate('portal.loyalty.status')}
                     </Typography>
                 </Stack>
 
                 <Stack spacing={3}>
                     <Box display="flex" justifyContent="space-between" alignItems="center">
                         <Box>
-                            <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">Current Badge</Typography>
+                            <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">
+                                {translate('portal.loyalty.current_badge')}
+                            </Typography>
                             <Typography variant="h5" fontWeight={800} sx={{ color: badgeColor }}>
-                                {profile.badge === 'None' ? 'Member' : profile.badge}
+                                {getBadgeLabel(profile.badge)}
                             </Typography>
                         </Box>
                         <Box textAlign="right">
-                            <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">Available Points</Typography>
+                            <Typography variant="caption" color="text.secondary" fontWeight={600} display="block">
+                                {translate('portal.loyalty.points')}
+                            </Typography>
                             <Typography variant="h4" fontWeight={800} color="primary.main">
-                                {profile.points} <span style={{ fontSize: '0.5em', color: theme.palette.text.secondary }}>pts</span>
+                                {profile.points} <span style={{ fontSize: '0.4em', color: theme.palette.text.secondary }}>{translate('portal.loyalty.points_suffix')}</span>
                             </Typography>
                         </Box>
                     </Box>
@@ -162,7 +168,9 @@ export const LoyaltyStatusCard = () => {
                     {nextRule && (
                         <Box>
                             <Stack direction="row" justifyContent="space-between" mb={1}>
-                                <Typography variant="caption" fontWeight={600}>Next Reward Drop ({nextRule.points_awarded} pts)</Typography>
+                                <Typography variant="caption" fontWeight={600}>
+                                    {translate('portal.loyalty.next_milestone')} ({nextRule.points_awarded} {translate('portal.loyalty.points_suffix')})
+                                </Typography>
                                 <Typography variant="caption" fontWeight={700} color="primary.main">{Math.round(dataProgress)}%</Typography>
                             </Stack>
                             <LinearProgress 
@@ -185,7 +193,7 @@ export const LoyaltyStatusCard = () => {
 
                     {/* Redemption Action */}
                     <Box pt={1}>
-                        <Tooltip title={profile.points < 20 ? "You need at least 20 points to redeem a 10GB Data reward" : ""}>
+                        <Tooltip title={profile.points < 20 ? translate('portal.loyalty.redeem_error') : ""}>
                             <span>
                                 <Button 
                                     variant="contained" 
@@ -203,7 +211,7 @@ export const LoyaltyStatusCard = () => {
                                         boxShadow: profile.points >= 20 && !isDark ? '0 4px 14px 0 rgba(0,118,255,0.39)' : 'none'
                                     }}
                                 >
-                                    {redeeming ? 'Redeeming...' : 'Redeem 20 pts for 10 GB Data'}
+                                    {redeeming ? translate('app.loading') : `${translate('portal.loyalty.redeem')} (20 ${translate('portal.loyalty.points_suffix')})`}
                                 </Button>
                             </span>
                         </Tooltip>

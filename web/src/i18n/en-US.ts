@@ -120,6 +120,29 @@ const customEnglishMessages: TranslationMessages = {
     alert_type_email: 'Email',
     alert_type_sms: 'SMS',
     no_alerts: 'No alerts sent yet',
+    loyalty: {
+      status: 'Loyalty Status',
+      points: 'Points',
+      badge: 'Badge',
+      current_badge: 'Current Label',
+      next_milestone: 'Next Milestone',
+      milestone_progress: 'Milestone Progress',
+      redeem: 'Redeem Points',
+      recent_rewards: 'Recent Rewards',
+      no_history: 'No rewards redeemed yet',
+      daily_limit_reached: 'Daily redemption limit reached (Max 3)',
+      redeem_success: 'Points redeemed successfully!',
+      redeem_error: 'Failed to redeem points',
+      points_suffix: 'pts',
+      usage_data: 'Data Usage',
+      usage_time: 'Time Usage',
+      badges: {
+        None: 'None',
+        Bronze: 'Bronze',
+        Silver: 'Silver',
+        Gold: 'Gold'
+      }
+    },
   },
   menu: {
     dashboard: 'Dashboard',

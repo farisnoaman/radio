@@ -1844,6 +1844,29 @@ const customArabicMessages: TranslationMessages = {
     alert_type_email: 'بريد إلكتروني',
     alert_type_sms: 'رسالة نصية',
     no_alerts: 'لم يتم إرسال تنبيهات بعد',
+    loyalty: {
+      status: 'حالة الولاء',
+      points: 'النقاط',
+      badge: 'الوسام',
+      current_badge: 'الوسام الحالي',
+      next_milestone: 'الهدف القادم',
+      milestone_progress: 'التقدم نحو الهدف',
+      redeem: 'استبدال النقاط',
+      recent_rewards: 'المكافآت الأخيرة',
+      no_history: 'لا يوجد سجل مكافآت بعد',
+      daily_limit_reached: 'تم الوصول إلى الحد اليومي للاستبدال (الحد الأقصى 3)',
+      redeem_success: 'تم استبدال النقاط بنجاح!',
+      redeem_error: 'فشل استبدال النقاط',
+      points_suffix: 'نقطة',
+      usage_data: 'استهلاك البيانات',
+      usage_time: 'استهلاك الوقت',
+      badges: {
+        None: 'لا يوجد',
+        Bronze: 'برونزي',
+        Silver: 'فضي',
+        Gold: 'ذهبي'
+      }
+    },
   },
   config: {
     web: {
