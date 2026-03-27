@@ -1,18 +1,26 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import {
     Card, CardContent, Typography, Button, Grid,
     Box, LinearProgress, Chip
 } from '@mui/material';
 import {
-    Refresh, Backup, Speed, Wifi
+    Backup, Speed, Wifi
 } from '@mui/icons-material';
 import { useDataProvider, useNotify } from 'react-admin';
+
+interface NasDevice {
+    id: number;
+    name: string;
+    ipaddr: string;
+    vendor_code: string;
+    status: string;
+}
 
 export const DeviceManagement = () => {
     const dataProvider = useDataProvider();
     const notify = useNotify();
     const [loading, setLoading] = useState(false);
-    const [devices, setDevices] = useState([]);
+    const [devices, setDevices] = useState<NasDevice[]>([]);
 
     useEffect(() => {
         loadDevices();
@@ -35,7 +43,7 @@ export const DeviceManagement = () => {
 
     const handleBackup = async (deviceId: number) => {
         try {
-            await dataProvider.create(`network/nas/${deviceId}/backup`, {});
+            await dataProvider.create(`network/nas/${deviceId}/backup`, { data: {} });
             notify('Backup started', { type: 'success' });
         } catch (error) {
             notify('Backup failed', { type: 'error' });
@@ -44,7 +52,7 @@ export const DeviceManagement = () => {
 
     const handleSpeedTest = async (deviceId: number) => {
         try {
-            await dataProvider.create(`network/nas/${deviceId}/speedtest`, {});
+            await dataProvider.create(`network/nas/${deviceId}/speedtest`, { data: {} });
             notify('Speed test started', { type: 'success' });
         } catch (error) {
             notify('Speed test failed', { type: 'error' });
@@ -60,8 +68,8 @@ export const DeviceManagement = () => {
             </Typography>
 
             <Grid container spacing={3}>
-                {devices.map((device: any) => (
-                    <Grid item xs={12} md={6} lg={4} key={device.id}>
+                {devices.map((device) => (
+                    <Grid size={{ xs: 12, md: 6, lg: 4 }} key={device.id}>
                         <Card>
                             <CardContent>
                                 <Typography variant="h6" gutterBottom>

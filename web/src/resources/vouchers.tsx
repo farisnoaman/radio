@@ -651,7 +651,7 @@ export const VoucherBatchCreate = (props: CreateProps) => {
     }
     const defaultName = `${translate('pages.voucher.batch.default_name_prefix')}${nextNumber}`;
 
-    const onSuccess = (data: any) => {
+    const handleSuccess = (data: any) => {
         // Show success message with expiry warning from backend
         if (data.expiry_warning) {
             notify(data.expiry_warning, { type: 'warning', autoHideDuration: 10000 });
@@ -663,7 +663,7 @@ export const VoucherBatchCreate = (props: CreateProps) => {
     };
 
     return (
-        <Create {...props} record={{ name: defaultName }} transform={transformVoucherBatch} onSuccess={onSuccess}>
+        <Create {...props} record={{ name: defaultName }} transform={transformVoucherBatch} mutationOptions={{ onSuccess: handleSuccess }}>
             <SimpleForm>
                 <VoucherBatchInputs />
             </SimpleForm>

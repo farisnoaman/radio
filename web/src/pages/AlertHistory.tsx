@@ -33,11 +33,11 @@ interface UsageAlert {
 export default function AlertHistory() {
   const translate = useTranslate();
 
-  const { data: alerts, isLoading } = useApiQuery<UsageAlert[]>(
-    ['portal', 'alerts', 'history'],
-    '/api/v1/portal/alerts/history',
-    { enabled: true }
-  );
+  const { data: alerts, isLoading } = useApiQuery<UsageAlert[]>({
+    queryKey: ['portal', 'alerts', 'history'],
+    path: '/api/v1/portal/alerts/history',
+    enabled: true
+  });
 
   const getThresholdColor = (threshold: number) => {
     if (threshold >= 100) return 'error';

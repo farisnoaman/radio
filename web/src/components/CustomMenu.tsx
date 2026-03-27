@@ -22,7 +22,6 @@ import NotificationsIcon from '@mui/icons-material/Notifications';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import ThermostatIcon from '@mui/icons-material/Thermostat';
 
-import LocationOnIcon from '@mui/icons-material/LocationOn';
 import RouterIcon from '@mui/icons-material/Router';
 import { Box, useTheme } from '@mui/material';
 import { MenuItemLink, MenuProps, useGetIdentity, useTranslate, useLocale } from 'react-admin';
@@ -38,9 +37,7 @@ const menuItems = [
   { to: '/network/servers', labelKey: 'menu.servers', icon: <StorageOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/network/nodes', labelKey: 'menu.network_nodes', icon: <AccountTreeOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/network/nas', labelKey: 'menu.nas_devices', icon: <RouterOutlinedIcon />, permissions: ['super', 'admin'] },
-  // New devices and locations in network section
-  { to: '/network/devices', labelKey: 'menu.network_devices', icon: <RouterIcon />, permissions: ['super', 'admin'] },
-  { to: '/network/locations', labelKey: 'menu.network_locations', icon: <LocationOnIcon />, permissions: ['super', 'admin'] },
+  { to: '/network', labelKey: 'menu.network', icon: <RouterIcon />, permissions: ['super', 'admin'] },
   { to: '/environment', labelKey: 'menu.env_monitoring', icon: <ThermostatIcon />, permissions: ['super', 'admin'] },
   { to: '/cpes', labelKey: 'menu.cpe_devices', icon: <RouterOutlinedIcon />, permissions: ['super', 'admin'] },
   { to: '/radius/users', labelKey: 'menu.radius_users', icon: <PeopleAltOutlinedIcon />, permissions: ['super', 'admin'] },

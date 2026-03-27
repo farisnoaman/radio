@@ -3,6 +3,7 @@ import { Router as RouterIcon } from '@mui/icons-material';
 // New device and location resources
 import { DeviceList, DeviceShow } from './pages/Devices';
 import { LocationList, LocationCreate, LocationEdit } from './pages/Locations';
+import { NetworkPage } from './pages/Network';
 import { NasTemplateList, NasTemplateCreate, NasTemplateEdit } from './resources/nasTemplates';
 import { LandingI18nProvider } from './contexts/LandingI18nProvider';
 import { Admin, Resource, CustomRoutes } from 'react-admin';
@@ -132,27 +133,14 @@ const PlatformAdmin = () => (
     error={CustomError}
     requireAuth
   >
-    {/* Platform Monitoring */}
-    <Resource
-      name="monitoring/devices"
-      list={DeviceHealthList}
-      options={{ label: 'Device Health' }}
-    />
+     {/* Platform Monitoring */}
+     <Resource
+       name="monitoring/devices"
+       list={DeviceHealthList}
+       options={{ label: 'Device Health' }}
+     />
 
-    {/* Network Devices & Locations */}
-    <Resource
-      name="network/devices"
-      list={DeviceList}
-      show={DeviceShow}
-    />
-    <Resource
-      name="network/locations"
-      list={LocationList}
-      create={LocationCreate}
-      edit={LocationEdit}
-    />
-
-    {/* Platform Quota Management */}
+     {/* Platform Quota Management */}
     <Resource
       name="quotas"
       list={QuotaList}
@@ -211,187 +199,203 @@ const App = () => (
       <Route path="/platform/*" element={<PlatformAdmin />} />
 
       {/* Main Admin Application - Provider Operations */}
-      <Route path="/*" element={
-        <Admin
-          dataProvider={dataProvider}
-          authProvider={authProvider}
-          i18nProvider={i18nProvider}
-          dashboard={Dashboard}
-          loginPage={LoginPage}
-          title="Radio v0.01"
-          theme={theme}
-          darkTheme={darkTheme}
-          defaultTheme="light"
-          layout={CustomLayout}
-          loading={CustomLoading}
-          error={CustomError}
-          requireAuth
-        >
-    {/* RADIUS 用户管理 */}
-    <Resource
-      name="radius/users"
-      list={RadiusUserList}
-      edit={RadiusUserEdit}
-      create={RadiusUserCreate}
-      show={RadiusUserShow}
-    />
+        <Route path="/*" element={
+          <Admin
+            dataProvider={dataProvider}
+            authProvider={authProvider}
+            i18nProvider={i18nProvider}
+            dashboard={Dashboard}
+            loginPage={LoginPage}
+            title="Radio v0.01"
+            theme={theme}
+            darkTheme={darkTheme}
+            defaultTheme="light"
+            layout={CustomLayout}
+            loading={CustomLoading}
+            error={CustomError}
+            requireAuth
+          >
+          {/* RADIUS 用户管理 */}
+          <Resource
+            name="radius/users"
+            list={RadiusUserList}
+            edit={RadiusUserEdit}
+            create={RadiusUserCreate}
+            show={RadiusUserShow}
+          />
 
-    {/* 在线会话 */}
-    <Resource
-      name="radius/online"
-      list={OnlineSessionList}
-      show={OnlineSessionShow}
-    />
+          {/* 在线会话 */}
+          <Resource
+            name="radius/online"
+            list={OnlineSessionList}
+            show={OnlineSessionShow}
+          />
 
-    {/* 计费记录 */}
-    <Resource
-      name="radius/accounting"
-      list={AccountingList}
-      show={AccountingShow}
-    />
+          {/* 计费记录 */}
+          <Resource
+            name="radius/accounting"
+            list={AccountingList}
+            show={AccountingShow}
+          />
 
-    {/* Invoices */}
-    <Resource
-      name="radius/invoices"
-      list={InvoiceList}
-      show={InvoiceShow}
-      options={{ label: 'Invoices' }}
-    />
+          {/* Invoices */}
+          <Resource
+            name="radius/invoices"
+            list={InvoiceList}
+            show={InvoiceShow}
+            options={{ label: 'Invoices' }}
+          />
 
-    {/* RADIUS 配置 */}
-    <Resource
-      name="radius/profiles"
-      list={RadiusProfileList}
-      edit={RadiusProfileEdit}
-      create={RadiusProfileCreate}
-      show={RadiusProfileShow}
-    />
+          {/* RADIUS 配置 */}
+          <Resource
+            name="radius/profiles"
+            list={RadiusProfileList}
+            edit={RadiusProfileEdit}
+            create={RadiusProfileCreate}
+            show={RadiusProfileShow}
+          />
 
-    {/* NAS 设备管理 */}
-    <Resource
-      name="network/nas"
-      list={NASWithTabs}
-      edit={NASEdit}
-      create={NASCreate}
-      show={NASShow}
-    />
+          {/* NAS 设备管理 */}
+          <Resource
+            name="network/nas"
+            list={NASWithTabs}
+            edit={NASEdit}
+            create={NASCreate}
+            show={NASShow}
+          />
 
-    {/* NAS Templates - accessed via tab */}
-    <Resource
-      name="network/nas-templates"
-      list={NasTemplateList}
-      create={NasTemplateCreate}
-      edit={NasTemplateEdit}
-    />
+          {/* NAS Templates - accessed via tab */}
+          <Resource
+            name="network/nas-templates"
+            list={NasTemplateList}
+            create={NasTemplateCreate}
+            edit={NasTemplateEdit}
+          />
 
-    {/* 网络节点 */}
-    <Resource
-      name="network/nodes"
-      list={NodeList}
-      edit={NodeEdit}
-      create={NodeCreate}
-      show={NodeShow}
-    />
+          {/* Network Devices & Locations (for use in NetworkPage tabs) */}
+          <Resource
+            name="network/devices"
+            list={DeviceList}
+            show={DeviceShow}
+          />
+          <Resource
+            name="network/locations"
+            list={LocationList}
+            create={LocationCreate}
+            edit={LocationEdit}
+          />
 
-    {/* Servers */}
-    <Resource
-      name="network/servers"
-      list={ServerList}
-      edit={ServerEdit}
-      create={ServerCreate}
-    />
+          {/* 网络节点 */}
+          <Resource
+            name="network/nodes"
+            list={NodeList}
+            edit={NodeEdit}
+            create={NodeCreate}
+            show={NodeShow}
+          />
 
-    {/* Network Devices & Locations */}
-    <Resource
-      name="network/devices"
-      list={DeviceList}
-      show={DeviceShow}
-    />
-    <Resource
-      name="network/locations"
-      list={LocationList}
-      create={LocationCreate}
-      edit={LocationEdit}
-    />
+          {/* Servers */}
+          <Resource
+            name="network/servers"
+            list={ServerList}
+            edit={ServerEdit}
+            create={ServerCreate}
+          />
 
-    {/* 操作员管理 */}
-    <Resource
-      name="system/operators"
-      list={OperatorList}
-      edit={OperatorEdit}
-      create={OperatorCreate}
-      show={OperatorShow}
-    />
+          {/* Network Devices & Locations (hidden from menu, used by NetworkPage) */}
+          <Resource
+            name="network/devices"
+            list={DeviceList}
+            show={DeviceShow}
+            options={{ label: '' }}
+          />
+          <Resource
+            name="network/locations"
+            list={LocationList}
+            create={LocationCreate}
+            edit={LocationEdit}
+            options={{ label: '' }}
+          />
 
-    {/* Products */}
-    <Resource
-      name="products"
-      list={ProductList}
-      create={ProductCreate}
-      edit={ProductEdit}
-      show={ProductShow}
-    />
+          {/* 操作员管理 */}
+          <Resource
+            name="system/operators"
+            list={OperatorList}
+            edit={OperatorEdit}
+            create={OperatorCreate}
+            show={OperatorShow}
+          />
 
-    {/* Vouchers */}
-    <Resource
-      name="voucher-batches"
-      list={VoucherBatchList}
-      create={VoucherBatchCreate}
-    />
-    <Resource
-      name="vouchers"
-      list={VoucherList}
-    />
+          {/* Products */}
+          <Resource
+            name="products"
+            list={ProductList}
+            create={ProductCreate}
+            edit={ProductEdit}
+            show={ProductShow}
+          />
 
-    <Resource
-      name="voucher-bundles"
-      list={VoucherBundleList}
-      create={VoucherBundleCreate}
-    />
+          {/* Vouchers */}
+          <Resource
+            name="voucher-batches"
+            list={VoucherBatchList}
+            create={VoucherBatchCreate}
+          />
+          <Resource
+            name="vouchers"
+            list={VoucherList}
+          />
 
-    {/* Agents */}
-    <Resource
-      name="agents"
-      list={AgentList}
-      create={AgentCreate}
-      edit={AgentEdit}
-      show={AgentShow}
-    />
+          <Resource
+            name="voucher-bundles"
+            list={VoucherBundleList}
+            create={VoucherBundleCreate}
+          />
 
-    {/* System Logs */}
-    <Resource
-      name="system/logs"
-      list={SystemLogList}
-    />
+          {/* Agents */}
+          <Resource
+            name="agents"
+            list={AgentList}
+            create={AgentCreate}
+            edit={AgentEdit}
+            show={AgentShow}
+          />
 
-    <Resource name="cpes" options={{ label: 'CPE Devices' }} list={CpeList} icon={RouterIcon} />
+          {/* System Logs */}
+          <Resource
+            name="system/logs"
+            list={SystemLogList}
+          />
 
-    {/* Phase 5A: Billing - Provider Level */}
-    <Resource
-      name="billing/invoices"
-      list={BillingInvoiceList}
-      show={BillingInvoiceShow}
-      options={{ label: 'Provider Billing' }}
-    />
+          <Resource name="cpes" options={{ label: 'CPE Devices' }} list={CpeList} icon={RouterIcon} />
 
-    {/* Custom Routes (Authenticated) */}
-    <CustomRoutes>
-      {/* Monitoring Dashboard - Keep accessible in main admin too */}
-      <Route path="/monitoring/dashboard" element={<MonitoringDashboard />} />
+          {/* Phase 5A: Billing - Provider Level */}
+          <Resource
+            name="billing/invoices"
+            list={BillingInvoiceList}
+            show={BillingInvoiceShow}
+            options={{ label: 'Provider Billing' }}
+          />
 
-      {/* Existing Routes */}
-      <Route path="/account/settings" element={<AccountSettings />} />
-      <Route path="/system/config" element={<SystemConfigPage />} />
-      <Route path="/settings/tunnel" element={<TunnelSettings />} />
-      <Route path="/system/maintenance" element={<SystemSettings />} />
-      <Route path="/financial/performance" element={<FinancialPerformance />} />
-      <Route path="/voucher-printing" element={<VoucherPrintingPage />} />
-      <Route path="/reporting" element={<ReportingDashboard />} />
-      <Route path="/reporting/notifications" element={<NotificationSettings />} />
-      <Route path="/environment" element={<EnvironmentMonitoring />} />
-    </CustomRoutes>
-  </Admin>
-      } />
+          {/* Custom Routes (Authenticated) */}
+          <CustomRoutes>
+            <Route path="/network" element={<NetworkPage />} />
+            {/* Monitoring Dashboard - Keep accessible in main admin too */}
+            <Route path="/monitoring/dashboard" element={<MonitoringDashboard />} />
+
+            {/* Existing Routes */}
+            <Route path="/account/settings" element={<AccountSettings />} />
+            <Route path="/system/config" element={<SystemConfigPage />} />
+            <Route path="/settings/tunnel" element={<TunnelSettings />} />
+            <Route path="/system/maintenance" element={<SystemSettings />} />
+            <Route path="/financial/performance" element={<FinancialPerformance />} />
+            <Route path="/voucher-printing" element={<VoucherPrintingPage />} />
+            <Route path="/reporting" element={<ReportingDashboard />} />
+            <Route path="/reporting/notifications" element={<NotificationSettings />} />
+            <Route path="/environment" element={<EnvironmentMonitoring />} />
+          </CustomRoutes>
+        </Admin>
+        } />
     </Routes>
   </BrowserRouter>
 );

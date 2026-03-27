@@ -47,11 +47,11 @@ export default function NotificationPreferences() {
     daily_summary_enabled: false,
   });
 
-  const { data, isLoading, refetch } = useApiQuery<NotificationPreferences>(
-    ['portal', 'preferences', 'notifications'],
-    '/api/v1/portal/preferences/notifications',
-    { enabled: true }
-  );
+  const { data, isLoading, refetch } = useApiQuery<NotificationPreferences>({
+    queryKey: ['portal', 'preferences', 'notifications'],
+    path: '/api/v1/portal/preferences/notifications',
+    enabled: true
+  });
 
   useEffect(() => {
     if (data) {
@@ -61,27 +61,24 @@ export default function NotificationPreferences() {
     }
   }, [data]);
 
-  const mutation = useApiMutation<
-    NotificationPreferences,
-    NotificationPreferences
-  >(
-    'PUT',
-    '/api/v1/portal/preferences/notifications',
-    {
-      onSuccess: () => {
-        notify(translate('common.save_success'), { type: 'success' });
-        refetch();
-      },
-      onError: (error: Error) => {
-        notify(error.message || translate('common.save_failed'), { type: 'error' });
-      },
-    }
-  );
+  const mutation = useApiMutation<{ message?: string }>({
+    onSuccess: () => {
+      notify(translate('common.save_success'), { type: 'success' });
+      refetch();
+    },
+    onError: (error: Error) => {
+      notify(error.message || translate('common.save_failed'), { type: 'error' });
+    },
+  });
 
   const handleSave = async () => {
     setLoading(true);
     try {
-      await mutation.mutateAsync(preferences);
+      await mutation.mutateAsync({
+        path: '/api/v1/portal/preferences/notifications',
+        method: 'PUT',
+        body: preferences,
+      });
     } finally {
       setLoading(false);
     }

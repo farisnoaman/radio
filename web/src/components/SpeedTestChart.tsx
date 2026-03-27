@@ -5,12 +5,7 @@ import {
     Typography,
     Box,
 } from '@mui/material';
-import {
-    Chart,
-    ArgumentAxis,
-    ValueAxis,
-    LineSeries,
-} from '@mui/x-charts';
+import ReactECharts from 'echarts-for-react';
 
 interface SpeedTestChartProps {
     results: Array<{
@@ -27,6 +22,39 @@ export const SpeedTestChart: React.FC<SpeedTestChartProps> = ({ results }) => {
         download: result.download_mbps,
     }));
 
+    const option = {
+        tooltip: {
+            trigger: 'axis',
+        },
+        legend: {
+            data: ['Download (Mbps)', 'Upload (Mbps)'],
+        },
+        xAxis: {
+            type: 'time',
+            name: 'Time',
+        },
+        yAxis: {
+            type: 'value',
+            name: 'Mbps',
+        },
+        series: [
+            {
+                name: 'Download (Mbps)',
+                type: 'line',
+                data: chartData.map(d => [d.timestamp, d.download]),
+                smooth: true,
+                color: '#4caf50',
+            },
+            {
+                name: 'Upload (Mbps)',
+                type: 'line',
+                data: chartData.map(d => [d.timestamp, d.upload]),
+                smooth: true,
+                color: '#2196f3',
+            },
+        ],
+    };
+
     return (
         <Card>
             <CardContent>
@@ -34,23 +62,7 @@ export const SpeedTestChart: React.FC<SpeedTestChartProps> = ({ results }) => {
                     Speed Test History
                 </Typography>
                 <Box sx={{ width: '100%', height: 300 }}>
-                    <Chart
-                        data={chartData}
-                        margin={{ top: 20, right: 30, left: 40, bottom: 30 }}
-                    >
-                        <ArgumentAxis />
-                        <ValueAxis />
-                        <LineSeries
-                            label="Download (Mbps)"
-                            valueKey="download"
-                            color="#4caf50"
-                        />
-                        <LineSeries
-                            label="Upload (Mbps)"
-                            valueKey="upload"
-                            color="#2196f3"
-                        />
-                    </Chart>
+                    <ReactECharts option={option} style={{ height: '100%', width: '100%' }} />
                 </Box>
             </CardContent>
         </Card>

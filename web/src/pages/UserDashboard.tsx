@@ -5,8 +5,6 @@ import { useTranslate, useGetIdentity, useLocale } from 'react-admin';
 import ReceiptLongOutlinedIcon from '@mui/icons-material/ReceiptLongOutlined';
 import AccountCircleOutlinedIcon from '@mui/icons-material/AccountCircleOutlined';
 import SpeedIcon from '@mui/icons-material/Speed';
-import TimerIcon from '@mui/icons-material/Timer';
-import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import DevicesIcon from '@mui/icons-material/Devices';
 import DateRangeIcon from '@mui/icons-material/DateRange';
 
