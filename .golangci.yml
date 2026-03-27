@@ -3,8 +3,10 @@ version: "2"
 run:
   timeout: 5m
   tests: true
-  exclude-dirs:
-    - go/src  # Exclude Go source tree (not part of this project)
+
+issues:
+  exclude-rules:
+    - path: go/src
 
 linters:
   enable:
