@@ -1,6 +1,7 @@
 package adminapi
 
 import (
+	"encoding/json"
 	"net/http"
 	"strconv"
 	"strings"
@@ -10,10 +11,55 @@ import (
 	"github.com/talkincode/toughradius/v9/internal/webserver"
 )
 
+// FlexibleInt64 can unmarshal from both JSON number and string
+type FlexibleInt64 struct {
+	Val  int64
+	Nil  bool
+}
+
+func (f *FlexibleInt64) UnmarshalJSON(data []byte) error {
+	if string(data) == "null" {
+		f.Nil = true
+		return nil
+	}
+	// Try number first
+	var num int64
+	if err := json.Unmarshal(data, &num); err == nil {
+		f.Val = num
+		return nil
+	}
+	// Try string
+	var str string
+	if err := json.Unmarshal(data, &str); err == nil {
+		if str == "" {
+			f.Nil = true
+			return nil
+		}
+		v, err := strconv.ParseInt(str, 10, 64)
+		if err != nil {
+			return err
+		}
+		f.Val = v
+		return nil
+	}
+	return json.Unmarshal(data, &num)
+}
+
+func (f FlexibleInt64) Int64() int64 {
+	return f.Val
+}
+
+func (f FlexibleInt64) Ptr() *int64 {
+	if f.Nil {
+		return nil
+	}
+	return &f.Val
+}
+
 // nasPayload represents the NAS device request structure
 type nasPayload struct {
-	TenantID   int64  `json:"tenant_id,string" validate:"gte=0"`
-	NodeId     int64  `json:"node_id,string" validate:"gte=0"`
+	TenantID   FlexibleInt64 `json:"tenant_id"`
+	NodeId     FlexibleInt64 `json:"node_id"`
 	Name       string `json:"name" validate:"required,min=1,max=100"`
 	Identifier string `json:"identifier" validate:"omitempty,max=100"`
 	Hostname   string `json:"hostname" validate:"omitempty,max=100"`
@@ -31,8 +77,8 @@ type nasPayload struct {
 
 // nasUpdatePayload relaxes validation rules for partial updates
 type nasUpdatePayload struct {
-	TenantID   int64  `json:"tenant_id,string" validate:"omitempty,gte=0"`
-	NodeId     int64  `json:"node_id,string" validate:"omitempty,gte=0"`
+	TenantID   FlexibleInt64 `json:"tenant_id"`
+	NodeId     FlexibleInt64 `json:"node_id"`
 	Name       string `json:"name" validate:"omitempty,min=1,max=100"`
 	Identifier string `json:"identifier" validate:"omitempty,max=100"`
 	Hostname   string `json:"hostname" validate:"omitempty,max=100"`
@@ -176,9 +222,14 @@ func CreateNAS(c echo.Context) error {
 		coaPort = *payload.CoaPort
 	}
 
+	var nodeId int64
+	if ptr := payload.NodeId.Ptr(); ptr != nil {
+		nodeId = *ptr
+	}
+
 	device := domain.NetNas{
 		TenantID:   tenantID,
-		NodeId:     payload.NodeId,
+		NodeId:     nodeId,
 		Name:       payload.Name,
 		Identifier: payload.Identifier,
 		Hostname:   payload.Hostname,
@@ -272,8 +323,8 @@ func UpdateNAS(c echo.Context) error {
 	if payload.Remark != "" {
 		device.Remark = payload.Remark
 	}
-	if payload.NodeId > 0 {
-		device.NodeId = payload.NodeId
+	if ptr := payload.NodeId.Ptr(); ptr != nil && *ptr > 0 {
+		device.NodeId = *ptr
 	}
 	if payload.ApiUser != "" {
 		device.ApiUser = payload.ApiUser

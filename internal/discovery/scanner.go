@@ -34,8 +34,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-routeros/routeros"
 	"github.com/talkincode/toughradius/v9/internal/domain"
-	"github.com/talkincode/toughradius/v9/internal/routeros"
 )
 
 const (
@@ -270,28 +270,14 @@ func (s *Scanner) detectRouterOS(ctx context.Context, ip string, port int) (bool
 		return s.detectRouterOSWithAuth(ctx, ip, port, s.username, s.password)
 	}
 
-	// Otherwise, try unauthenticated detection
-	for _, useTLS := range []bool{false, true} {
-		client := routeros.NewClient(routeros.Config{
-			Address:  ip,
-			Port:     fmt.Sprintf("%d", port),
-			Username: "",
-			Password: "",
-			UseTLS:   useTLS,
-			Timeout:  s.timeout,
-		})
-
-		isROS, err := client.IsRouterOS(ctx)
-		if err == nil && isROS {
-			fmt.Printf("[Discovery] Found RouterOS at %s\n", addr)
-			return true, &DeviceInfo{
-				Model: "Mikrotik Device",
-			}
-		}
-		if err != nil {
-			fmt.Printf("[Discovery] %s TLS=%v detection failed: %v\n", addr, useTLS, err)
-		} else {
-			fmt.Printf("[Discovery] %s TLS=%v not detected (no RouterOS response)\n", addr, useTLS)
+	// Otherwise, try unauthenticated detection - just try to connect
+	// Try to connect with empty credentials (will fail but proves it's RouterOS)
+	client, err := routeros.Dial(addr, "", "")
+	if err == nil {
+		client.Close()
+		fmt.Printf("[Discovery] Found RouterOS at %s\n", addr)
+		return true, &DeviceInfo{
+			Model: "Mikrotik Device",
 		}
 	}
 
@@ -303,46 +289,52 @@ func (s *Scanner) detectRouterOS(ctx context.Context, ip string, port int) (bool
 func (s *Scanner) detectRouterOSWithAuth(ctx context.Context, ip string, port int, username, password string) (bool, *DeviceInfo) {
 	fmt.Printf("[Discovery] Attempting authenticated detection for %s:%d\n", ip, port)
 	
-	client := routeros.NewClient(routeros.Config{
-		Address:  ip,
-		Port:     fmt.Sprintf("%d", port),
-		Username: username,
-		Password: password,
-		Timeout:  s.timeout,
-	})
-
-	if err := client.Connect(ctx); err != nil {
+	client, err := routeros.Dial(ip+":8728", username, password)
+	if err != nil {
 		fmt.Printf("[Discovery] Connect failed: %v\n", err)
 		return false, nil
 	}
-	fmt.Printf("[Discovery] Connected successfully, attempting login...\n")
+	fmt.Printf("[Discovery] Connected successfully, getting system info...\n")
 	defer client.Close()
 
-	if err := client.Login(ctx); err != nil {
-		fmt.Printf("[Discovery] Login failed: %v (but device is RouterOS)\n", err)
-		// Login failed but it's RouterOS
-		return true, &DeviceInfo{
-			Model: "Mikrotik Device (auth required)",
-		}
-	}
-	
-	fmt.Printf("[Discovery] Login successful, getting system info...\n")
-
-	info, err := client.GetSystemInfo(ctx)
+	// Get system identity
+	re, err := client.Run("/system/identity/print")
 	if err != nil {
-		fmt.Printf("[Discovery] GetSystemInfo failed: %v\n", err)
 		return true, &DeviceInfo{
 			Model: "Mikrotik Device",
 		}
 	}
 
-	fmt.Printf("[Discovery] Found RouterOS: %s, %s, %s\n", info.Identity, info.BoardName, info.Version)
+	identity := ""
+	if len(re.Re) > 0 {
+		identity = re.Re[0].Map["name"]
+	}
+
+	// Get system resource
+	re2, err := client.Run("/system/resource/print")
+	if err != nil {
+		return true, &DeviceInfo{
+			Identity: identity,
+			Model:    "Mikrotik Device",
+		}
+	}
+
+	boardName := ""
+	version := ""
+	serial := ""
+	if len(re2.Re) > 0 {
+		boardName = re2.Re[0].Map["board-name"]
+		version = re2.Re[0].Map["version"]
+		serial = re2.Re[0].Map["serial-number"]
+	}
+
+	fmt.Printf("[Discovery] Found RouterOS: %s, %s, %s\n", identity, boardName, version)
 	return true, &DeviceInfo{
-		Identity:  info.Identity,
-		BoardName: info.BoardName,
-		Version:   info.Version,
-		Model:     info.Model,
-		Serial:    info.Serial,
+		Identity:  identity,
+		BoardName: boardName,
+		Version:   version,
+		Model:     boardName,
+		Serial:    serial,
 	}
 }
 
@@ -466,39 +458,45 @@ type OSPFInfo struct {
 	State      string         `json:"state"`
 }
 
-// DiscoverNeighbors discovers network neighbors via Mikrotik RouterOS API.
-// This retrieves routing neighbor information (OSPF, BGP, PPP connections).
+// DiscoverNeighbors discovers all network neighbors via Mikrotik RouterOS API.
+// This retrieves:
+// - Layer 2 neighbors (switches, APs, routers) via "/ip/neighbor/print"
+// - OSPF routing neighbors via "/routing/ospf/neighbor/print"
+// - BGP peers via "/routing/bgp/peer/print"
+// - PPP connections via "/ppp/active/print"
 func (s *Scanner) DiscoverNeighbors(
 	ctx context.Context,
 	ip, username, password string,
 ) ([]NeighborInfo, error) {
-	client := routeros.NewClient(routeros.Config{
-		Address:  ip,
-		Port:     "8728",
-		Username: username,
-		Password: password,
-		Timeout:  s.timeout,
-	})
-
-	if err := client.Connect(ctx); err != nil {
+	// Use the go-routeros library which handles login correctly
+	client, err := routeros.Dial(ip+":8728", username, password)
+	if err != nil {
 		return nil, fmt.Errorf("connect failed: %w", err)
 	}
 	defer client.Close()
 
-	if err := client.Login(ctx); err != nil {
-		return nil, fmt.Errorf("login failed: %w", err)
-	}
-
 	var neighbors []NeighborInfo
 
+	// Discover Layer 2 neighbors (switches, APs, routers, repeaters)
+	ipNeighbors, err := s.getIPNeighborsRos(client)
+	if err == nil {
+		neighbors = append(neighbors, ipNeighbors...)
+	}
+
 	// Discover OSPF neighbors
-	ospfNeighbors, err := s.getOSPFNeighbors(ctx, client)
+	ospfNeighbors, err := s.getOSPFNeighborsRos(client)
 	if err == nil {
 		neighbors = append(neighbors, ospfNeighbors...)
 	}
 
+	// Discover BGP peers
+	bgpNeighbors, err := s.getBGPNeighborsRos(client)
+	if err == nil {
+		neighbors = append(neighbors, bgpNeighbors...)
+	}
+
 	// Discover PPP connections
-	pppNeighbors, err := s.getPPPConnections(ctx, client)
+	pppNeighbors, err := s.getPPPNeighborsRos(client)
 	if err == nil {
 		neighbors = append(neighbors, pppNeighbors...)
 	}
@@ -511,24 +509,13 @@ func (s *Scanner) DiscoverPPPProfiles(
 	ctx context.Context,
 	ip, username, password string,
 ) ([]PPPProfileInfo, error) {
-	client := routeros.NewClient(routeros.Config{
-		Address:  ip,
-		Port:     "8728",
-		Username: username,
-		Password: password,
-		Timeout:  s.timeout,
-	})
-
-	if err := client.Connect(ctx); err != nil {
+	client, err := routeros.Dial(ip+":8728", username, password)
+	if err != nil {
 		return nil, err
 	}
 	defer client.Close()
 
-	if err := client.Login(ctx); err != nil {
-		return nil, err
-	}
-
-	profiles, err := s.getPPPProfiles(ctx, client)
+	profiles, err := s.getPPPProfilesRos(client)
 	if err != nil {
 		return nil, err
 	}
@@ -541,24 +528,13 @@ func (s *Scanner) DiscoverOSPF(
 	ctx context.Context,
 	ip, username, password string,
 ) (*OSPFInfo, error) {
-	client := routeros.NewClient(routeros.Config{
-		Address:  ip,
-		Port:     "8728",
-		Username: username,
-		Password: password,
-		Timeout:  s.timeout,
-	})
-
-	if err := client.Connect(ctx); err != nil {
+	client, err := routeros.Dial(ip+":8728", username, password)
+	if err != nil {
 		return nil, err
 	}
 	defer client.Close()
 
-	if err := client.Login(ctx); err != nil {
-		return nil, err
-	}
-
-	ospf, err := s.getOSPFInstance(ctx, client)
+	ospf, err := s.getOSPFInstanceRos(client)
 	if err != nil {
 		return nil, err
 	}
@@ -566,32 +542,143 @@ func (s *Scanner) DiscoverOSPF(
 	return ospf, nil
 }
 
-// getOSPFNeighbors retrieves OSPF neighbors from RouterOS device.
-// TODO: Implement actual RouterOS API command /routing/ospf/neighbor/print
-func (s *Scanner) getOSPFNeighbors(ctx context.Context, client *routeros.Client) ([]NeighborInfo, error) {
-	// Stub implementation - returns empty list for now
-	return []NeighborInfo{}, nil
+// getIPNeighborsRos retrieves Layer 2 neighbors using go-routeros library
+func (s *Scanner) getIPNeighborsRos(client *routeros.Client) ([]NeighborInfo, error) {
+	re, err := client.Run("/ip/neighbor/print")
+	if err != nil {
+		return nil, fmt.Errorf("ip neighbor print failed: %w", err)
+	}
+
+	var neighbors []NeighborInfo
+	for _, item := range re.Re {
+		neighbor := NeighborInfo{
+			IP:        item.Map["address"],
+			MAC:       item.Map["mac-address"],
+			Interface: item.Map["interface"],
+			Protocol:  "MNDP",
+			RemoteID:  item.Map["identity"],
+			State:     "discovered",
+		}
+
+		if dt, ok := item.Map["device-type"]; ok && dt != "" {
+			neighbor.RemoteID = dt + " (" + neighbor.RemoteID + ")"
+		}
+
+		neighbors = append(neighbors, neighbor)
+	}
+
+	return neighbors, nil
 }
 
-// getPPPConnections retrieves active PPP connections from RouterOS device.
-// TODO: Implement actual RouterOS API command /ppp/active/print
-func (s *Scanner) getPPPConnections(ctx context.Context, client *routeros.Client) ([]NeighborInfo, error) {
-	// Stub implementation - returns empty list for now
-	return []NeighborInfo{}, nil
+// getOSPFNeighborsRos retrieves OSPF neighbors using go-routeros library
+func (s *Scanner) getOSPFNeighborsRos(client *routeros.Client) ([]NeighborInfo, error) {
+	re, err := client.Run("/routing/ospf/neighbor/print")
+	if err != nil {
+		return nil, fmt.Errorf("ospf neighbor print failed: %w", err)
+	}
+
+	var neighbors []NeighborInfo
+	for _, item := range re.Re {
+		neighbor := NeighborInfo{
+			IP:        item.Map["address"],
+			Interface: item.Map["interface"],
+			Protocol:  "OSPF",
+			RemoteID:  item.Map["router-id"],
+			State:     item.Map["state"],
+		}
+		neighbors = append(neighbors, neighbor)
+	}
+
+	return neighbors, nil
+}
+
+// getBGPNeighborsRos retrieves BGP peers using go-routeros library
+func (s *Scanner) getBGPNeighborsRos(client *routeros.Client) ([]NeighborInfo, error) {
+	re, err := client.Run("/routing/bgp/peer/print")
+	if err != nil {
+		return nil, fmt.Errorf("bgp peer print failed: %w", err)
+	}
+
+	var neighbors []NeighborInfo
+	for _, item := range re.Re {
+		neighbor := NeighborInfo{
+			IP:        item.Map["remote-address"],
+			Interface: item.Map["interface"],
+			Protocol:  "BGP",
+			RemoteID:  item.Map["name"],
+			State:     item.Map["state"],
+		}
+		neighbors = append(neighbors, neighbor)
+	}
+
+	return neighbors, nil
+}
+
+// getPPPNeighborsRos retrieves PPP connections using go-routeros library
+func (s *Scanner) getPPPNeighborsRos(client *routeros.Client) ([]NeighborInfo, error) {
+	re, err := client.Run("/ppp/active/print")
+	if err != nil {
+		return nil, fmt.Errorf("ppp active print failed: %w", err)
+	}
+
+	var neighbors []NeighborInfo
+	for _, item := range re.Re {
+		pType := item.Map["service"]
+		if pType == "" {
+			pType = "PPP"
+		}
+
+		neighbor := NeighborInfo{
+			IP:        item.Map["address"],
+			MAC:       item.Map["caller-id"],
+			Interface: item.Map["interface"],
+			Protocol:  pType,
+			RemoteID:  item.Map["name"],
+			State:     item.Map["state"],
+		}
+		neighbors = append(neighbors, neighbor)
+	}
+
+	return neighbors, nil
 }
 
 // getPPPProfiles retrieves PPP profiles from RouterOS device.
-// TODO: Implement actual RouterOS API command /ppp/profile/print
-func (s *Scanner) getPPPProfiles(ctx context.Context, client *routeros.Client) ([]PPPProfileInfo, error) {
-	// Stub implementation - returns empty list for now
-	return []PPPProfileInfo{}, nil
+func (s *Scanner) getPPPProfilesRos(client *routeros.Client) ([]PPPProfileInfo, error) {
+	re, err := client.Run("/ppp/profile/print")
+	if err != nil {
+		return nil, fmt.Errorf("ppp profile print failed: %w", err)
+	}
+
+	var profiles []PPPProfileInfo
+	for _, item := range re.Re {
+		profile := PPPProfileInfo{
+			Name:               item.Map["name"],
+			LocalAddress:       item.Map["local-address"],
+			RemoteAddressRange: item.Map["remote-address"],
+		}
+		profiles = append(profiles, profile)
+	}
+
+	return profiles, nil
 }
 
 // getOSPFInstance retrieves OSPF instance information from RouterOS device.
-// TODO: Implement actual RouterOS API command /routing/ospf/instance/print
-func (s *Scanner) getOSPFInstance(ctx context.Context, client *routeros.Client) (*OSPFInfo, error) {
-	// Stub implementation - returns empty OSPF info for now
-	return &OSPFInfo{
+func (s *Scanner) getOSPFInstanceRos(client *routeros.Client) (*OSPFInfo, error) {
+	re, err := client.Run("/routing/ospf/instance/print")
+	if err != nil {
+		return nil, fmt.Errorf("ospf instance print failed: %w", err)
+	}
+
+	ospf := &OSPFInfo{
 		Neighbors: []NeighborInfo{},
-	}, nil
+	}
+
+	for _, item := range re.Re {
+		ospf.InstanceID = item.Map["instance"]
+		ospf.AreaID = item.Map["area"]
+		ospf.RouterID = item.Map["router-id"]
+		ospf.State = item.Map["disabled"]
+	}
+
+	return ospf, nil
 }

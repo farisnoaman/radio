@@ -59,6 +59,7 @@ import {
 import { useMemo, useCallback, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ScanNetworkModal } from '../components/ScanNetworkModal';
+import { NASNeighbors } from './nas/NASNeighbors';
 import {
   Router as NasIcon,
   NetworkCheck as NetworkIcon,
@@ -1706,9 +1707,36 @@ const NASDetails = () => {
 
 // NAS 设备详情
 export const NASShow = () => {
+  const [tabValue, setTabValue] = useState(0);
+  const translate = useTranslate();
+
+  const handleTabChange = (_: React.SyntheticEvent, newValue: number) => {
+    setTabValue(newValue);
+  };
+
   return (
     <Show>
-      <NASDetails />
+      <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+        <Tabs
+          value={tabValue}
+          onChange={handleTabChange}
+          sx={{
+            minHeight: 48,
+            '& .MuiTab-root': {
+              minHeight: 48,
+              textTransform: 'none',
+              fontWeight: 500,
+            },
+          }}
+        >
+          <Tab label={translate('resources.network/nas.tabs.details', { _: 'Details' })} />
+          <Tab label={translate('resources.network/nas.tabs.neighbors', { _: 'Neighbors' })} />
+        </Tabs>
+      </Box>
+      <Box sx={{ mt: 2 }}>
+        {tabValue === 0 && <NASDetails />}
+        {tabValue === 1 && <NASNeighbors />}
+      </Box>
     </Show>
   );
 };

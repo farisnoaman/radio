@@ -26,6 +26,7 @@ interface Neighbor {
   protocol: string;
   remote_id: string;
   state: string;
+  device_type?: string;
 }
 
 export const NASNeighbors = () => {
@@ -42,9 +43,12 @@ export const NASNeighbors = () => {
     setError(null);
     
     try {
+      const apiUser = record.api_user || 'admin';
+      const apiPass = record.api_pass || record.secret || '';
+      
       const queryParams = new URLSearchParams({
-        username: record.api_user || '',
-        password: record.api_pass || '',
+        username: apiUser,
+        password: apiPass,
       }).toString();
       
       const baseUrl = import.meta.env.VITE_API_BASE_URL || '';
@@ -59,7 +63,8 @@ export const NASNeighbors = () => {
       }
       
       const data = await response.json();
-      const neighborData = data?.neighbors || [];
+      // API returns { data: { count, neighbors: [] } }
+      const neighborData = data?.data?.neighbors || [];
       setNeighbors(neighborData);
     } catch (err: any) {
       setError(err.message || 'Failed to fetch neighbors');
@@ -77,9 +82,31 @@ export const NASNeighbors = () => {
     switch (protocol?.toLowerCase()) {
       case 'ospf': return 'warning';
       case 'bgp': return 'info';
-      case 'ppp': return 'success';
+      case 'ppp': 
+      case 'pppoe': 
+      case 'hotspot': 
+      case 'l2tp': 
+      case 'pptp': 
+      case 'sstp': 
+        return 'success';
+      case 'mndp': return 'primary';
       case 'static': return 'default';
       default: return 'default';
+    }
+  };
+
+  const getProtocolLabel = (protocol: string) => {
+    switch (protocol?.toLowerCase()) {
+      case 'mndp': return 'Layer 2';
+      case 'ospf': return 'OSPF';
+      case 'bgp': return 'BGP';
+      case 'pppoe': return 'PPPoE';
+      case 'hotspot': return 'Hotspot';
+      case 'l2tp': return 'L2TP';
+      case 'pptp': return 'PPTP';
+      case 'sstp': return 'SSTP';
+      case 'ppp': return 'PPP';
+      default: return protocol || 'Unknown';
     }
   };
 
@@ -147,7 +174,8 @@ export const NASNeighbors = () => {
                 <TableCell>IP Address</TableCell>
                 <TableCell>MAC Address</TableCell>
                 <TableCell>Interface</TableCell>
-                <TableCell>Protocol</TableCell>
+                <TableCell>Type</TableCell>
+                <TableCell>Device/Identity</TableCell>
                 <TableCell>State</TableCell>
               </TableRow>
             </TableHead>
@@ -159,15 +187,18 @@ export const NASNeighbors = () => {
                   <TableCell>{neighbor.interface}</TableCell>
                   <TableCell>
                     <Chip 
-                      label={neighbor.protocol} 
+                      label={getProtocolLabel(neighbor.protocol)} 
                       color={getProtocolColor(neighbor.protocol)} 
                       size="small" 
                     />
                   </TableCell>
+                  <TableCell sx={{ fontFamily: 'monospace', fontSize: '0.8rem' }}>
+                    {neighbor.remote_id || '-'}
+                  </TableCell>
                   <TableCell>
                     <Chip 
-                      label={neighbor.state} 
-                      color={getStateColor(neighbor.state)} 
+                      label={neighbor.state || 'active'} 
+                      color={getStateColor(neighbor.state || 'active')} 
                       size="small" 
                       variant="outlined"
                     />
