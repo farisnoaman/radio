@@ -193,6 +193,12 @@ func AddDiscoveredDevice(c echo.Context) error {
 		model = "Mikrotik"
 	}
 
+	tenantIDStr := GetTenantID(c)
+	tenantID, err := strconv.ParseInt(tenantIDStr, 10, 64)
+	if err != nil {
+		tenantID = 0
+	}
+
 	device := domain.NetNas{
 		Name:       name,
 		Ipaddr:    payload.IP,
@@ -203,6 +209,7 @@ func AddDiscoveredDevice(c echo.Context) error {
 		Status:    "enabled",
 		Tags:      payload.Tags,
 		Remark:    "Added via auto-discovery",
+		TenantID:  tenantID,
 	}
 
 	if err := GetDB(c).Create(&device).Error; err != nil {
@@ -264,6 +271,12 @@ func AddDiscoveredDevices(c echo.Context) error {
 			model = "Mikrotik"
 		}
 
+		tenantIDStr := GetTenantID(c)
+		tenantID, err := strconv.ParseInt(tenantIDStr, 10, 64)
+		if err != nil {
+			tenantID = 0
+		}
+
 		device := domain.NetNas{
 			Name:       name,
 			Ipaddr:    payload.IP,
@@ -274,6 +287,7 @@ func AddDiscoveredDevices(c echo.Context) error {
 			Status:    "enabled",
 			Tags:      payload.Tags,
 			Remark:    "Added via auto-discovery",
+			TenantID:  tenantID,
 		}
 
 		if err := GetDB(c).Create(&device).Error; err != nil {

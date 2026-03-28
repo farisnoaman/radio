@@ -86,8 +86,8 @@ export const ScanNetworkModal = ({ open, onClose }: ScanNetworkModalProps) => {
         body: JSON.stringify({
           ip_range: ipRange,
           ports: [8728, 8729],
-          timeout: 5,
-          workers: 20,
+          timeout: 3,
+          workers: 50,
           username: username || 'admin',
           password: password,
         }),

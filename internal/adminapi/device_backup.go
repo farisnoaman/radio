@@ -1,6 +1,7 @@
 package adminapi
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"time"
@@ -159,12 +160,15 @@ func DiscoverNeighbors(c echo.Context) error {
 		return fail(c, http.StatusNotFound, "NOT_FOUND", "Device not found", nil)
 	}
 
-	// Get device credentials from query parameters
-	username := c.QueryParam("username")
-	password := c.QueryParam("password")
+	// Debug: log what we're using
+	fmt.Printf("DEBUG: NAS ID=%d, IP=%s, ApiUser=%s, ApiPass=%s\n", nas.ID, nas.Ipaddr, nas.ApiUser, nas.ApiPass)
+
+	// Use stored API credentials from the NAS device
+	username := nas.ApiUser
+	password := nas.ApiPass
 
 	if username == "" || password == "" {
-		return fail(c, http.StatusBadRequest, "MISSING_CREDENTIALS", "SSH credentials required", nil)
+		return fail(c, http.StatusBadRequest, "MISSING_CREDENTIALS", fmt.Sprintf("API credentials not configured on device. IP=%s, ApiUser=%s", nas.Ipaddr, nas.ApiUser), nil)
 	}
 
 	scanner, err := discovery.NewScanner(discovery.Config{
