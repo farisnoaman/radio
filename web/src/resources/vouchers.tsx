@@ -71,18 +71,29 @@ const BatchActions = () => {
     const translate = useTranslate();
     const locale = useLocale();
     const isRTL = locale === 'ar';
+    const [actionLoading, setActionLoading] = useState(false);
 
     if (!record) return null;
 
     const handleAction = async (action: string) => {
+        if (actionLoading) return;
+        setActionLoading(true);
         try {
             await httpClient(`/voucher-batches/${record.id}/${action}`, { method: 'POST' });
             const actionKey = action === 'activate' ? 'activated' : action === 'deactivate' ? 'deactivated' : action === 'restore' ? 'restored' : 'refunded';
             notify(translate(`resources.voucher-batches.notifications.${actionKey}`), { type: 'success' });
             refresh();
-        } catch (error: any) {
-            const msg = error?.json?.msg || error?.message || `Failed to ${action} batch`;
+        } catch (error: unknown) {
+            let msg = `Failed to ${action} batch`;
+            if (error instanceof Error) {
+                msg = error.message;
+            } else if (error && typeof error === 'object' && 'json' in error) {
+                const err = error as { json?: { msg?: string } };
+                msg = err.json?.msg || msg;
+            }
             notify(msg, { type: 'error' });
+        } finally {
+            setActionLoading(false);
         }
     };
 
@@ -137,7 +148,7 @@ const BatchActions = () => {
     };
 
     const userStr = localStorage.getItem('user');
-    const user = userStr ? JSON.parse(userStr) : null;
+    const user = userStr ? (() => { try { return JSON.parse(userStr); } catch { return null; } })() : null;
     const isAdmin = user && user.level !== 'agent';
 
 
@@ -166,29 +177,29 @@ const BatchActions = () => {
                         {translate('resources.voucher-batches.actions.print')}
                     </MuiButton>
                     {record.activated_at ? (
-                        <MuiButton size="small" variant="outlined" onClick={() => handleAction('deactivate')} color="warning" startIcon={!isRTL ? <ToggleOffIcon /> : undefined} endIcon={isRTL ? <ToggleOffIcon /> : undefined} sx={{ minWidth: 85, justifyContent: 'space-between' }}>
+                        <MuiButton size="small" variant="outlined" onClick={() => handleAction('deactivate')} disabled={actionLoading} color="warning" startIcon={!isRTL ? <ToggleOffIcon /> : undefined} endIcon={isRTL ? <ToggleOffIcon /> : undefined} sx={{ minWidth: 85, justifyContent: 'space-between' }}>
                             {translate('resources.voucher-batches.actions.deactivate')}
                         </MuiButton>
                     ) : (
-                        <MuiButton size="small" variant="outlined" onClick={() => handleAction('activate')} color="primary" startIcon={!isRTL ? <ToggleOnIcon /> : undefined} endIcon={isRTL ? <ToggleOnIcon /> : undefined} sx={{ minWidth: 75, justifyContent: 'space-between' }}>
+                        <MuiButton size="small" variant="outlined" onClick={() => handleAction('activate')} disabled={actionLoading} color="primary" startIcon={!isRTL ? <ToggleOnIcon /> : undefined} endIcon={isRTL ? <ToggleOnIcon /> : undefined} sx={{ minWidth: 75, justifyContent: 'space-between' }}>
                             {translate('resources.voucher-batches.actions.activate')}
                         </MuiButton>
                     )}
-                    <MuiButton size="small" variant="outlined" onClick={() => setTransferOpen(true)} color="secondary" startIcon={!isRTL ? <SwapHorizIcon /> : undefined} endIcon={isRTL ? <SwapHorizIcon /> : undefined} sx={{ minWidth: 70, justifyContent: 'space-between' }}>
+                    <MuiButton size="small" variant="outlined" onClick={() => setTransferOpen(true)} disabled={actionLoading} color="secondary" startIcon={!isRTL ? <SwapHorizIcon /> : undefined} endIcon={isRTL ? <SwapHorizIcon /> : undefined} sx={{ minWidth: 70, justifyContent: 'space-between' }}>
                         {translate('resources.voucher-batches.actions.transfer')}
                     </MuiButton>
-                    <MuiButton size="small" variant="outlined" onClick={handleDelete} color="error" startIcon={!isRTL ? <DeleteIcon /> : undefined} endIcon={isRTL ? <DeleteIcon /> : undefined} sx={{ minWidth: 60, justifyContent: 'space-between' }}>
+                    <MuiButton size="small" variant="outlined" onClick={handleDelete} disabled={actionLoading} color="error" startIcon={!isRTL ? <DeleteIcon /> : undefined} endIcon={isRTL ? <DeleteIcon /> : undefined} sx={{ minWidth: 60, justifyContent: 'space-between' }}>
                         {translate('resources.voucher-batches.actions.delete')}
                     </MuiButton>
                 </>
             )}
             {record.is_deleted && isAdmin && (
                 <>
-                    <MuiButton size="small" variant="outlined" onClick={() => handleAction('restore')} color="primary" startIcon={!isRTL ? <RestoreIcon /> : undefined} endIcon={isRTL ? <RestoreIcon /> : undefined} sx={{ minWidth: 75, justifyContent: 'space-between' }}>
+                    <MuiButton size="small" variant="outlined" onClick={() => handleAction('restore')} disabled={actionLoading} color="primary" startIcon={!isRTL ? <RestoreIcon /> : undefined} endIcon={isRTL ? <RestoreIcon /> : undefined} sx={{ minWidth: 75, justifyContent: 'space-between' }}>
                         {translate('resources.voucher-batches.actions.restore')}
                     </MuiButton>
-                    {record.agent_id && record.agent_id !== "0" && (
-                        <MuiButton size="small" variant="outlined" onClick={() => handleAction('refund')} color="success" startIcon={!isRTL ? <CurrencyExchangeIcon /> : undefined} endIcon={isRTL ? <CurrencyExchangeIcon /> : undefined} sx={{ minWidth: 100, justifyContent: 'space-between' }}>
+                    {record.agent_id && Number(record.agent_id) !== 0 && (
+                        <MuiButton size="small" variant="outlined" onClick={() => handleAction('refund')} disabled={actionLoading} color="success" startIcon={!isRTL ? <CurrencyExchangeIcon /> : undefined} endIcon={isRTL ? <CurrencyExchangeIcon /> : undefined} sx={{ minWidth: 100, justifyContent: 'space-between' }}>
                             {translate('resources.voucher-batches.actions.refund')}
                         </MuiButton>
                     )}
@@ -336,6 +347,7 @@ const VoucherBatchInputs = () => {
     const translate = useTranslate();
     const locale = useLocale();
     const isRTL = locale === 'ar';
+    const hasNotifiedRef = React.useRef(false);
 
     const textInputProps = { style: { textAlign: isRTL ? 'right' : 'left', direction: isRTL ? 'rtl' : 'ltr' } } as const;
     const numInputProps = { style: { textAlign: isRTL ? 'right' : 'left', direction: isRTL ? 'rtl' : 'ltr' } } as const;
@@ -345,28 +357,30 @@ const VoucherBatchInputs = () => {
 
     React.useEffect(() => {
         const userStr = localStorage.getItem('user');
-        if (userStr) {
-            const u = JSON.parse(userStr);
-            setUser(u);
-            if (u.level === 'agent') {
-                httpClient(`/agents/${u.id}/wallet`)
-                    .then(({ json }) => {
-                        setBalance(json.data.balance);
-                    })
-                    .catch(() => {
-                        notify('Failed to fetch wallet balance', { type: 'warning' });
-                    });
-            }
+        const u = userStr ? (() => { try { return JSON.parse(userStr); } catch { return null; } })() : null;
+        if (!u) return;
+        setUser(u);
+        if (u.level === 'agent') {
+            httpClient(`/agents/${u.id}/wallet`)
+                .then(({ json }) => {
+                    if (json?.data?.balance !== undefined) {
+                        setBalance(Number(json.data.balance));
+                    }
+                })
+                .catch(() => {
+                    notify('Failed to fetch wallet balance', { type: 'warning' });
+                });
         }
     }, [notify]);
 
     React.useEffect(() => {
-        if (user?.level === 'agent' && product && balance !== null) {
+        if (user?.level === 'agent' && product && balance !== null && !hasNotifiedRef.current) {
             const price = product.cost_price || product.price || 0;
             if (price > 0) {
                 const max = Math.floor(balance / price);
                 setValue('count', max);
                 notify(`Max affordable vouchers: ${max}`, { type: 'info' });
+                hasNotifiedRef.current = true;
             }
         }
     }, [product, balance, user, setValue, notify]);

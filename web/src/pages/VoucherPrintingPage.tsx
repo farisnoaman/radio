@@ -211,19 +211,29 @@ const formatQuota = (mb?: number): string => {
 const makeQR = (data: string, size = 80): string =>
     `<img src="https://api.qrserver.com/v1/create-qr-code/?size=${size}x${size}&data=${encodeURIComponent(data)}" width="${size}" height="${size}" alt="QR" style="display:block;" />`;
 
+const escapeHtml = (str: string): string => {
+    if (!str) return '';
+    return str
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+};
+
 const replaceCustomVars = (html: string, vars: TemplateVars): string =>
     html
-        .replace(/\{\{code\}\}/g, vars.code)
-        .replace(/\{\{price\}\}/g, vars.price)
-        .replace(/\{\{validity\}\}/g, vars.validity)
-        .replace(/\{\{quota\}\}/g, vars.quota)
-        .replace(/\{\{agent\}\}/g, vars.agent)
-        .replace(/\{\{hotspot\}\}/g, vars.hotspot)
-        .replace(/\{\{link\}\}/g, vars.link)
-        .replace(/\{\{serial\}\}/g, vars.serial)
+        .replace(/\{\{code\}\}/g, escapeHtml(vars.code))
+        .replace(/\{\{price\}\}/g, escapeHtml(vars.price))
+        .replace(/\{\{validity\}\}/g, escapeHtml(vars.validity))
+        .replace(/\{\{quota\}\}/g, escapeHtml(vars.quota))
+        .replace(/\{\{agent\}\}/g, escapeHtml(vars.agent))
+        .replace(/\{\{hotspot\}\}/g, escapeHtml(vars.hotspot))
+        .replace(/\{\{link\}\}/g, escapeHtml(vars.link))
+        .replace(/\{\{serial\}\}/g, escapeHtml(vars.serial))
         .replace(/\{\{qr\}\}/g, vars.qr)
-        .replace(/\{\{product\}\}/g, vars.product)
-        .replace(/\{\{color\}\}/g, vars.color);
+        .replace(/\{\{product\}\}/g, escapeHtml(vars.product))
+        .replace(/\{\{color\}\}/g, escapeHtml(vars.color));
 
 const getSampleTemplate = (t: (key: string, options?: Record<string, unknown>) => string, isRtl: boolean) => `
 <div style="width:142px;height:120px;border:1px solid {{color}};margin:2px;padding:4px;box-sizing:border-box;direction:${isRtl ? 'rtl' : 'ltr'};display:flex;flex-direction:column;justify-content:space-between;page-break-inside:avoid;overflow:hidden;background:#fff;position:relative;">
@@ -295,9 +305,11 @@ const VoucherPrintingPage: React.FC = () => {
 
 
     const previewRef = useRef<HTMLIFrameElement>(null);
+    const fetchedProductIds = useRef<Set<number>>(new Set());
 
     // --- Load batches and templates on mount ---
     useEffect(() => {
+        let cancelled = false;
         const loadData = async () => {
             setLoadingBatches(true);
             try {
@@ -305,6 +317,7 @@ const VoucherPrintingPage: React.FC = () => {
                     apiRequest<VoucherBatch[]>('/voucher-batches?perPage=1000&sort=id&order=DESC'),
                     apiRequest<VoucherTemplate[]>('/voucher-templates'),
                 ]);
+                if (cancelled) return;
                 setBatches(Array.isArray(batchData) ? batchData : []);
                 setCustomTemplates(Array.isArray(templateData) ? templateData : []);
 
@@ -314,11 +327,17 @@ const VoucherPrintingPage: React.FC = () => {
                     setSelectedBatchId(parseInt(batchParam, 10));
                 }
             } catch (err) {
+                if (cancelled) return;
                 notify('Failed to load data', { type: 'error' });
             }
-            setLoadingBatches(false);
+            if (!cancelled) {
+                setLoadingBatches(false);
+            }
         };
         loadData();
+        return () => {
+            cancelled = true;
+        };
     }, [searchParams, notify]);
 
     // --- Fetch product info when batch changes ---
@@ -326,12 +345,18 @@ const VoucherPrintingPage: React.FC = () => {
         if (!selectedBatchId) return;
         const batch = batches.find((b) => b.id === selectedBatchId);
         if (!batch) return;
-        if (products[batch.product_id]) return;
+        if (products[batch.product_id] || fetchedProductIds.current.has(batch.product_id)) return;
 
+        fetchedProductIds.current.add(batch.product_id);
         apiRequest<Product>(`/products/${batch.product_id}`)
-            .then((p) => setProducts((prev) => ({ ...prev, [batch.product_id]: p })))
-            .catch(() => { });
-    }, [selectedBatchId, batches, products]);
+            .then((p) => {
+                setProducts((prev) => ({ ...prev, [batch.product_id]: p }));
+            })
+            .catch(() => {
+                fetchedProductIds.current.delete(batch.product_id);
+                notify('Failed to load product details', { type: 'warning' });
+            });
+    }, [selectedBatchId, batches, products, notify]);
 
 
 
@@ -435,15 +460,22 @@ html,body{margin:0;padding:2px;font-family:Arial,sans-serif;font-size:12px;-webk
 </body></html>`;
     }, [fetchingVouchers, selectedBatchId, vouchers, renderVoucher, makeVoucherVars, isRtl]);
 
+    const [previewError, setPreviewError] = useState(false);
+
     // --- Update preview iframe ---
     useEffect(() => {
         const iframe = previewRef.current;
         if (!iframe) return;
-        const doc = iframe.contentDocument || iframe.contentWindow?.document;
-        if (!doc) return;
-        doc.open();
-        doc.write(previewHtml);
-        doc.close();
+        try {
+            const doc = iframe.contentDocument || iframe.contentWindow?.document;
+            if (!doc) return;
+            doc.open();
+            doc.write(previewHtml);
+            doc.close();
+            setPreviewError(false);
+        } catch (e) {
+            setPreviewError(true);
+        }
     }, [previewHtml]);
 
 
@@ -454,6 +486,15 @@ html,body{margin:0;padding:2px;font-family:Arial,sans-serif;font-size:12px;-webk
             notify('Name and content are required', { type: 'warning' });
             return;
         }
+        if (editorName.length > 100) {
+            notify('Template name must be 100 characters or less', { type: 'warning' });
+            return;
+        }
+        if (editorContent.length > 50000) {
+            notify('Template content must be 50,000 characters or less', { type: 'warning' });
+            return;
+        }
+        
         try {
             if (editingTemplateId) {
                 await apiRequest(`/voucher-templates/${editingTemplateId}`, {
@@ -468,9 +509,11 @@ html,body{margin:0;padding:2px;font-family:Arial,sans-serif;font-size:12px;-webk
                 });
                 notify('Template saved', { type: 'success' });
             }
-            // Reload templates
-            const data = await apiRequest<VoucherTemplate[]>('/voucher-templates');
-            setCustomTemplates(Array.isArray(data) ? data : []);
+            
+            const reloadData = await apiRequest<VoucherTemplate[]>('/voucher-templates').catch(() => null);
+            if (reloadData) {
+                setCustomTemplates(Array.isArray(reloadData) ? reloadData : []);
+            }
 
             setEditorName('');
             setEditorContent('');
@@ -911,18 +954,24 @@ else{for(var i=0;i<total;i++){if(images[i].complete){tryPrint();}else{images[i].
                                 minHeight: 350,
                             }}
                         >
-                            <Box
-                                component="iframe"
-                                ref={previewRef}
-                                title="Voucher Preview"
-                                sx={{
-                                    width: '100%',
-                                    height: '100%',
-                                    border: 'none',
-                                    minHeight: 350,
-                                }}
-                                sandbox="allow-same-origin"
-                            />
+                            {previewError ? (
+                                <Box display="flex" alignItems="center" justifyContent="center" height="100%" color="error.main">
+                                    <Typography>Failed to render preview</Typography>
+                                </Box>
+                            ) : (
+                                <Box
+                                    component="iframe"
+                                    ref={previewRef}
+                                    title="Voucher Preview"
+                                    sx={{
+                                        width: '100%',
+                                        height: '100%',
+                                        border: 'none',
+                                        minHeight: 350,
+                                    }}
+                                    sandbox="allow-same-origin"
+                                />
+                            )}
                         </Box>
                     </CardContent>
                 </Card>
