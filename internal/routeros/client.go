@@ -38,8 +38,10 @@ package routeros
 
 import (
 	"context"
+	"crypto/md5"
 	"crypto/tls"
 	"encoding/binary"
+	"encoding/hex"
 	"errors"
 	"fmt"
 	"net"
@@ -168,6 +170,11 @@ func (c *Client) Close() error {
 
 // Login authenticates to the RouterOS device using the configured credentials.
 //
+// RouterOS API uses a challenge-response authentication mechanism:
+// 1. Send /login with username only
+// 2. Receive challenge (a hash value) in a !re response
+// 3. Send /login with username, password, and response=MD5(password+challenge)
+//
 // Connect() must be called before Login().
 // After successful login, the connection remains authenticated until Close() is called.
 func (c *Client) Login(ctx context.Context) error {
@@ -175,12 +182,12 @@ func (c *Client) Login(ctx context.Context) error {
 		return errors.New("not connected: call Connect() first")
 	}
 
-	// Build and send login request
-	loginReq := c.buildLoginRequest()
-	fmt.Printf("[RouterOS] Login request to %s: % x\n", c.config.Address, loginReq)
+	// Step 1: Send initial login request with username ONLY
+	loginReq1 := c.buildLoginRequestSimple()
+	fmt.Printf("[RouterOS] Login step 1 to %s: % x\n", c.config.Address, loginReq1)
 	
-	if _, err := c.conn.Write(loginReq); err != nil {
-		return fmt.Errorf("failed to send login request: %w", err)
+	if _, err := c.conn.Write(loginReq1); err != nil {
+		return fmt.Errorf("failed to send login: %w", err)
 	}
 
 	// Read response
@@ -189,24 +196,111 @@ func (c *Client) Login(ctx context.Context) error {
 		return fmt.Errorf("failed to read login response: %w", err)
 	}
 
-	fmt.Printf("[RouterOS] Login response from %s: type=%v, data=% x\n", c.config.Address, resp.Type, resp.Data)
+	fmt.Printf("[RouterOS] Login response from %s: type=%v, data=%s\n", c.config.Address, resp.Type, string(resp.Data))
 
-	// Check for successful login
+	// If ResponseDone, login successful without challenge (old RouterOS versions)
 	if resp.Type == ResponseDone {
 		c.loggedIn = true
 		return nil
 	}
 
-	// Check for trap (authentication failure)
+	// If ResponseTrap, credentials invalid
 	if resp.Type == ResponseTrap {
 		return errors.New("login failed: invalid credentials")
 	}
 
-	if resp.Type == ResponseFatal {
-		return errors.New("login failed: fatal error from RouterOS")
+	// If ResponseRe, it contains the challenge
+	if resp.Type == ResponseRe {
+		// Extract challenge from "ret=<hash>"
+		challenge := extractValue(resp.Data, "ret")
+		if challenge == "" {
+			// Also check for "=ret" format
+			challenge = extractValue(resp.Data, "=ret")
+		}
+		if challenge == "" {
+			return errors.New("login failed: no challenge received")
+		}
+
+		fmt.Printf("[RouterOS] Got challenge: %s\n", challenge)
+
+		// Step 2: Compute response and send
+		loginReq2 := c.buildChallengeResponse(challenge)
+		fmt.Printf("[RouterOS] Login step 2 to %s: % x\n", c.config.Address, loginReq2)
+
+		if _, err := c.conn.Write(loginReq2); err != nil {
+			return fmt.Errorf("failed to send challenge response: %w", err)
+		}
+
+		resp2, err := c.readResponse(ctx)
+		if err != nil {
+			return fmt.Errorf("failed to read challenge response: %w", err)
+		}
+
+		fmt.Printf("[RouterOS] Challenge result: type=%v, data=%s\n", c.config.Address, resp2.Type, string(resp2.Data))
+
+		if resp2.Type == ResponseDone {
+			c.loggedIn = true
+			return nil
+		}
+
+		if resp2.Type == ResponseTrap {
+			return errors.New("login failed: invalid credentials")
+		}
+
+		if resp2.Type == ResponseFatal {
+			return errors.New("login failed: fatal error from RouterOS")
+		}
 	}
 
 	return errors.New("login failed: unknown error")
+}
+
+// buildLoginRequestSimple sends only the username to get the challenge.
+func (c *Client) buildLoginRequestSimple() []byte {
+	var data []byte
+	data = appendWord(data, "name="+c.config.Username)
+
+	command := "/login"
+	commandLen := len(command) + 1
+	totalLen := commandLen + len(data)
+	packet := make([]byte, 4+totalLen)
+	binary.BigEndian.PutUint32(packet[0:4], uint32(commandLen))
+	copy(packet[4:], command)
+	packet[4+len(command)] = 0
+	copy(packet[4+commandLen:], data)
+	return packet
+}
+
+// buildChallengeResponse builds the second login step with the challenge response.
+func (c *Client) buildChallengeResponse(challenge string) []byte {
+	// RouterOS uses MD5 of: username + " " + password + challenge
+	response := computeResponse(c.config.Username, c.config.Password, challenge)
+
+	var data []byte
+	data = appendWord(data, "name="+c.config.Username)
+	data = appendWord(data, "response="+response)
+
+	command := "/login"
+	commandLen := len(command) + 1
+
+	totalLen := commandLen + len(data)
+	packet := make([]byte, 4+totalLen)
+
+	binary.BigEndian.PutUint32(packet[0:4], uint32(commandLen))
+
+	copy(packet[4:], command)
+	packet[4+len(command)] = 0
+
+	copy(packet[4+commandLen:], data)
+
+	return packet
+}
+
+// computeResponse computes the MD5 hash for RouterOS challenge-response login.
+func computeResponse(username, password, challenge string) string {
+	input := username + " " + password + challenge
+	hash := md5.Sum([]byte(input))
+	return hex.EncodeToString(hash[:])
 }
 
 // GetSystemInfo retrieves system information from the RouterOS device.
@@ -488,6 +582,103 @@ func appendWord(data []byte, word string) []byte {
 	newData[len(data)+4+len(word)] = 0
 
 	return newData
+}
+
+// RunCommand executes a RouterOS API command and returns parsed response.
+//
+// This method is more flexible than runCommand - it parses the response
+// into a slice of maps, where each map represents a row of data.
+// The command path uses spaces instead of slashes (e.g., "ip neighbor print")
+func (c *Client) RunCommand(ctx context.Context, path string) ([]map[string]string, error) {
+	if !c.loggedIn {
+		return nil, errors.New("not logged in: call Login() first")
+	}
+
+	data, err := c.runCommand(ctx, path)
+	if err != nil {
+		return nil, fmt.Errorf("failed to run command %s: %w", path, err)
+	}
+
+	// Parse response data into a list of maps
+	// Response format: key1=value1\0key2=value2\0... (repeated for each item)
+	return parseResponseList(data), nil
+}
+
+// parseResponseList parses RouterOS API response data into a list of maps.
+func parseResponseList(data []byte) []map[string]string {
+	if len(data) == 0 {
+		return nil
+	}
+
+	var results []map[string]string
+
+	// Split by looking for the pattern of repeated keys
+	// Each entry starts after a null byte followed by a word
+	entries := splitEntries(data)
+
+	for _, entry := range entries {
+		if len(entry) == 0 {
+			continue
+		}
+
+		row := make(map[string]string)
+		pairs := strings.Split(string(entry), "\x00")
+
+		for _, pair := range pairs {
+			pair = strings.TrimSpace(pair)
+			if pair == "" {
+				continue
+			}
+
+			// Find the first = to split key/value
+			eqIdx := strings.Index(pair, "=")
+			if eqIdx > 0 {
+				key := pair[:eqIdx]
+				value := pair[eqIdx+1:]
+				row[key] = value
+			}
+		}
+
+		if len(row) > 0 {
+			results = append(results, row)
+		}
+	}
+
+	return results
+}
+
+// splitEntries splits the response data into individual entries.
+func splitEntries(data []byte) [][]byte {
+	var entries [][]byte
+
+	// Look for the pattern where a word appears at the start after null bytes
+	// This is a simplified approach - RouterOS responses have repeated structure
+	current := make([]byte, 0)
+
+	for i := 0; i < len(data); i++ {
+		if data[i] == 0 {
+			if len(current) > 0 {
+				endIdx := i + 20
+				if endIdx > len(data) {
+					endIdx = len(data)
+				}
+				lookAhead := string(data[i:endIdx])
+				if !strings.Contains(lookAhead, "=") || strings.HasPrefix(lookAhead, ".") {
+					entries = append(entries, current)
+					current = make([]byte, 0)
+					continue
+				}
+			}
+		}
+		current = append(current, data[i])
+	}
+
+	// Don't forget the last entry
+	if len(current) > 0 {
+		entries = append(entries, current)
+	}
+
+	return entries
 }
 
 // extractValue extracts a value from RouterOS API response data.
